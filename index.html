@@ -37,7 +37,7 @@
         .day-header::after { content: ''; display: block; width: 40px; height: 3px; background: var(--accent); margin: 5px auto 0; border-radius: 2px; }
         
         .match-card { background: white; padding: 12px; margin-bottom: 10px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: space-between; }
-        .player { width: 30%; font-weight: 600; font-size: 14px; word-wrap: break-word; line-height: 1.2; }
+        .player { width: 30%; font-weight: 600; font-size: 14px; word-wrap: break-word; line-height: 1.2; transition: color 0.3s; }
         .player.p1 { text-align: right; }
         .player.p2 { text-align: left; }
         
@@ -227,14 +227,13 @@
         return val !== null && val !== "" && !isNaN(val);
     }
 
-    // Puan Durumu Hesaplama (DÜZELTİLDİ: Oynanan Maç ve Averaj)
+    // Puan Durumu Hesaplama
     function calculateStandings() {
         // 1. İstatistikleri tamamen sıfırla
         appData.players.forEach(p => p.stats = { p:0, o:0, g:0, m:0, a:0, y:0, av:0 });
 
         // 2. Maçları gez
         appData.matches.forEach(m => {
-            // DÜZELTME: Sadece iki skor da geçerliyse (doluysa) işlem yap
             if (isValidScore(m.s1) && isValidScore(m.s2)) {
                 const p1 = appData.players.find(pl => pl.name === m.p1);
                 const p2 = appData.players.find(pl => pl.name === m.p2);
@@ -243,17 +242,14 @@
                     const s1 = parseInt(m.s1);
                     const s2 = parseInt(m.s2);
 
-                    // Oynanan maçı artır
                     p1.stats.o++; 
                     p2.stats.o++;
                     
-                    // Atılan/Yenilen sayıları topla
                     p1.stats.a += s1; 
                     p1.stats.y += s2;
                     p2.stats.a += s2; 
                     p2.stats.y += s1;
 
-                    // Puanlama (Galip:2, Mağlup:1, Hükmen Mağlup:0)
                     if (s1 > s2) {
                         p1.stats.g++; p1.stats.p += 2;
                         p2.stats.m++; p2.stats.p += m.hukmen ? 0 : 1;
@@ -265,7 +261,7 @@
             }
         });
 
-        // 3. Averajı hesapla (DÜZELTME: NaN olmaması için kontrol)
+        // 3. Averajı hesapla
         appData.players.forEach(p => {
             p.stats.av = (p.stats.a || 0) - (p.stats.y || 0);
         });
@@ -292,18 +288,15 @@
                 if (!pyData.oyuncular || !pyData.maclar) return alert("Geçersiz dosya formatı.");
                 if(!confirm("Mevcut veriler silinecek. Onaylıyor musunuz?")) return;
 
-                // Oyuncuları temiz bir istatistikle oluştur
                 const newPlayers = pyData.oyuncular.map(name => ({
                     name: name,
                     stats: { p:0, o:0, g:0, m:0, a:0, y:0, av:0 }
                 }));
 
-                // Maçları güvenli tipe çevir
                 const newMatches = pyData.maclar.map(m => ({
                     round: m.gun,
                     p1: m.p1,
                     p2: m.p2,
-                    // Boş stringleri null yap, sayıları int yap
                     s1: isValidScore(m.s1) ? parseInt(m.s1) : null,
                     s2: isValidScore(m.s2) ? parseInt(m.s2) : null,
                     hukmen: m.hukmen || false
@@ -311,7 +304,6 @@
 
                 appData = { players: newPlayers, matches: newMatches, started: true };
                 
-                // Hemen hesapla ki Firebase'e doğru gitsin
                 calculateStandings();
 
                 db.ref('turnuva').set(appData)
@@ -427,7 +419,25 @@
                 card.className = 'match-card';
                 const disabled = isAdmin ? '' : 'disabled';
                 
-                // Hükmen Butonu HTML (Flex yapısına uygun)
+                // --- RENKLENDİRME MANTIĞI ---
+                let p1Style = '';
+                let p2Style = '';
+
+                // Eğer iki skor da girilmişse renklendir
+                if (m.s1 !== null && m.s1 !== "" && m.s2 !== null && m.s2 !== "") {
+                    const s1 = parseInt(m.s1);
+                    const s2 = parseInt(m.s2);
+                    
+                    if (s1 > s2) {
+                        p1Style = 'color: var(--accent);'; // Kazanan Yeşil
+                        p2Style = 'color: var(--danger);'; // Kaybeden Kırmızı
+                    } else if (s2 > s1) {
+                        p1Style = 'color: var(--danger);'; // Kaybeden Kırmızı
+                        p2Style = 'color: var(--accent);'; // Kazanan Yeşil
+                    }
+                }
+                
+                // Hükmen Butonu HTML
                 let hukmenHtml = '';
                 let hukmenLabel = '';
                 if(isAdmin) {
@@ -439,7 +449,7 @@
                 }
 
                 card.innerHTML = `
-                    <div class="player p1">${m.p1}</div>
+                    <div class="player p1" style="${p1Style}">${m.p1}</div>
                     <div class="scores">
                         <input type="number" ${disabled} value="${m.s1 !== null ? m.s1 : ''}" oninput="updateScore(${m.idx}, 's1', this.value)">
                         <span style="color:#ccc;">-</span>
@@ -447,7 +457,7 @@
                         ${hukmenHtml}
                         ${hukmenLabel}
                     </div>
-                    <div class="player p2">${m.p2}</div>
+                    <div class="player p2" style="${p2Style}">${m.p2}</div>
                 `;
                 container.appendChild(card);
             });
