@@ -10,7 +10,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 
     <style>
-        :root { --primary: #2c3e50; --accent: #27ae60; --light: #ecf0f1; --danger: #e74c3c; --win-bg: #d4edda; --lose-bg: #f8d7da; }
+        :root { --primary: #2c3e50; --accent: #27ae60; --light: #ecf0f1; --danger: #e74c3c; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; background: #f0f2f5; color: #333; padding-bottom: 60px; }
         
         /* Navbar */
@@ -19,11 +19,11 @@
         .navbar button.active { color: white; border-bottom: 4px solid var(--accent); background: rgba(255,255,255,0.05); }
 
         /* Container */
-        .container { max-width: 900px; margin: 0 auto; padding: 10px; }
+        .container { max-width: 800px; margin: 0 auto; padding: 15px; }
         .tab-content { display: none; animation: fadeIn 0.4s ease; }
         .tab-content.active { display: block; }
 
-        /* Puan Tablosu */
+        /* Tablo */
         .table-container { overflow-x: auto; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); background: white; margin-bottom: 20px; }
         table { width: 100%; border-collapse: collapse; min-width: 350px; }
         th, td { padding: 12px 8px; text-align: center; border-bottom: 1px solid #eee; font-size: 14px; }
@@ -36,87 +36,92 @@
         .day-header { text-align: center; margin: 25px 0 10px; font-weight: 800; color: var(--primary); text-transform: uppercase; letter-spacing: 1px; font-size: 13px; position: relative; }
         .day-header::after { content: ''; display: block; width: 40px; height: 3px; background: var(--accent); margin: 5px auto 0; border-radius: 2px; }
         
-        .match-card { background: white; padding: 10px; margin-bottom: 12px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: space-between; gap: 5px; }
-
-        /* Bahis Alanı */
-        .vote-panel { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 45px; }
-        .vote-btn { cursor: pointer; font-size: 18px; opacity: 0.6; transition: 0.2s; user-select: none; }
-        .vote-btn:hover { opacity: 1; transform: scale(1.1); }
-        .vote-btn.voted { color: var(--accent); opacity: 1; pointer-events: none; }
-        .vote-percent { font-size: 10px; font-weight: bold; margin-top: 2px; }
-        
-        .text-green { color: var(--accent); }
-        .text-red { color: var(--danger); }
-        .text-grey { color: #aaa; }
-
-        /* Oyuncu İsimleri */
-        .player { flex: 1; font-weight: 600; font-size: 13px; word-wrap: break-word; line-height: 1.2; padding: 8px 5px; border-radius: 4px; transition: background 0.3s; }
+        .match-card { background: white; padding: 12px; margin-bottom: 10px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: space-between; }
+        .player { width: 30%; font-weight: 600; font-size: 14px; word-wrap: break-word; line-height: 1.2; }
         .player.p1 { text-align: right; }
         .player.p2 { text-align: left; }
         
-        /* Kazanan/Kaybeden Arkaplanları */
-        .winner-bg { background-color: var(--win-bg); color: #155724; }
-        .loser-bg { background-color: var(--lose-bg); color: #721c24; opacity: 0.8; }
-
         /* Skor Alanı */
-        .scores { display: flex; align-items: center; gap: 3px; justify-content: center; width: 80px; }
-        .scores input { width: 28px; height: 28px; text-align: center; font-size: 15px; border: 1px solid #ddd; border-radius: 4px; font-weight: bold; background: #f9f9f9; }
+        .scores { display: flex; align-items: center; gap: 5px; justify-content: center; width: 40%; }
+        .scores input { width: 32px; height: 32px; text-align: center; font-size: 16px; border: 1px solid #ddd; border-radius: 4px; font-weight: bold; background: #f9f9f9; }
         .scores input:focus { outline: none; border-color: var(--accent); background: white; }
         .scores input:disabled { background: #eee; color: #333; border: none; }
 
         /* Hükmen Butonu */
-        .hukmen-toggle { width: 24px; height: 24px; border-radius: 4px; border: 1px solid #ccc; color: #777; font-size: 10px; font-weight: bold; display: flex; align-items: center; justify-content: center; cursor: pointer; margin-left: 8px; user-select: none; background: #fff; transition: all 0.2s; }
+        .hukmen-toggle { 
+            width: 24px; 
+            height: 24px; 
+            border-radius: 4px; 
+            border: 1px solid #ccc; 
+            color: #777; 
+            font-size: 10px; 
+            font-weight: bold;
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            cursor: pointer; 
+            margin-left: 8px;
+            user-select: none;
+            background: #fff;
+            transition: all 0.2s;
+        }
+        .hukmen-toggle:hover { background: #f0f0f0; }
         .hukmen-toggle.active { background: var(--danger); color: white; border-color: var(--danger); }
         .hukmen-indicator { font-size: 10px; color: var(--danger); font-weight: bold; margin-left: 5px; }
 
-        /* Admin & Diğer */
+        /* Admin Panel */
         .admin-box { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; }
-        .admin-box input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
+        .admin-box input[type="text"], .admin-box input[type="email"], .admin-box input[type="password"] { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
         .btn { width: 100%; padding: 12px; border: none; border-radius: 6px; font-size: 14px; font-weight: bold; cursor: pointer; transition: 0.2s; margin-top: 5px; text-transform: uppercase; }
         .btn-primary { background: var(--accent); color: white; }
+        .btn-primary:hover { background: #219150; }
+        .btn-danger { background: var(--danger); color: white; margin-top: 20px; }
         .btn-secondary { background: #34495e; color: white; }
-        .btn-danger { background: var(--danger); color: white; }
         .file-upload { background: #f1f1f1; padding: 15px; border-radius: 6px; margin-top: 15px; border: 2px dashed #ccc; }
 
         .status-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: #333; color: white; padding: 12px; text-align: center; font-size: 13px; z-index: 2000; display: none; }
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid var(--accent); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 20px auto; }
-        .error-box { background-color: #ffe6e6; border: 1px solid red; color: red; padding: 15px; margin: 10px; border-radius: 5px; display: none; text-align: center; font-weight: bold; }
-        
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @media (max-width: 600px) { .player { font-size: 12px; } .scores input { width: 24px; height: 24px; font-size: 13px; } .vote-btn { font-size: 16px; } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        @media (max-width: 600px) { .player { font-size: 12px; } .scores input { width: 28px; height: 28px; font-size: 14px; } }
     </style>
 </head>
 <body>
 
 <div class="navbar">
-    <button class="tab-link active" onclick="openTab('puanDurumu')">PUAN</button>
-    <button class="tab-link" onclick="openTab('fikstur')">FİKSTÜR & BAHİS</button>
-    <button class="tab-link" onclick="openTab('admin')">ADMİN</button>
+    <button class="tab-link active" onclick="openTab('puanDurumu')">PUAN DURUMU</button>
+    <button class="tab-link" onclick="openTab('fikstur')">FİKSTÜR</button>
+    <button class="tab-link" onclick="openTab('admin')">YÖNETİCİ</button>
 </div>
 
 <div class="container">
     <div id="loading" class="loader"></div>
-    <div id="errorBox" class="error-box"></div> 
 
     <div id="puanDurumu" class="tab-content" style="display:none;">
         <div class="table-container">
             <table>
                 <thead>
                     <tr>
-                        <th width="10%">#</th><th width="40%" style="text-align:left; padding-left:15px;">OYUNCU</th><th width="10%">O</th><th width="10%">G</th><th width="10%">M</th><th width="10%">AV</th><th width="10%">P</th>
+                        <th width="10%">#</th>
+                        <th width="40%" style="text-align:left; padding-left:15px;">OYUNCU</th>
+                        <th width="10%">O</th>
+                        <th width="10%">G</th>
+                        <th width="10%">M</th>
+                        <th width="10%">AV</th>
+                        <th width="10%">P</th>
                     </tr>
                 </thead>
                 <tbody id="standingsBody"></tbody>
             </table>
         </div>
-        <p style="text-align:center; color:#7f8c8d; font-size:11px;">G:2, M:1, Hükmen:0 Puan</p>
+        <p style="text-align:center; color:#7f8c8d; font-size:11px; margin-top:5px;">İlk 8 Play-off oynar. | G:2 Puan, M:1 Puan, Hükmen: 0 Puan</p>
     </div>
 
     <div id="fikstur" class="tab-content" style="display:none;">
         <div id="fixtureList"></div>
         <div id="saveBtnArea" style="margin-top:20px; display:none; position:sticky; bottom:20px;">
-            <button class="btn btn-primary" style="box-shadow: 0 4px 10px rgba(0,0,0,0.3);" onclick="saveDataToFirebase()">💾 SKORLARI KAYDET</button>
+            <button class="btn btn-primary" style="box-shadow: 0 4px 10px rgba(0,0,0,0.3);" onclick="saveDataToFirebase()">💾 SKORLARI KAYDET VE YAYINLA</button>
         </div>
     </div>
 
@@ -130,15 +135,21 @@
 
         <div id="adminControls" class="admin-box" style="display:none;">
             <h3 style="color:var(--accent); margin-top:0;">Yönetim Paneli</h3>
+            
             <div class="file-upload">
                 <h4 style="margin:0 0 10px 0; color:#555;">Python Verisini Yükle</h4>
+                <p style="font-size:11px; color:#777; margin-bottom:10px;">Python uygulamasından kaydettiğin .json dosyasını seç.</p>
                 <input type="file" id="jsonFileInput" accept=".json" style="width:100%; margin-bottom:10px;">
                 <button class="btn btn-secondary" onclick="importFromPythonJson()">📂 YÜKLE VE YAYINLA</button>
             </div>
+
             <hr style="border:0; border-top:1px solid #eee; margin:20px 0;">
+
+            <h4 style="margin:0 0 10px 0; color:#555;">veya Yeni Lig Oluştur</h4>
             <input type="text" id="newPlayerName" placeholder="Yeni Oyuncu İsmi">
-            <button class="btn btn-secondary" onclick="addPlayerTemp()">Listeye Ekle</button>
-            <ul id="tempPlayerList" style="text-align:left; color:#555; font-size:13px;"></ul>
+            <button class="btn btn-secondary" style="background:#95a5a6;" onclick="addPlayerTemp()">Listeye Ekle</button>
+            <ul id="tempPlayerList" style="text-align:left; color:#555; font-size:13px; padding-left:20px;"></ul>
+
             <button class="btn btn-primary" style="margin-top:10px;" onclick="generateFixtureAndStart()">🚀 MANUEL LİGİ BAŞLAT</button>
             <button class="btn btn-danger" onclick="firebase.auth().signOut()">Çıkış Yap</button>
         </div>
@@ -149,7 +160,7 @@
 
 <script>
     // ============================================================
-    // 1. AYARLAR: KULLANICININ YÜKLEDİĞİ DOSYADAKİ AYARLAR
+    // 1. AYARLAR: FIREBASE BİLGİLERİNİ BURAYA GİRİNİZ
     // ============================================================
     const firebaseConfig = {
         apiKey:  "AIzaSyApl74nGCJrG42BWFJaR_v3gqHGlF2R_3M",
@@ -159,21 +170,15 @@
         storageBucket: "otomotiv-masa-tenisi-turnuvasi.firebasestorage.app",
         messagingSenderId: "88398060894",
         appId: "1:88398060894:web:8b9e4e1198466aae1283cf",
-        measurementId: "G-GC6ND6CK6J"
+	measurementId: "G-GC6ND6CK6J"
     };
 
-    // Firebase Başlat (Hata Yakalamalı)
-    try {
-        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-    } catch (e) {
-        document.getElementById('errorBox').style.display = 'block';
-        document.getElementById('errorBox').innerText = "Firebase Başlatma Hatası: " + e.message;
-    }
+    if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
     const db = firebase.database();
     const auth = firebase.auth();
 
     // ============================================================
-    // 2. STATE
+    // 2. STATE YÖNETİMİ
     // ============================================================
     let appData = { players: [], matches: [], started: false };
     let tempPlayers = [];
@@ -186,127 +191,224 @@
             document.getElementById('adminControls').style.display = isAdmin ? 'block' : 'none';
             document.getElementById('saveBtnArea').style.display = isAdmin ? 'block' : 'none';
             if(isAdmin) showStatus("Yönetici modundasınız.", "success");
-            // Tabloyu güncelle (Kilitler açılsın/kapansın)
-            if(appData.started) renderFixture();
+            renderFixture();
         });
 
         db.ref('turnuva').on('value', (snapshot) => {
+            const data = snapshot.val();
             document.getElementById('loading').style.display = 'none';
-            try {
-                const data = snapshot.val();
-                if (data) {
-                    appData = data;
-                    // Array/Object Dönüşümü (Kritik Düzeltme: Dizi olarak gelmezse diziye çevir)
-                    if(data.players && !Array.isArray(data.players)) appData.players = Object.values(data.players);
-                    if(data.matches && !Array.isArray(data.matches)) appData.matches = Object.values(data.matches);
-                    
-                    if(!appData.players) appData.players = [];
-                    if(!appData.matches) appData.matches = [];
-                    
-                    calculateStandings();
-                    renderFixture();
-                    
-                    if(document.querySelector('.tab-content.active') === null) openTab('puanDurumu');
-                } else {
+            
+            if (data) {
+                appData = data;
+                if(!appData.players) appData.players = [];
+                if(!appData.matches) appData.matches = [];
+                
+                calculateStandings();
+                renderFixture();
+                
+                if(document.getElementById('puanDurumu').style.display === 'none' && 
+                   document.getElementById('fikstur').style.display === 'none' && 
+                   document.getElementById('admin').style.display === 'none') {
                     openTab('puanDurumu');
-                    document.getElementById('fixtureList').innerHTML = '<p style="text-align:center; padding:20px; color:#999;">Veri yok. Yönetici panelinden veri yükleyiniz.</p>';
                 }
-            } catch(e) {
-                console.error(e);
-                document.getElementById('errorBox').style.display = 'block';
-                document.getElementById('errorBox').innerText = "Veri İşleme Hatası: " + e.message;
+            } else {
+                openTab('puanDurumu');
+                document.getElementById('fixtureList').innerHTML = '<p style="text-align:center; padding:20px; color:#999;">Turnuva verisi bulunamadı.</p>';
             }
-        }, (error) => {
-            document.getElementById('errorBox').style.display = 'block';
-            document.getElementById('errorBox').innerText = "Veritabanı Erişim Hatası: " + error.message;
         });
     };
 
     // ============================================================
-    // 3. FONKSİYONLAR
+    // 3. İŞLEVLER (LOGIC)
     // ============================================================
     
-    // GÜVENLİK: Değer undefined/null ise boş string dön (Bu fonksiyon hatayı çözer)
-    function getSafeVal(val) {
-        if (val === undefined || val === null) return "";
-        return val;
-    }
-
+    // Skorun geçerli olup olmadığını kontrol eden yardımcı fonksiyon
     function isValidScore(val) {
-        return val !== null && val !== "" && val !== undefined && !isNaN(parseInt(val));
+        return val !== null && val !== "" && !isNaN(val);
     }
 
-    // BAHİS
-    window.vote = function(matchIndex, side) {
-        if(localStorage.getItem(`voted_match_${matchIndex}`)) return alert("Zaten oy kullandınız!");
-        const ref = db.ref(`turnuva/matches/${matchIndex}/votes/${side}`);
-        ref.transaction((currentValue) => (currentValue || 0) + 1)
-            .then(() => localStorage.setItem(`voted_match_${matchIndex}`, 'true'))
-            .catch(err => alert("Hata: " + err.message));
-    }
-
+    // Puan Durumu Hesaplama (DÜZELTİLDİ: Oynanan Maç ve Averaj)
     function calculateStandings() {
-        if(!appData.players) return;
+        // 1. İstatistikleri tamamen sıfırla
         appData.players.forEach(p => p.stats = { p:0, o:0, g:0, m:0, a:0, y:0, av:0 });
 
-        if(appData.matches) {
-            appData.matches.forEach(m => {
-                if (isValidScore(m.s1) && isValidScore(m.s2)) {
-                    // İsim eşleşmesi yaparken trim() kullanmak güvenli olabilir
-                    const p1 = appData.players.find(pl => pl.name === m.p1);
-                    const p2 = appData.players.find(pl => pl.name === m.p2);
-                    if (p1 && p2) {
-                        const s1 = parseInt(m.s1); const s2 = parseInt(m.s2);
-                        p1.stats.o++; p2.stats.o++;
-                        p1.stats.a += s1; p1.stats.y += s2;
-                        p2.stats.a += s2; p2.stats.y += s1;
-                        if (s1 > s2) {
-                            p1.stats.g++; p1.stats.p += 2;
-                            p2.stats.m++; p2.stats.p += m.hukmen ? 0 : 1;
-                        } else if (s2 > s1) {
-                            p2.stats.g++; p2.stats.p += 2;
-                            p1.stats.m++; p1.stats.p += m.hukmen ? 0 : 1;
-                        }
+        // 2. Maçları gez
+        appData.matches.forEach(m => {
+            // DÜZELTME: Sadece iki skor da geçerliyse (doluysa) işlem yap
+            if (isValidScore(m.s1) && isValidScore(m.s2)) {
+                const p1 = appData.players.find(pl => pl.name === m.p1);
+                const p2 = appData.players.find(pl => pl.name === m.p2);
+
+                if (p1 && p2) {
+                    const s1 = parseInt(m.s1);
+                    const s2 = parseInt(m.s2);
+
+                    // Oynanan maçı artır
+                    p1.stats.o++; 
+                    p2.stats.o++;
+                    
+                    // Atılan/Yenilen sayıları topla
+                    p1.stats.a += s1; 
+                    p1.stats.y += s2;
+                    p2.stats.a += s2; 
+                    p2.stats.y += s1;
+
+                    // Puanlama (Galip:2, Mağlup:1, Hükmen Mağlup:0)
+                    if (s1 > s2) {
+                        p1.stats.g++; p1.stats.p += 2;
+                        p2.stats.m++; p2.stats.p += m.hukmen ? 0 : 1;
+                    } else if (s2 > s1) {
+                        p2.stats.g++; p2.stats.p += 2;
+                        p1.stats.m++; p1.stats.p += m.hukmen ? 0 : 1;
                     }
                 }
-            });
-        }
+            }
+        });
 
-        appData.players.forEach(p => p.stats.av = (p.stats.a||0) - (p.stats.y||0));
+        // 3. Averajı hesapla (DÜZELTME: NaN olmaması için kontrol)
+        appData.players.forEach(p => {
+            p.stats.av = (p.stats.a || 0) - (p.stats.y || 0);
+        });
+
+        // 4. Sıralama
         appData.players.sort((a, b) => {
             if (b.stats.p !== a.stats.p) return b.stats.p - a.stats.p;
             if (b.stats.av !== a.stats.av) return b.stats.av - a.stats.av;
             return b.stats.a - a.stats.a;
         });
+
         renderStandings();
     }
 
-    // RENDER: Puan Durumu
+    function importFromPythonJson() {
+        const fileInput = document.getElementById('jsonFileInput');
+        const file = fileInput.files[0];
+        if (!file) return alert("Lütfen bir dosya seçin.");
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const pyData = JSON.parse(e.target.result);
+                if (!pyData.oyuncular || !pyData.maclar) return alert("Geçersiz dosya formatı.");
+                if(!confirm("Mevcut veriler silinecek. Onaylıyor musunuz?")) return;
+
+                // Oyuncuları temiz bir istatistikle oluştur
+                const newPlayers = pyData.oyuncular.map(name => ({
+                    name: name,
+                    stats: { p:0, o:0, g:0, m:0, a:0, y:0, av:0 }
+                }));
+
+                // Maçları güvenli tipe çevir
+                const newMatches = pyData.maclar.map(m => ({
+                    round: m.gun,
+                    p1: m.p1,
+                    p2: m.p2,
+                    // Boş stringleri null yap, sayıları int yap
+                    s1: isValidScore(m.s1) ? parseInt(m.s1) : null,
+                    s2: isValidScore(m.s2) ? parseInt(m.s2) : null,
+                    hukmen: m.hukmen || false
+                }));
+
+                appData = { players: newPlayers, matches: newMatches, started: true };
+                
+                // Hemen hesapla ki Firebase'e doğru gitsin
+                calculateStandings();
+
+                db.ref('turnuva').set(appData)
+                    .then(() => { alert("Veriler başarıyla yüklendi!"); openTab('puanDurumu'); })
+                    .catch(err => alert("Hata: " + err.message));
+
+            } catch (error) { alert("Dosya okuma hatası."); }
+        };
+        reader.readAsText(file);
+    }
+
+    // --- Standart Fonksiyonlar ---
+    function login() {
+        const email = document.getElementById('email').value;
+        const pass = document.getElementById('password').value;
+        auth.signInWithEmailAndPassword(email, pass).catch(e => alert(e.message));
+    }
+
+    function addPlayerTemp() {
+        const name = document.getElementById('newPlayerName').value.trim();
+        if(name) {
+            tempPlayers.push({ name: name, stats: {} });
+            document.getElementById('newPlayerName').value = '';
+            document.getElementById('tempPlayerList').innerHTML = tempPlayers.map(p => `<li>${p.name}</li>`).join('');
+        }
+    }
+
+    function generateFixtureAndStart() {
+        if(tempPlayers.length < 2) return alert("En az 2 oyuncu gerekli.");
+        if(!confirm("Eski veriler silinecek.")) return;
+
+        let players = [...tempPlayers];
+        if (players.length % 2 !== 0) players.push(null);
+
+        const numRounds = players.length - 1;
+        const matchesPerRound = players.length / 2;
+        let matches = [];
+
+        for (let r = 0; r < numRounds; r++) {
+            for (let i = 0; i < matchesPerRound; i++) {
+                const p1 = players[i];
+                const p2 = players[players.length - 1 - i];
+                if (p1 && p2) {
+                    matches.push({ round: r + 1, p1: p1.name, p2: p2.name, s1: null, s2: null, hukmen: false });
+                }
+            }
+            players.splice(1, 0, players.pop());
+        }
+
+        const newData = { players: tempPlayers, matches: matches, started: true };
+        db.ref('turnuva').set(newData).then(() => { tempPlayers = []; openTab('fikstur'); });
+    }
+
+    window.updateScore = function(index, field, value) {
+        if(!isAdmin) return;
+        appData.matches[index][field] = value === '' ? null : parseInt(value);
+    }
+
+    window.toggleHukmen = function(index) {
+        if(!isAdmin) return;
+        appData.matches[index].hukmen = !appData.matches[index].hukmen;
+        renderFixture();
+    }
+
+    window.saveDataToFirebase = function() {
+        if(!isAdmin) return;
+        calculateStandings(); // Kaydetmeden önce hesapla
+        db.ref('turnuva').update(appData)
+            .then(() => showStatus("Değişiklikler yayınlandı!", "success"))
+            .catch(err => alert(err.message));
+    }
+
+    // ============================================================
+    // 4. ARAYÜZ (RENDER)
+    // ============================================================
     function renderStandings() {
         const tbody = document.getElementById('standingsBody');
-        if(!tbody) return;
         tbody.innerHTML = '';
-        if(!appData.players) return;
         appData.players.forEach((p, index) => {
             tbody.innerHTML += `
                 <tr class="${index < 8 ? 'top8' : ''}">
                     <td>${index + 1}</td>
                     <td style="text-align:left; padding-left:15px; font-weight:600;">${p.name}</td>
-                    <td>${p.stats.o}</td><td>${p.stats.g}</td><td>${p.stats.m}</td><td>${p.stats.av}</td><td><strong>${p.stats.p}</strong></td>
+                    <td>${p.stats.o}</td>
+                    <td>${p.stats.g}</td>
+                    <td>${p.stats.m}</td>
+                    <td>${p.stats.av}</td>
+                    <td><strong>${p.stats.p}</strong></td>
                 </tr>`;
         });
     }
 
-    // RENDER: Fikstür
     function renderFixture() {
         const container = document.getElementById('fixtureList');
-        if(!container) return;
         if(document.activeElement.tagName === "INPUT") return;
-        
         container.innerHTML = '';
-        if (!appData.matches || appData.matches.length === 0) {
-            container.innerHTML = '<p style="text-align:center;">Maç yok.</p>'; return;
-        }
+        if (!appData.matches.length) return container.innerHTML = '<p style="text-align:center; color:#999;">Maç yok.</p>';
 
         const rounds = {};
         appData.matches.forEach((m, index) => {
@@ -325,116 +427,54 @@
                 card.className = 'match-card';
                 const disabled = isAdmin ? '' : 'disabled';
                 
-                // Bahis & Renk
-                let v1 = (m.votes && m.votes.p1) ? m.votes.p1 : 0;
-                let v2 = (m.votes && m.votes.p2) ? m.votes.p2 : 0;
-                let totalVotes = v1 + v2;
-                let p1_pct = totalVotes === 0 ? 0 : Math.round((v1 / totalVotes) * 100);
-                let p2_pct = totalVotes === 0 ? 0 : Math.round((v2 / totalVotes) * 100);
-                let p1_color = p1_pct > p2_pct ? 'text-green' : (p1_pct < p2_pct ? 'text-red' : 'text-grey');
-                let p2_color = p2_pct > p1_pct ? 'text-green' : (p2_pct < p1_pct ? 'text-red' : 'text-grey');
-                if(totalVotes===0) { p1_color='text-grey'; p2_color='text-grey'; }
-                const isVoted = localStorage.getItem(`voted_match_${m.idx}`);
-                const voteClass = isVoted ? 'voted' : '';
-
-                // Kazanan/Kaybeden Rengi
-                let p1_bg = '', p2_bg = '';
-                if(isValidScore(m.s1) && isValidScore(m.s2)) {
-                    if(parseInt(m.s1) > parseInt(m.s2)) { p1_bg = 'winner-bg'; p2_bg = 'loser-bg'; }
-                    else if(parseInt(m.s2) > parseInt(m.s1)) { p2_bg = 'winner-bg'; p1_bg = 'loser-bg'; }
-                }
-
-                let hukmenBtn = '', hukmenLabel = '';
+                // Hükmen Butonu HTML (Flex yapısına uygun)
+                let hukmenHtml = '';
+                let hukmenLabel = '';
                 if(isAdmin) {
                     const activeClass = m.hukmen ? 'active' : '';
-                    hukmenBtn = `<div class="hukmen-toggle ${activeClass}" onclick="toggleHukmen(${m.idx})">H</div>`;
+                    hukmenHtml = `<div class="hukmen-toggle ${activeClass}" onclick="toggleHukmen(${m.idx})">H</div>`;
                 }
                 if(m.hukmen && !isAdmin) {
                      hukmenLabel = '<span class="hukmen-indicator" style="position:static; margin-left:5px;">(HÜKMEN)</span>';
                 }
 
-                // GÜVENLİ INPUT VALUE: getSafeVal kullanımı
                 card.innerHTML = `
-                    <div class="vote-panel">
-                        <div class="vote-percent ${p1_color}">${totalVotes>0 ? p1_pct+'%' : ''}</div>
-                        <div class="vote-btn ${voteClass}" onclick="vote(${m.idx}, 'p1')">👍</div>
+                    <div class="player p1">${m.p1}</div>
+                    <div class="scores">
+                        <input type="number" ${disabled} value="${m.s1 !== null ? m.s1 : ''}" oninput="updateScore(${m.idx}, 's1', this.value)">
+                        <span style="color:#ccc;">-</span>
+                        <input type="number" ${disabled} value="${m.s2 !== null ? m.s2 : ''}" oninput="updateScore(${m.idx}, 's2', this.value)">
+                        ${hukmenHtml}
+                        ${hukmenLabel}
                     </div>
-                    <div class="player p1 ${p1_bg}">${m.p1}</div>
-                    <div style="display:flex; flex-direction:column; align-items:center;">
-                        <div class="scores">
-                            <input type="text" inputmode="numeric" ${disabled} value="${getSafeVal(m.s1)}" oninput="updateScore(${m.idx},'s1',this.value)">
-                            <span>-</span>
-                            <input type="text" inputmode="numeric" ${disabled} value="${getSafeVal(m.s2)}" oninput="updateScore(${m.idx},'s2',this.value)">
-                        </div>
-                        ${hukmenLabel} ${hukmenBtn}
-                    </div>
-                    <div class="player p2 ${p2_bg}">${m.p2}</div>
-                    <div class="vote-panel">
-                        <div class="vote-percent ${p2_color}">${totalVotes>0 ? p2_pct+'%' : ''}</div>
-                        <div class="vote-btn ${voteClass}" onclick="vote(${m.idx}, 'p2')">👍</div>
-                    </div>
+                    <div class="player p2">${m.p2}</div>
                 `;
                 container.appendChild(card);
             });
         }
     }
 
-    // --- Standart Fonksiyonlar ---
-    function login() { auth.signInWithEmailAndPassword(document.getElementById('email').value, document.getElementById('password').value).catch(e=>alert(e.message)); }
-    function addPlayerTemp() { 
-        let name = document.getElementById('newPlayerName').value.trim();
-        if(name) { tempPlayers.push({name:name, stats:{}}); document.getElementById('newPlayerName').value=''; document.getElementById('tempPlayerList').innerHTML=tempPlayers.map(p=>`<li>${p.name}</li>`).join(''); }
+    window.openTab = function(tabName) {
+        document.querySelectorAll('.tab-content').forEach(t => { t.style.display = 'none'; t.classList.remove('active'); });
+        document.querySelectorAll('.tab-link').forEach(t => t.classList.remove('active'));
+        
+        const selected = document.getElementById(tabName);
+        selected.style.display = 'block';
+        setTimeout(() => selected.classList.add('active'), 10);
+        
+        const btns = document.querySelectorAll('.navbar button');
+        if(tabName === 'puanDurumu') btns[0].classList.add('active');
+        if(tabName === 'fikstur') btns[1].classList.add('active');
+        if(tabName === 'admin') btns[2].classList.add('active');
     }
-    function generateFixtureAndStart() {
-        if(tempPlayers.length<2) return alert("En az 2 oyuncu.");
-        if(!confirm("Eski veriler silinecek.")) return;
-        let players = [...tempPlayers]; if(players.length%2!==0) players.push(null);
-        let matches = [];
-        for(let r=0; r<players.length-1; r++) {
-            for(let i=0; i<players.length/2; i++) {
-                let p1=players[i], p2=players[players.length-1-i];
-                if(p1&&p2) matches.push({round:r+1, p1:p1.name, p2:p2.name, s1:null, s2:null, hukmen:false, votes:{p1:0,p2:0}});
-            }
-            players.splice(1,0,players.pop());
-        }
-        db.ref('turnuva').set({players:tempPlayers, matches:matches, started:true}).then(()=>{ tempPlayers=[]; openTab('fikstur'); });
+
+    function showStatus(msg, type) {
+        const bar = document.getElementById('statusBar');
+        bar.innerText = msg;
+        bar.style.background = type === 'success' ? '#27ae60' : '#e74c3c';
+        bar.style.display = 'block';
+        setTimeout(() => { bar.style.display = 'none'; }, 3000);
     }
-    function importFromPythonJson() {
-        const file = document.getElementById('jsonFileInput').files[0];
-        if (!file) return alert("Dosya seçin.");
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            try {
-                const pyData = JSON.parse(e.target.result);
-                if (!pyData.oyuncular || !pyData.maclar) return alert("Hatalı dosya.");
-                if(!confirm("Eski veriler silinecek.")) return;
-                const newPlayers = pyData.oyuncular.map(name => ({ name: name, stats: { p:0,o:0,g:0,m:0,a:0,y:0,av:0 } }));
-                const newMatches = pyData.maclar.map(m => ({
-                    round: m.gun, p1: m.p1, p2: m.p2,
-                    s1: isValidScore(m.s1) ? parseInt(m.s1) : null,
-                    s2: isValidScore(m.s2) ? parseInt(m.s2) : null,
-                    hukmen: m.hukmen || false, votes: { p1:0, p2:0 }
-                }));
-                appData = { players: newPlayers, matches: newMatches, started: true };
-                db.ref('turnuva').set(appData).then(() => { alert("Yüklendi!"); openTab('puanDurumu'); });
-            } catch (error) { alert("Hata: " + error); }
-        };
-        reader.readAsText(file);
-    }
-    window.updateScore = function(i,f,v) { if(isAdmin) appData.matches[i][f] = v===''?null:parseInt(v); }
-    window.toggleHukmen = function(i) { if(isAdmin) { appData.matches[i].hukmen = !appData.matches[i].hukmen; renderFixture(); } }
-    window.saveDataToFirebase = function() { if(isAdmin) { calculateStandings(); db.ref('turnuva').update(appData).then(()=>showStatus("Kaydedildi!","success")); } }
-    window.openTab = function(t) { 
-        document.querySelectorAll('.tab-content').forEach(e=>e.classList.remove('active')); 
-        document.querySelectorAll('.tab-link').forEach(e=>e.classList.remove('active')); 
-        const target = document.getElementById(t);
-        if(target) {
-            target.classList.add('active'); 
-            const idx = t=='puanDurumu'?0:t=='fikstur'?1:2;
-            document.querySelectorAll('.navbar button')[idx].classList.add('active'); 
-        }
-    }
-    function showStatus(m,t) { let b=document.getElementById('statusBar'); b.innerText=m; b.style.background=t=='success'?'#27ae60':'#e74c3c'; b.style.display='block'; setTimeout(()=>b.style.display='none',3000); }
 </script>
 
 </body>
