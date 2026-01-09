@@ -40,8 +40,8 @@
         
         /* Player Alanı ve Oy Oranları */
         .player-container { width: 35%; display: flex; align-items: center; justify-content: space-between; }
-        .player-container.left { flex-direction: row; text-align: left; } /* Sol taraf */
-        .player-container.right { flex-direction: row-reverse; text-align: right; } /* Sağ taraf */
+        .player-container.left { flex-direction: row; text-align: left; }
+        .player-container.right { flex-direction: row-reverse; text-align: right; }
 
         .player { font-weight: 600; font-size: 13px; word-wrap: break-word; line-height: 1.2; transition: color 0.3s; width: 100%; }
         .vote-ratio { font-size: 10px; color: #95a5a6; font-weight: bold; background: #f0f2f5; padding: 2px 5px; border-radius: 4px; min-width: 30px; text-align: center; }
@@ -278,6 +278,8 @@
         }
 
         const matchRef = db.ref('turnuva/matches/' + matchIdx);
+        
+        // İşlem (Transaction)
         matchRef.transaction((match) => {
             if (match) {
                 if (playerKey === 1) {
@@ -289,11 +291,16 @@
             return match;
         }, (error, committed) => {
             if (error) {
-                showStatus("Oy verilemedi.", "error");
+                // Hata Yakalama: Eğer kural hatasıysa net mesaj verelim
+                if (error.code === 'PERMISSION_DENIED') {
+                    showStatus("HATA: Firebase Yazma İzni Yok! Kuralları 'true' yapın.", "error");
+                } else {
+                    showStatus("Oy verilemedi: " + error.message, "error");
+                }
             } else if (committed) {
                 localStorage.setItem(storageKey, "true");
                 showStatus("Oyunuz kaydedildi!", "success");
-                renderVoting(); // Butonu pasif yapmak için
+                renderVoting(); 
             }
         });
     }
@@ -322,7 +329,7 @@
                     s1: isValidScore(m.s1) ? parseInt(m.s1) : null,
                     s2: isValidScore(m.s2) ? parseInt(m.s2) : null,
                     hukmen: m.hukmen || false,
-                    v1: 0, v2: 0 // Oyları sıfırla
+                    v1: 0, v2: 0 // Yeni yüklemede oylar sıfırlanır
                 }));
 
                 appData = { players: newPlayers, matches: newMatches, started: true };
@@ -382,10 +389,9 @@
         });
     }
 
-    // --- FİKSTÜR RENDER (RENK VE YÜZDE GÖSTERİMİ) ---
     function renderFixture() {
         const container = document.getElementById('fixtureList');
-        if(document.activeElement.tagName === "INPUT") return; // Yazarken yenilemeyi engelle
+        if(document.activeElement.tagName === "INPUT") return;
         container.innerHTML = '';
         if (!appData.matches.length) return container.innerHTML = '<p style="text-align:center; color:#999;">Maç yok.</p>';
 
@@ -406,7 +412,6 @@
                 card.className = 'match-card';
                 const disabled = isAdmin ? '' : 'disabled';
                 
-                // Renk Mantığı
                 let p1Style = '';
                 let p2Style = '';
                 if (m.s1 !== null && m.s1 !== "" && m.s2 !== null && m.s2 !== "") {
@@ -416,14 +421,12 @@
                     else if (s2 > s1) { p1Style = 'color:var(--danger);'; p2Style = 'color:var(--accent);'; }
                 }
                 
-                // Oy Yüzdesi Hesaplama
                 const v1 = m.v1 || 0;
                 const v2 = m.v2 || 0;
                 const total = v1 + v2;
                 const p1Pct = total > 0 ? Math.round((v1 / total) * 100) : 0;
                 const p2Pct = total > 0 ? Math.round((v2 / total) * 100) : 0;
 
-                // Hükmen Butonu
                 let hukmenHtml = isAdmin ? `<div class="hukmen-toggle ${m.hukmen ? 'active' : ''}" onclick="toggleHukmen(${m.idx})">H</div>` : '';
                 let hukmenLabel = (!isAdmin && m.hukmen) ? '<span class="hukmen-indicator">(HÜKMEN)</span>' : '';
 
@@ -451,13 +454,9 @@
         }
     }
 
-    // --- OYLAMA EKRANI RENDER ---
     function renderVoting() {
         const container = document.getElementById('votingList');
         container.innerHTML = '';
-        
-        // Sadece oynanmamış veya henüz skoru girilmemiş maçları gösterelim (İsteğe bağlı, şimdilik hepsini gösteriyorum)
-        // Ancak genellikle sadece gelecekteki maçlar oylanır. Şimdilik hepsi.
         
         const rounds = {};
         appData.matches.forEach((m, index) => {
@@ -475,11 +474,9 @@
                 const card = document.createElement('div');
                 card.className = 'match-card';
                 
-                // Kullanıcı daha önce oy vermiş mi kontrol et
                 const hasVoted = localStorage.getItem('voted_match_' + m.idx);
                 const disabledClass = hasVoted ? 'voted' : '';
-                const btnText = hasVoted ? 'Kullanıldı' : 'Oy Ver';
-
+                
                 card.innerHTML = `
                     <div style="width:45%; display:flex; justify-content:flex-end; align-items:center; gap:10px;">
                         <span style="font-size:13px; font-weight:600;">${m.p1}</span>
