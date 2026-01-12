@@ -200,7 +200,7 @@
                 <li>Galibiyet: <strong>2 Puan</strong>, Mağlubiyet: <strong>1 Puan</strong>.</li>
                 <li>Hükmen mağlubiyet durumunda <strong>0 Puan</strong> verilir.</li>
                 <li>Grup maçları sonunda puan cetvelindeki <strong>ilk 8 oyuncu</strong> Play-off oynamaya hak kazanır.</li>
-                <li>Puan eşitliğinde sırasıyla; Genel Averaj, Atılan Sayı dikkate alınır.</li>
+                <li>Puan eşitliğinde sırasıyla; Genel Averaj ve İsim Sıralaması dikkate alınır.</li>
             </ul>
         </div>
     </div>
@@ -324,10 +324,16 @@
 
         appData.players.forEach(p => p.stats.av = (p.stats.a || 0) - (p.stats.y || 0));
 
+        // --- GÜNCELLENEN SIRALAMA ALGORİTMASI ---
         appData.players.sort((a, b) => {
+            // 1. Kriter: Puan (Yüksekten düşüğe)
             if (b.stats.p !== a.stats.p) return b.stats.p - a.stats.p;
+            
+            // 2. Kriter: Averaj (Yüksekten düşüğe)
             if (b.stats.av !== a.stats.av) return b.stats.av - a.stats.av;
-            return b.stats.a - a.stats.a;
+            
+            // 3. Kriter: İsim (Alfabetik A-Z)
+            return a.name.localeCompare(b.name);
         });
 
         renderStandings();
