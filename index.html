@@ -73,8 +73,16 @@
         .hukmen-toggle.active { background: var(--danger); color: white; border-color: var(--danger); }
         .hukmen-indicator { font-size: 10px; color: var(--danger); font-weight: bold; margin-left: 5px; }
 
-        /* Admin Panel */
-        .admin-box { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; }
+        /* Admin & Rules Box */
+        .admin-box, .rules-box { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .admin-box { text-align: center; }
+        .rules-box { text-align: left; line-height: 1.6; color: #444; }
+        
+        /* Kurallar Listesi */
+        .rules-box h3 { color: var(--accent); margin-top: 20px; font-size: 16px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+        .rules-box ul { margin: 10px 0; padding-left: 20px; }
+        .rules-box li { margin-bottom: 5px; font-size: 14px; }
+
         .admin-box input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
         .btn { width: 100%; padding: 12px; border: none; border-radius: 6px; font-size: 14px; font-weight: bold; cursor: pointer; transition: 0.2s; margin-top: 5px; text-transform: uppercase; }
         .btn-primary { background: var(--accent); color: white; }
@@ -100,6 +108,7 @@
     <button class="tab-link active" onclick="openTab('puanDurumu')">PUAN DURUMU</button>
     <button class="tab-link" onclick="openTab('fikstur')">FİKSTÜR</button>
     <button class="tab-link" onclick="openTab('oylama')">MAÇLARI OYLA</button>
+    <button class="tab-link" onclick="openTab('kurallar')">KURALLAR</button>
     <button class="tab-link" onclick="openTab('admin')">YÖNETİCİ</button>
 </div>
 
@@ -140,6 +149,62 @@
         <div id="votingList"></div>
     </div>
 
+    <div id="kurallar" class="tab-content" style="display:none;">
+        <div class="rules-box">
+            <h2 style="color:var(--primary); text-align:center; margin-bottom: 20px; border-bottom: 2px solid var(--accent); padding-bottom:10px;">VESTEL MOBILITY <br> MASA TENİSİ TURNUVASI</h2>
+            
+            <h3>1. Genel Kurallar</h3>
+            <ul>
+                <li>Maçlar tekler (1'e 1) oynanır.</li>
+                <li>Maçlar 3 set üzerinden oynanır (2 set kazanan maçı kazanır).</li>
+                <li>Setler 21 sayıda biter.</li>
+                <li>20-20 durumunda fark 2 olana kadar devam edilir.</li>
+            </ul>
+    
+            <h3>2. Servis Kuralları</h3>
+            <ul>
+                <li>Servis açık avuç içinden atılır.</li>
+                <li>Top önce servis atan sahaya, sonra rakip sahaya değmelidir.</li>
+                <li>Fileye değip karşıya geçen servis tekrar edilir (let).</li>
+                <li>Her 5 sayıda bir servis değişir.</li>
+                <li>20-20 sonrası servis her sayıda bir değişir.</li>
+            </ul>
+    
+            <h3>3. Oyun Sırasında</h3>
+            <ul>
+                <li>Top fileye değip karşı sahaya düşerse oyun devam eder.</li>
+                <li>Top arka arkaya iki kez rakete vurulamaz.</li>
+                <li>Top el, kol veya vücudun başka bir yerine değerse sayı rakibe gider.</li>
+                <li>Masaya elle veya vücutla müdahale yasaktır.</li>
+            </ul>
+    
+            <h3>4. Sayı Rakibe Verilir Eğer;</h3>
+            <ul>
+                <li>Top masaya değmeden dışarı giderse.</li>
+                <li>Top fileye takılıp karşıya geçmezse.</li>
+                <li>Top iki kez kendi sahana değerse.</li>
+                <li>Servis kurallara uygun atılmazsa.</li>
+            </ul>
+    
+            <h3>5. Fair Play</h3>
+            <ul>
+                <li>Kararlarda saygı ve dürüstlük esastır.</li>
+                <li>Hakem yoksa oyuncular uzlaşır.</li>
+                <li>Tartışmalarda turnuva sorumlusu karar verir.</li>
+            </ul>
+    
+            <hr style="border:0; border-top:1px solid #eee; margin:20px 0;">
+    
+            <h3 style="color:var(--primary);">Fikstür İşleyişi</h3>
+            <ul>
+                <li>Galibiyet: <strong>2 Puan</strong>, Mağlubiyet: <strong>1 Puan</strong>.</li>
+                <li>Hükmen mağlubiyet durumunda <strong>0 Puan</strong> verilir.</li>
+                <li>Grup maçları sonunda puan cetvelindeki <strong>ilk 8 oyuncu</strong> Play-off oynamaya hak kazanır.</li>
+                <li>Puan eşitliğinde sırasıyla; Genel Averaj, Atılan Sayı dikkate alınır.</li>
+            </ul>
+        </div>
+    </div>
+
     <div id="admin" class="tab-content" style="display:none;">
         <div id="loginPanel" class="admin-box">
             <h2 style="color:var(--primary);">Yönetici Girişi</h2>
@@ -178,7 +243,7 @@
         storageBucket: "otomotiv-masa-tenisi-turnuvasi.firebasestorage.app",
         messagingSenderId: "88398060894",
         appId: "1:88398060894:web:8b9e4e1198466aae1283cf",
-	measurementId: "G-GC6ND6CK6J"
+        measurementId: "G-GC6ND6CK6J"
     };
 
     if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
@@ -291,7 +356,6 @@
             return match;
         }, (error, committed) => {
             if (error) {
-                // Hata Yakalama: Eğer kural hatasıysa net mesaj verelim
                 if (error.code === 'PERMISSION_DENIED') {
                     showStatus("HATA: Firebase Yazma İzni Yok! Kuralları 'true' yapın.", "error");
                 } else {
@@ -507,7 +571,8 @@
         if(tabName === 'puanDurumu') btns[0].classList.add('active');
         if(tabName === 'fikstur') btns[1].classList.add('active');
         if(tabName === 'oylama') btns[2].classList.add('active');
-        if(tabName === 'admin') btns[3].classList.add('active');
+        if(tabName === 'kurallar') btns[3].classList.add('active');
+        if(tabName === 'admin') btns[4].classList.add('active');
     }
 
     function showStatus(msg, type) {
