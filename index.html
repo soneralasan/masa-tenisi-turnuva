@@ -44,7 +44,13 @@
         .player-container.right { flex-direction: row-reverse; text-align: right; }
 
         .player { font-weight: 600; font-size: 13px; word-wrap: break-word; line-height: 1.2; transition: color 0.3s; width: 100%; }
-        .vote-ratio { font-size: 10px; color: #95a5a6; font-weight: bold; background: #f0f2f5; padding: 2px 5px; border-radius: 4px; min-width: 30px; text-align: center; }
+        
+        /* Güncellenen Oy Kutusu Stili */
+        .vote-ratio { 
+            font-size: 11px; color: #333; font-weight: bold; 
+            background: #f0f2f5; padding: 4px 6px; border-radius: 4px; 
+            min-width: 35px; text-align: center; line-height: 1.1; 
+        }
         
         /* Skor Alanı */
         .scores { display: flex; align-items: center; gap: 5px; justify-content: center; width: 30%; }
@@ -97,7 +103,7 @@
 
         @media (max-width: 600px) { 
             .player { font-size: 12px; } 
-            .vote-ratio { font-size: 9px; min-width: 25px; }
+            .vote-ratio { font-size: 10px; min-width: 30px; padding: 3px; }
             .navbar button { font-size: 10px; padding: 12px 5px; }
         }
     </style>
@@ -324,24 +330,18 @@
 
         appData.players.forEach(p => p.stats.av = (p.stats.a || 0) - (p.stats.y || 0));
 
-        // --- GÜNCELLENEN SIRALAMA ALGORİTMASI ---
+        // Sıralama: 1. Puan, 2. Averaj, 3. İsim (A-Z)
         appData.players.sort((a, b) => {
-            // 1. Kriter: Puan (Yüksekten düşüğe)
             if (b.stats.p !== a.stats.p) return b.stats.p - a.stats.p;
-            
-            // 2. Kriter: Averaj (Yüksekten düşüğe)
             if (b.stats.av !== a.stats.av) return b.stats.av - a.stats.av;
-            
-            // 3. Kriter: İsim (Alfabetik A-Z)
             return a.name.localeCompare(b.name);
         });
 
         renderStandings();
     }
 
-    // --- OY KULLANMA FONKSİYONU ---
+    // --- OY KULLANMA ---
     window.castVote = function(matchIdx, playerKey) {
-        // LocalStorage kontrolü: Bu maça daha önce oy verdi mi?
         const storageKey = 'voted_match_' + matchIdx;
         if (localStorage.getItem(storageKey)) {
             showStatus("Bu maç için zaten oy kullandınız!", "error");
@@ -350,7 +350,6 @@
 
         const matchRef = db.ref('turnuva/matches/' + matchIdx);
         
-        // İşlem (Transaction)
         matchRef.transaction((match) => {
             if (match) {
                 if (playerKey === 1) {
@@ -363,7 +362,7 @@
         }, (error, committed) => {
             if (error) {
                 if (error.code === 'PERMISSION_DENIED') {
-                    showStatus("HATA: Firebase Yazma İzni Yok! Kuralları 'true' yapın.", "error");
+                    showStatus("HATA: İzin Yok!", "error");
                 } else {
                     showStatus("Oy verilemedi: " + error.message, "error");
                 }
@@ -375,7 +374,7 @@
         });
     }
 
-    // --- YÖNETİCİ & DATA ---
+    // --- YÖNETİCİ ---
     function importFromPythonJson() {
         const fileInput = document.getElementById('jsonFileInput');
         const file = fileInput.files[0];
@@ -399,7 +398,7 @@
                     s1: isValidScore(m.s1) ? parseInt(m.s1) : null,
                     s2: isValidScore(m.s2) ? parseInt(m.s2) : null,
                     hukmen: m.hukmen || false,
-                    v1: 0, v2: 0 // Yeni yüklemede oylar sıfırlanır
+                    v1: 0, v2: 0
                 }));
 
                 appData = { players: newPlayers, matches: newMatches, started: true };
@@ -491,19 +490,25 @@
                     else if (s2 > s1) { p1Style = 'color:var(--danger);'; p2Style = 'color:var(--accent);'; }
                 }
                 
+                // --- OY HESAPLAMASI GÜNCELLEMESİ ---
                 const v1 = m.v1 || 0;
                 const v2 = m.v2 || 0;
                 const total = v1 + v2;
                 const p1Pct = total > 0 ? Math.round((v1 / total) * 100) : 0;
                 const p2Pct = total > 0 ? Math.round((v2 / total) * 100) : 0;
 
+                // Gösterim Formatı: %20 (1/5)
+                // Daha küçük font ile parantez içinde adet gösteriliyor
+                const p1Display = `%${p1Pct} <span style="font-size:9px; display:block; color:#7f8c8d; font-weight:normal;">(${v1}/${total})</span>`;
+                const p2Display = `%${p2Pct} <span style="font-size:9px; display:block; color:#7f8c8d; font-weight:normal;">(${v2}/${total})</span>`;
+
                 let hukmenHtml = isAdmin ? `<div class="hukmen-toggle ${m.hukmen ? 'active' : ''}" onclick="toggleHukmen(${m.idx})">H</div>` : '';
                 let hukmenLabel = (!isAdmin && m.hukmen) ? '<span class="hukmen-indicator">(HÜKMEN)</span>' : '';
 
                 card.innerHTML = `
                     <div class="player-container left">
-                        <div class="vote-ratio" title="Oy Oranı">%${p1Pct}</div>
-                        <div class="player p1" style="${p1Style}; margin-left:5px;">${m.p1}</div>
+                        <div class="vote-ratio" title="Oy Dağılımı">${p1Display}</div>
+                        <div class="player p1" style="${p1Style}; margin-left:8px;">${m.p1}</div>
                     </div>
                     
                     <div class="scores">
@@ -515,8 +520,8 @@
                     </div>
 
                     <div class="player-container right">
-                        <div class="player p2" style="${p2Style}; margin-right:5px;">${m.p2}</div>
-                        <div class="vote-ratio" title="Oy Oranı">%${p2Pct}</div>
+                        <div class="player p2" style="${p2Style}; margin-right:8px;">${m.p2}</div>
+                        <div class="vote-ratio" title="Oy Dağılımı">${p2Display}</div>
                     </div>
                 `;
                 container.appendChild(card);
