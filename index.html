@@ -23,6 +23,11 @@
         .tab-content { display: none; animation: fadeIn 0.4s ease; }
         .tab-content.active { display: block; }
 
+        /* Sub-Navbar (Fikstür İçin) */
+        .sub-navbar { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; background: #fff; padding: 10px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .sub-tab-btn { flex: 1; padding: 8px; border: 1px solid #ddd; background: #f9f9f9; color: #555; border-radius: 5px; cursor: pointer; font-size: 12px; font-weight: bold; transition: all 0.2s; }
+        .sub-tab-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+
         /* Tablo */
         .table-container { overflow-x: auto; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); background: white; margin-bottom: 20px; }
         table { width: 100%; border-collapse: collapse; min-width: 350px; }
@@ -35,6 +40,8 @@
         /* Fikstür Kartları */
         .day-header { text-align: center; margin: 25px 0 10px; font-weight: 800; color: var(--primary); text-transform: uppercase; letter-spacing: 1px; font-size: 13px; position: relative; }
         .day-header::after { content: ''; display: block; width: 40px; height: 3px; background: var(--accent); margin: 5px auto 0; border-radius: 2px; }
+        
+        .player-header { background: var(--primary); color: white; padding: 10px; margin: 20px 0 5px 0; border-radius: 5px; font-weight: bold; text-align: left; padding-left: 15px; font-size: 14px; display: flex; justify-content: space-between; align-items: center; }
         
         .match-card { background: white; padding: 12px; margin-bottom: 10px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: space-between; }
         
@@ -52,8 +59,8 @@
             min-width: 35px; text-align: center; line-height: 1.1; 
         }
         
-        /* Skor Alanı */
-        .scores { display: flex; align-items: center; gap: 5px; justify-content: center; width: 30%; }
+        /* Skor Alanı - Genişlik esnek yapıldı */
+        .scores { display: flex; align-items: center; gap: 5px; justify-content: center; width: auto; min-width: 120px; }
         .scores input { width: 30px; height: 30px; text-align: center; font-size: 16px; border: 1px solid #ddd; border-radius: 4px; font-weight: bold; background: #f9f9f9; }
         .scores input:focus { outline: none; border-color: var(--accent); background: white; }
         .scores input:disabled { background: #eee; color: #333; border: none; }
@@ -73,7 +80,7 @@
             width: 24px; height: 24px; border-radius: 4px; border: 1px solid #ccc; 
             color: #777; font-size: 10px; font-weight: bold; display: flex; 
             align-items: center; justify-content: center; cursor: pointer; 
-            margin-left: 8px; user-select: none; background: #fff; transition: all 0.2s;
+            margin-left: 8px; user-select: none; background: #fff; transition: all 0.2s; flex-shrink: 0;
         }
         .hukmen-toggle:hover { background: #f0f0f0; }
         .hukmen-toggle.active { background: var(--danger); color: white; border-color: var(--danger); }
@@ -142,7 +149,16 @@
     </div>
 
     <div id="fikstur" class="tab-content" style="display:none;">
-        <div id="fixtureList"></div>
+        
+        <div class="sub-navbar">
+            <button class="sub-tab-btn active" id="btnDayView" onclick="switchFixtureView('day')">📅 GÜN GÖRÜNÜMÜ</button>
+            <button class="sub-tab-btn" id="btnPlayerView" onclick="switchFixtureView('player')">👤 OYUNCU GÖRÜNÜMÜ</button>
+        </div>
+
+        <div id="fixtureByDay"></div>
+        
+        <div id="fixtureByPlayer" style="display:none;"></div>
+
         <div id="saveBtnArea" style="margin-top:20px; display:none; position:sticky; bottom:20px;">
             <button class="btn btn-primary" style="box-shadow: 0 4px 10px rgba(0,0,0,0.3);" onclick="saveDataToFirebase()">💾 SKORLARI KAYDET VE YAYINLA</button>
         </div>
@@ -427,7 +443,7 @@
     window.toggleHukmen = function(index) {
         if(!isAdmin) return;
         appData.matches[index].hukmen = !appData.matches[index].hukmen;
-        renderFixture();
+        renderFixture(); // Değişiklik olunca görünümü tazele
     }
 
     window.saveDataToFirebase = function() {
@@ -439,7 +455,7 @@
     }
 
     // ============================================================
-    // 4. ARAYÜZ (RENDER)
+    // 4. ARAYÜZ (RENDER) - GÜNCELLENDİ
     // ============================================================
     function renderStandings() {
         const tbody = document.getElementById('standingsBody');
@@ -458,75 +474,121 @@
         });
     }
 
-    function renderFixture() {
-        const container = document.getElementById('fixtureList');
-        if(document.activeElement.tagName === "INPUT") return;
-        container.innerHTML = '';
-        if (!appData.matches.length) return container.innerHTML = '<p style="text-align:center; color:#999;">Maç yok.</p>';
-
-        const rounds = {};
-        appData.matches.forEach((m, index) => {
-            if (!rounds[m.round]) rounds[m.round] = [];
-            rounds[m.round].push({ ...m, idx: index });
-        });
-
-        for (const [round, matches] of Object.entries(rounds)) {
-            const header = document.createElement('div');
-            header.className = 'day-header';
-            header.innerText = `${round}. GÜN`;
-            container.appendChild(header);
-
-            matches.forEach(m => {
-                const card = document.createElement('div');
-                card.className = 'match-card';
-                const disabled = isAdmin ? '' : 'disabled';
-                
-                let p1Style = '';
-                let p2Style = '';
-                if (m.s1 !== null && m.s1 !== "" && m.s2 !== null && m.s2 !== "") {
-                    const s1 = parseInt(m.s1);
-                    const s2 = parseInt(m.s2);
-                    if (s1 > s2) { p1Style = 'color:var(--accent);'; p2Style = 'color:var(--danger);'; } 
-                    else if (s2 > s1) { p1Style = 'color:var(--danger);'; p2Style = 'color:var(--accent);'; }
-                }
-                
-                // --- OY HESAPLAMASI GÜNCELLEMESİ ---
-                const v1 = m.v1 || 0;
-                const v2 = m.v2 || 0;
-                const total = v1 + v2;
-                const p1Pct = total > 0 ? Math.round((v1 / total) * 100) : 0;
-                const p2Pct = total > 0 ? Math.round((v2 / total) * 100) : 0;
-
-                // Gösterim Formatı: %20 (1/5)
-                // Daha küçük font ile parantez içinde adet gösteriliyor
-                const p1Display = `%${p1Pct} <span style="font-size:9px; display:block; color:#7f8c8d; font-weight:normal;">(${v1}/${total})</span>`;
-                const p2Display = `%${p2Pct} <span style="font-size:9px; display:block; color:#7f8c8d; font-weight:normal;">(${v2}/${total})</span>`;
-
-                let hukmenHtml = isAdmin ? `<div class="hukmen-toggle ${m.hukmen ? 'active' : ''}" onclick="toggleHukmen(${m.idx})">H</div>` : '';
-                let hukmenLabel = (!isAdmin && m.hukmen) ? '<span class="hukmen-indicator">(HÜKMEN)</span>' : '';
-
-                card.innerHTML = `
-                    <div class="player-container left">
-                        <div class="vote-ratio" title="Oy Dağılımı">${p1Display}</div>
-                        <div class="player p1" style="${p1Style}; margin-left:8px;">${m.p1}</div>
-                    </div>
-                    
-                    <div class="scores">
-                        <input type="number" ${disabled} value="${m.s1 !== null ? m.s1 : ''}" oninput="updateScore(${m.idx}, 's1', this.value)">
-                        <span style="color:#ccc;">-</span>
-                        <input type="number" ${disabled} value="${m.s2 !== null ? m.s2 : ''}" oninput="updateScore(${m.idx}, 's2', this.value)">
-                        ${hukmenHtml}
-                        ${hukmenLabel}
-                    </div>
-
-                    <div class="player-container right">
-                        <div class="player p2" style="${p2Style}; margin-right:8px;">${m.p2}</div>
-                        <div class="vote-ratio" title="Oy Dağılımı">${p2Display}</div>
-                    </div>
-                `;
-                container.appendChild(card);
-            });
+    // YARDIMCI FONKSİYON: Maç Kartı HTML'i Oluşturur
+    function createMatchCardHTML(m) {
+        const disabled = isAdmin ? '' : 'disabled';
+        
+        let p1Style = '';
+        let p2Style = '';
+        if (m.s1 !== null && m.s1 !== "" && m.s2 !== null && m.s2 !== "") {
+            const s1 = parseInt(m.s1);
+            const s2 = parseInt(m.s2);
+            if (s1 > s2) { p1Style = 'color:var(--accent);'; p2Style = 'color:var(--danger);'; } 
+            else if (s2 > s1) { p1Style = 'color:var(--danger);'; p2Style = 'color:var(--accent);'; }
         }
+        
+        // OY HESAPLAMASI
+        const v1 = m.v1 || 0;
+        const v2 = m.v2 || 0;
+        const total = v1 + v2;
+        const p1Pct = total > 0 ? Math.round((v1 / total) * 100) : 0;
+        const p2Pct = total > 0 ? Math.round((v2 / total) * 100) : 0;
+
+        const p1Display = `%${p1Pct} <span style="font-size:9px; display:block; color:#7f8c8d; font-weight:normal;">(${v1}/${total})</span>`;
+        const p2Display = `%${p2Pct} <span style="font-size:9px; display:block; color:#7f8c8d; font-weight:normal;">(${v2}/${total})</span>`;
+
+        let hukmenHtml = isAdmin ? `<div class="hukmen-toggle ${m.hukmen ? 'active' : ''}" onclick="toggleHukmen(${m.idx})">H</div>` : '';
+        let hukmenLabel = (!isAdmin && m.hukmen) ? '<span class="hukmen-indicator">(HÜKMEN)</span>' : '';
+
+        return `
+            <div class="match-card">
+                <div class="player-container left">
+                    <div class="vote-ratio" title="Oy Dağılımı">${p1Display}</div>
+                    <div class="player p1" style="${p1Style}; margin-left:8px;">${m.p1}</div>
+                </div>
+                
+                <div class="scores">
+                    <input type="number" ${disabled} value="${m.s1 !== null ? m.s1 : ''}" oninput="updateScore(${m.idx}, 's1', this.value)">
+                    <span style="color:#ccc;">-</span>
+                    <input type="number" ${disabled} value="${m.s2 !== null ? m.s2 : ''}" oninput="updateScore(${m.idx}, 's2', this.value)">
+                    ${hukmenHtml}
+                    ${hukmenLabel}
+                </div>
+
+                <div class="player-container right">
+                    <div class="player p2" style="${p2Style}; margin-right:8px;">${m.p2}</div>
+                    <div class="vote-ratio" title="Oy Dağılımı">${p2Display}</div>
+                </div>
+            </div>
+        `;
+    }
+
+    function renderFixture() {
+        if(document.activeElement.tagName === "INPUT") return;
+        
+        const matchesWithIdx = appData.matches.map((m, index) => ({...m, idx: index}));
+
+        // --- 1. GÜN GÖRÜNÜMÜ RENDER ---
+        const dayContainer = document.getElementById('fixtureByDay');
+        dayContainer.innerHTML = '';
+        if (!matchesWithIdx.length) {
+            dayContainer.innerHTML = '<p style="text-align:center; color:#999;">Maç yok.</p>';
+        } else {
+            const rounds = {};
+            matchesWithIdx.forEach(m => {
+                if (!rounds[m.round]) rounds[m.round] = [];
+                rounds[m.round].push(m);
+            });
+
+            for (const [round, matches] of Object.entries(rounds)) {
+                const header = document.createElement('div');
+                header.className = 'day-header';
+                header.innerText = `${round}. GÜN`;
+                dayContainer.appendChild(header);
+
+                matches.forEach(m => {
+                    dayContainer.innerHTML += createMatchCardHTML(m);
+                });
+            }
+        }
+
+        // --- 2. OYUNCU GÖRÜNÜMÜ RENDER ---
+        const playerContainer = document.getElementById('fixtureByPlayer');
+        playerContainer.innerHTML = '';
+        
+        // Oyuncuları isme göre sırala
+        const sortedPlayers = [...appData.players].sort((a, b) => a.name.localeCompare(b.name));
+        
+        sortedPlayers.forEach(p => {
+            // Bu oyuncunun oynadığı maçları bul (p1 veya p2)
+            const playerMatches = matchesWithIdx.filter(m => m.p1 === p.name || m.p2 === p.name);
+            
+            // Eğer maçı varsa listele
+            if (playerMatches.length > 0) {
+                // Header (Oyuncu Adı)
+                playerContainer.innerHTML += `<div class="player-header"><span>${p.name}</span> <span style="font-size:11px; font-weight:normal; opacity:0.8;">${playerMatches.length} Maç</span></div>`;
+                
+                // Maçları Gün Sırasına Göre Diz
+                playerMatches.sort((a, b) => a.round - b.round);
+
+                playerMatches.forEach(m => {
+                    // Kartın üzerine "1. GÜN" yazısı ekleyelim ki karışmasın
+                    const dayLabel = `<div style="text-align:center; font-size:10px; color:#999; margin-bottom:2px; font-weight:bold;">${m.round}. GÜN</div>`;
+                    const cardHtml = createMatchCardHTML(m);
+                    // dayLabel'i kartın içine değil, hemen üstüne ekleyebiliriz veya kart yapısını bozmamak için direkt basarız.
+                    // Kartın üstünde küçük bir etiket olarak dursun:
+                    playerContainer.innerHTML += `<div style="margin-top:-5px;">${dayLabel}${cardHtml}</div>`;
+                });
+            }
+        });
+    }
+
+    window.switchFixtureView = function(view) {
+        document.getElementById('fixtureByDay').style.display = view === 'day' ? 'block' : 'none';
+        document.getElementById('fixtureByPlayer').style.display = view === 'player' ? 'block' : 'none';
+        
+        document.getElementById('btnDayView').classList.toggle('active', view === 'day');
+        document.getElementById('btnPlayerView').classList.toggle('active', view === 'player');
     }
 
     function renderVoting() {
