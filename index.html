@@ -443,7 +443,7 @@
     window.toggleHukmen = function(index) {
         if(!isAdmin) return;
         appData.matches[index].hukmen = !appData.matches[index].hukmen;
-        renderFixture(); // Değişiklik olunca görünümü tazele
+        renderFixture(); 
     }
 
     window.saveDataToFirebase = function() {
@@ -475,49 +475,72 @@
     }
 
     // YARDIMCI FONKSİYON: Maç Kartı HTML'i Oluşturur
-    function createMatchCardHTML(m) {
+    // forceLeftPlayer: Eğer belirtilirse, o oyuncu görsel olarak SOL tarafta gösterilir.
+    function createMatchCardHTML(m, forceLeftPlayer = null) {
         const disabled = isAdmin ? '' : 'disabled';
         
-        let p1Style = '';
-        let p2Style = '';
-        if (m.s1 !== null && m.s1 !== "" && m.s2 !== null && m.s2 !== "") {
-            const s1 = parseInt(m.s1);
-            const s2 = parseInt(m.s2);
-            if (s1 > s2) { p1Style = 'color:var(--accent);'; p2Style = 'color:var(--danger);'; } 
-            else if (s2 > s1) { p1Style = 'color:var(--danger);'; p2Style = 'color:var(--accent);'; }
+        // --- 1. YERLEŞİM AYARLAMASI (SWAP LOGIC) ---
+        // Eğer odaklanılan oyuncu P2 ise, görsel olarak yer değiştir (Swap)
+        // Ancak inputlar veritabanında hala doğru yeri (s1 veya s2) hedeflemeli.
+        
+        let isSwapped = false;
+        if (forceLeftPlayer && m.p2 === forceLeftPlayer) {
+            isSwapped = true;
+        }
+
+        const pLeftName = isSwapped ? m.p2 : m.p1;
+        const pRightName = isSwapped ? m.p1 : m.p2;
+        
+        const sLeftVal = isSwapped ? m.s2 : m.s1;
+        const sRightVal = isSwapped ? m.s1 : m.s2;
+
+        const fieldLeft = isSwapped ? 's2' : 's1';   // Input hangi DB alanını güncelleyecek?
+        const fieldRight = isSwapped ? 's1' : 's2';
+        
+        const vLeft = isSwapped ? (m.v2 || 0) : (m.v1 || 0);
+        const vRight = isSwapped ? (m.v1 || 0) : (m.v2 || 0);
+
+        // --- 2. RENKLENDİRME ---
+        // Görüntülenen değerlere göre (sLeftVal vs sRightVal) renk ver
+        let pLeftStyle = '';
+        let pRightStyle = '';
+        if (sLeftVal !== null && sLeftVal !== "" && sRightVal !== null && sRightVal !== "") {
+            const valL = parseInt(sLeftVal);
+            const valR = parseInt(sRightVal);
+            if (valL > valR) { pLeftStyle = 'color:var(--accent);'; pRightStyle = 'color:var(--danger);'; } 
+            else if (valR > valL) { pLeftStyle = 'color:var(--danger);'; pRightStyle = 'color:var(--accent);'; }
         }
         
-        // OY HESAPLAMASI
-        const v1 = m.v1 || 0;
-        const v2 = m.v2 || 0;
-        const total = v1 + v2;
-        const p1Pct = total > 0 ? Math.round((v1 / total) * 100) : 0;
-        const p2Pct = total > 0 ? Math.round((v2 / total) * 100) : 0;
+        // --- 3. OY HESAPLAMASI ---
+        const total = vLeft + vRight;
+        const pctLeft = total > 0 ? Math.round((vLeft / total) * 100) : 0;
+        const pctRight = total > 0 ? Math.round((vRight / total) * 100) : 0;
 
-        const p1Display = `%${p1Pct} <span style="font-size:9px; display:block; color:#7f8c8d; font-weight:normal;">(${v1}/${total})</span>`;
-        const p2Display = `%${p2Pct} <span style="font-size:9px; display:block; color:#7f8c8d; font-weight:normal;">(${v2}/${total})</span>`;
+        const pLeftDisplay = `%${pctLeft} <span style="font-size:9px; display:block; color:#7f8c8d; font-weight:normal;">(${vLeft}/${total})</span>`;
+        const pRightDisplay = `%${pctRight} <span style="font-size:9px; display:block; color:#7f8c8d; font-weight:normal;">(${vRight}/${total})</span>`;
 
         let hukmenHtml = isAdmin ? `<div class="hukmen-toggle ${m.hukmen ? 'active' : ''}" onclick="toggleHukmen(${m.idx})">H</div>` : '';
         let hukmenLabel = (!isAdmin && m.hukmen) ? '<span class="hukmen-indicator">(HÜKMEN)</span>' : '';
 
+        // --- 4. HTML ÇIKTISI ---
         return `
             <div class="match-card">
                 <div class="player-container left">
-                    <div class="vote-ratio" title="Oy Dağılımı">${p1Display}</div>
-                    <div class="player p1" style="${p1Style}; margin-left:8px;">${m.p1}</div>
+                    <div class="vote-ratio" title="Oy Dağılımı">${pLeftDisplay}</div>
+                    <div class="player p1" style="${pLeftStyle}; margin-left:8px;">${pLeftName}</div>
                 </div>
                 
                 <div class="scores">
-                    <input type="number" ${disabled} value="${m.s1 !== null ? m.s1 : ''}" oninput="updateScore(${m.idx}, 's1', this.value)">
+                    <input type="number" ${disabled} value="${sLeftVal !== null ? sLeftVal : ''}" oninput="updateScore(${m.idx}, '${fieldLeft}', this.value)">
                     <span style="color:#ccc;">-</span>
-                    <input type="number" ${disabled} value="${m.s2 !== null ? m.s2 : ''}" oninput="updateScore(${m.idx}, 's2', this.value)">
+                    <input type="number" ${disabled} value="${sRightVal !== null ? sRightVal : ''}" oninput="updateScore(${m.idx}, '${fieldRight}', this.value)">
                     ${hukmenHtml}
                     ${hukmenLabel}
                 </div>
 
                 <div class="player-container right">
-                    <div class="player p2" style="${p2Style}; margin-right:8px;">${m.p2}</div>
-                    <div class="vote-ratio" title="Oy Dağılımı">${p2Display}</div>
+                    <div class="player p2" style="${pRightStyle}; margin-right:8px;">${pRightName}</div>
+                    <div class="vote-ratio" title="Oy Dağılımı">${pRightDisplay}</div>
                 </div>
             </div>
         `;
@@ -547,6 +570,7 @@
                 dayContainer.appendChild(header);
 
                 matches.forEach(m => {
+                    // Gün görünümünde standart sıralama (Swap yok)
                     dayContainer.innerHTML += createMatchCardHTML(m);
                 });
             }
@@ -556,27 +580,21 @@
         const playerContainer = document.getElementById('fixtureByPlayer');
         playerContainer.innerHTML = '';
         
-        // Oyuncuları isme göre sırala
         const sortedPlayers = [...appData.players].sort((a, b) => a.name.localeCompare(b.name));
         
         sortedPlayers.forEach(p => {
-            // Bu oyuncunun oynadığı maçları bul (p1 veya p2)
             const playerMatches = matchesWithIdx.filter(m => m.p1 === p.name || m.p2 === p.name);
             
-            // Eğer maçı varsa listele
             if (playerMatches.length > 0) {
-                // Header (Oyuncu Adı)
                 playerContainer.innerHTML += `<div class="player-header"><span>${p.name}</span> <span style="font-size:11px; font-weight:normal; opacity:0.8;">${playerMatches.length} Maç</span></div>`;
                 
-                // Maçları Gün Sırasına Göre Diz
                 playerMatches.sort((a, b) => a.round - b.round);
 
                 playerMatches.forEach(m => {
-                    // Kartın üzerine "1. GÜN" yazısı ekleyelim ki karışmasın
                     const dayLabel = `<div style="text-align:center; font-size:10px; color:#999; margin-bottom:2px; font-weight:bold;">${m.round}. GÜN</div>`;
-                    const cardHtml = createMatchCardHTML(m);
-                    // dayLabel'i kartın içine değil, hemen üstüne ekleyebiliriz veya kart yapısını bozmamak için direkt basarız.
-                    // Kartın üstünde küçük bir etiket olarak dursun:
+                    // BURASI ÖNEMLİ: Oyuncu adını 2. parametre olarak gönderiyoruz
+                    // Böylece createMatchCardHTML fonksiyonu bu oyuncuyu hep SOLA alacak.
+                    const cardHtml = createMatchCardHTML(m, p.name);
                     playerContainer.innerHTML += `<div style="margin-top:-5px;">${dayLabel}${cardHtml}</div>`;
                 });
             }
