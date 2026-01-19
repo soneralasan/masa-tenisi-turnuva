@@ -41,7 +41,19 @@
         .day-header { text-align: center; margin: 25px 0 10px; font-weight: 800; color: var(--primary); text-transform: uppercase; letter-spacing: 1px; font-size: 13px; position: relative; }
         .day-header::after { content: ''; display: block; width: 40px; height: 3px; background: var(--accent); margin: 5px auto 0; border-radius: 2px; }
         
-        .player-header { background: var(--primary); color: white; padding: 10px; margin: 20px 0 5px 0; border-radius: 5px; font-weight: bold; text-align: left; padding-left: 15px; font-size: 14px; display: flex; justify-content: space-between; align-items: center; }
+        /* GÜNCELLENEN OYUNCU BAŞLIĞI (TOGGLE) */
+        .player-header { 
+            background: var(--primary); color: white; padding: 12px 15px; margin: 10px 0 2px 0; 
+            border-radius: 5px; font-weight: bold; text-align: left; font-size: 14px; 
+            display: flex; justify-content: space-between; align-items: center; cursor: pointer;
+            transition: background 0.2s; user-select: none;
+        }
+        .player-header:hover { background: #34495e; }
+        .player-header .arrow { transition: transform 0.3s ease; font-size: 10px; }
+        .player-header.active .arrow { transform: rotate(180deg); }
+        
+        /* GİZLİ MAÇ LİSTESİ */
+        .player-matches-container { display: none; padding-top: 5px; animation: slideDown 0.3s ease; }
         
         .match-card { background: white; padding: 12px; margin-bottom: 10px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: space-between; }
         
@@ -107,6 +119,7 @@
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid var(--accent); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 20px auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
 
         @media (max-width: 600px) { 
             .player { font-size: 12px; } 
@@ -475,13 +488,8 @@
     }
 
     // YARDIMCI FONKSİYON: Maç Kartı HTML'i Oluşturur
-    // forceLeftPlayer: Eğer belirtilirse, o oyuncu görsel olarak SOL tarafta gösterilir.
     function createMatchCardHTML(m, forceLeftPlayer = null) {
         const disabled = isAdmin ? '' : 'disabled';
-        
-        // --- 1. YERLEŞİM AYARLAMASI (SWAP LOGIC) ---
-        // Eğer odaklanılan oyuncu P2 ise, görsel olarak yer değiştir (Swap)
-        // Ancak inputlar veritabanında hala doğru yeri (s1 veya s2) hedeflemeli.
         
         let isSwapped = false;
         if (forceLeftPlayer && m.p2 === forceLeftPlayer) {
@@ -494,14 +502,12 @@
         const sLeftVal = isSwapped ? m.s2 : m.s1;
         const sRightVal = isSwapped ? m.s1 : m.s2;
 
-        const fieldLeft = isSwapped ? 's2' : 's1';   // Input hangi DB alanını güncelleyecek?
+        const fieldLeft = isSwapped ? 's2' : 's1';   
         const fieldRight = isSwapped ? 's1' : 's2';
         
         const vLeft = isSwapped ? (m.v2 || 0) : (m.v1 || 0);
         const vRight = isSwapped ? (m.v1 || 0) : (m.v2 || 0);
 
-        // --- 2. RENKLENDİRME ---
-        // Görüntülenen değerlere göre (sLeftVal vs sRightVal) renk ver
         let pLeftStyle = '';
         let pRightStyle = '';
         if (sLeftVal !== null && sLeftVal !== "" && sRightVal !== null && sRightVal !== "") {
@@ -511,7 +517,6 @@
             else if (valR > valL) { pLeftStyle = 'color:var(--danger);'; pRightStyle = 'color:var(--accent);'; }
         }
         
-        // --- 3. OY HESAPLAMASI ---
         const total = vLeft + vRight;
         const pctLeft = total > 0 ? Math.round((vLeft / total) * 100) : 0;
         const pctRight = total > 0 ? Math.round((vRight / total) * 100) : 0;
@@ -522,7 +527,6 @@
         let hukmenHtml = isAdmin ? `<div class="hukmen-toggle ${m.hukmen ? 'active' : ''}" onclick="toggleHukmen(${m.idx})">H</div>` : '';
         let hukmenLabel = (!isAdmin && m.hukmen) ? '<span class="hukmen-indicator">(HÜKMEN)</span>' : '';
 
-        // --- 4. HTML ÇIKTISI ---
         return `
             <div class="match-card">
                 <div class="player-container left">
@@ -551,7 +555,7 @@
         
         const matchesWithIdx = appData.matches.map((m, index) => ({...m, idx: index}));
 
-        // --- 1. GÜN GÖRÜNÜMÜ RENDER ---
+        // --- 1. GÜN GÖRÜNÜMÜ ---
         const dayContainer = document.getElementById('fixtureByDay');
         dayContainer.innerHTML = '';
         if (!matchesWithIdx.length) {
@@ -570,35 +574,58 @@
                 dayContainer.appendChild(header);
 
                 matches.forEach(m => {
-                    // Gün görünümünde standart sıralama (Swap yok)
                     dayContainer.innerHTML += createMatchCardHTML(m);
                 });
             }
         }
 
-        // --- 2. OYUNCU GÖRÜNÜMÜ RENDER ---
+        // --- 2. OYUNCU GÖRÜNÜMÜ (ACCORDION/TOGGLE) ---
         const playerContainer = document.getElementById('fixtureByPlayer');
         playerContainer.innerHTML = '';
         
         const sortedPlayers = [...appData.players].sort((a, b) => a.name.localeCompare(b.name));
         
-        sortedPlayers.forEach(p => {
+        sortedPlayers.forEach((p, index) => {
             const playerMatches = matchesWithIdx.filter(m => m.p1 === p.name || m.p2 === p.name);
             
             if (playerMatches.length > 0) {
-                playerContainer.innerHTML += `<div class="player-header"><span>${p.name}</span> <span style="font-size:11px; font-weight:normal; opacity:0.8;">${playerMatches.length} Maç</span></div>`;
+                const uniqueId = `matches-${index}`;
+                
+                // Toggle Başlığı
+                playerContainer.innerHTML += `
+                    <div class="player-header" onclick="togglePlayerAccordion('${uniqueId}', this)">
+                        <span>${p.name}</span>
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <span style="font-size:11px; opacity:0.8; font-weight:normal;">${playerMatches.length} Maç</span>
+                            <span class="arrow">▼</span>
+                        </div>
+                    </div>
+                `;
+                
+                // Gizli İçerik Kutusu
+                let matchesHtml = `<div id="${uniqueId}" class="player-matches-container">`;
                 
                 playerMatches.sort((a, b) => a.round - b.round);
-
                 playerMatches.forEach(m => {
                     const dayLabel = `<div style="text-align:center; font-size:10px; color:#999; margin-bottom:2px; font-weight:bold;">${m.round}. GÜN</div>`;
-                    // BURASI ÖNEMLİ: Oyuncu adını 2. parametre olarak gönderiyoruz
-                    // Böylece createMatchCardHTML fonksiyonu bu oyuncuyu hep SOLA alacak.
                     const cardHtml = createMatchCardHTML(m, p.name);
-                    playerContainer.innerHTML += `<div style="margin-top:-5px;">${dayLabel}${cardHtml}</div>`;
+                    matchesHtml += `<div style="margin-top:-5px;">${dayLabel}${cardHtml}</div>`;
                 });
+                
+                matchesHtml += `</div>`;
+                playerContainer.innerHTML += matchesHtml;
             }
         });
+    }
+
+    // Accordion Toggle Fonksiyonu
+    window.togglePlayerAccordion = function(elementId, headerElement) {
+        const content = document.getElementById(elementId);
+        const isVisible = content.style.display === 'block';
+        
+        // Aç / Kapa
+        content.style.display = isVisible ? 'none' : 'block';
+        headerElement.classList.toggle('active', !isVisible);
     }
 
     window.switchFixtureView = function(view) {
