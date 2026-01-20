@@ -23,9 +23,9 @@
         .tab-content { display: none; animation: fadeIn 0.4s ease; }
         .tab-content.active { display: block; }
 
-        /* Sub-Navbar (Fikstür İçin) */
+        /* Sub-Navbar (Ortak Kullanım) */
         .sub-navbar { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; background: #fff; padding: 10px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .sub-tab-btn { flex: 1; padding: 8px; border: 1px solid #ddd; background: #f9f9f9; color: #555; border-radius: 5px; cursor: pointer; font-size: 12px; font-weight: bold; transition: all 0.2s; }
+        .sub-tab-btn { flex: 1; padding: 8px; border: 1px solid #ddd; background: #f9f9f9; color: #555; border-radius: 5px; cursor: pointer; font-size: 11px; font-weight: bold; transition: all 0.2s; text-transform: uppercase; }
         .sub-tab-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
 
         /* Tablo */
@@ -142,23 +142,50 @@
     <div id="loading" class="loader"></div>
 
     <div id="puanDurumu" class="tab-content" style="display:none;">
-        <div class="table-container">
-            <table>
-                <thead>
-                    <tr>
-                        <th width="10%">#</th>
-                        <th width="40%" style="text-align:left; padding-left:15px;">OYUNCU</th>
-                        <th width="10%">O</th>
-                        <th width="10%">G</th>
-                        <th width="10%">M</th>
-                        <th width="10%">AV</th>
-                        <th width="10%">P</th>
-                    </tr>
-                </thead>
-                <tbody id="standingsBody"></tbody>
-            </table>
+        
+        <div class="sub-navbar">
+            <button class="sub-tab-btn active" id="btnStandingsStandard" onclick="switchStandingsView('standard')">GENEL PUAN</button>
+            <button class="sub-tab-btn" id="btnStandingsWeighted" onclick="switchStandingsView('weighted')">AĞIRLIKLI ORTALAMA</button>
         </div>
-        <p style="text-align:center; color:#7f8c8d; font-size:11px; margin-top:5px;">İlk 8 Play-off oynar. | G:2 Puan, M:1 Puan, Hükmen: 0 Puan</p>
+
+        <div id="standingsStandard">
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th width="10%">#</th>
+                            <th width="40%" style="text-align:left; padding-left:15px;">OYUNCU</th>
+                            <th width="10%">O</th>
+                            <th width="10%">G</th>
+                            <th width="10%">M</th>
+                            <th width="10%">AV</th>
+                            <th width="10%">P</th>
+                        </tr>
+                    </thead>
+                    <tbody id="standingsBody"></tbody>
+                </table>
+            </div>
+            <p style="text-align:center; color:#7f8c8d; font-size:11px; margin-top:5px;">Sıralama: Puan > Averaj > İsim | G:2 Puan, M:1 Puan, Hükmen: 0 Puan</p>
+        </div>
+
+        <div id="standingsWeighted" style="display:none;">
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th width="10%">#</th>
+                            <th width="40%" style="text-align:left; padding-left:15px;">OYUNCU</th>
+                            <th width="10%">O</th>
+                            <th width="10%">P</th>
+                            <th width="15%" style="background:#27ae60;">ORT</th>
+                        </tr>
+                    </thead>
+                    <tbody id="weightedStandingsBody"></tbody>
+                </table>
+            </div>
+            <p style="text-align:center; color:#7f8c8d; font-size:11px; margin-top:5px;">Sıralama: (Toplam Puan / Oynanan Maç)</p>
+        </div>
+
     </div>
 
     <div id="fikstur" class="tab-content" style="display:none;">
@@ -359,7 +386,7 @@
 
         appData.players.forEach(p => p.stats.av = (p.stats.a || 0) - (p.stats.y || 0));
 
-        // Sıralama: 1. Puan, 2. Averaj, 3. İsim (A-Z)
+        // Standart Sıralama: 1. Puan, 2. Averaj, 3. İsim (A-Z)
         appData.players.sort((a, b) => {
             if (b.stats.p !== a.stats.p) return b.stats.p - a.stats.p;
             if (b.stats.av !== a.stats.av) return b.stats.av - a.stats.av;
@@ -471,10 +498,16 @@
     // 4. ARAYÜZ (RENDER) - GÜNCELLENDİ
     // ============================================================
     function renderStandings() {
-        const tbody = document.getElementById('standingsBody');
-        tbody.innerHTML = '';
+        const standardBody = document.getElementById('standingsBody');
+        const weightedBody = document.getElementById('weightedStandingsBody');
+        
+        standardBody.innerHTML = '';
+        weightedBody.innerHTML = '';
+
+        // --- 1. TABLO (STANDART) ---
+        // Global appData.players zaten standart kurallara göre sıralı geliyor
         appData.players.forEach((p, index) => {
-            tbody.innerHTML += `
+            standardBody.innerHTML += `
                 <tr class="${index < 8 ? 'top8' : ''}">
                     <td>${index + 1}</td>
                     <td style="text-align:left; padding-left:15px; font-weight:600;">${p.name}</td>
@@ -485,6 +518,39 @@
                     <td><strong>${p.stats.p}</strong></td>
                 </tr>`;
         });
+
+        // --- 2. TABLO (AĞIRLIKLI ORTALAMA) ---
+        // Yeni bir dizi oluşturup ağırlıklı ortalamaya göre sıralayalım
+        const weightedPlayers = [...appData.players].sort((a, b) => {
+            const avgA = a.stats.o > 0 ? a.stats.p / a.stats.o : 0;
+            const avgB = b.stats.o > 0 ? b.stats.p / b.stats.o : 0;
+            
+            // Büyükten küçüğe sırala
+            if (avgB !== avgA) return avgB - avgA;
+            // Eşitse toplam puana bak
+            return b.stats.p - a.stats.p;
+        });
+
+        weightedPlayers.forEach((p, index) => {
+            const avg = p.stats.o > 0 ? (p.stats.p / p.stats.o).toFixed(2) : "0.00";
+            weightedBody.innerHTML += `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td style="text-align:left; padding-left:15px; font-weight:600;">${p.name}</td>
+                    <td>${p.stats.o}</td>
+                    <td>${p.stats.p}</td>
+                    <td style="font-weight:bold; color:var(--accent); background:#f0f9f4;">${avg}</td>
+                </tr>`;
+        });
+    }
+
+    // Puan Durumu Sekme Geçişi
+    window.switchStandingsView = function(view) {
+        document.getElementById('standingsStandard').style.display = view === 'standard' ? 'block' : 'none';
+        document.getElementById('standingsWeighted').style.display = view === 'weighted' ? 'block' : 'none';
+        
+        document.getElementById('btnStandingsStandard').classList.toggle('active', view === 'standard');
+        document.getElementById('btnStandingsWeighted').classList.toggle('active', view === 'weighted');
     }
 
     // YARDIMCI FONKSİYON: Maç Kartı HTML'i Oluşturur
@@ -628,6 +694,7 @@
         headerElement.classList.toggle('active', !isVisible);
     }
 
+    // Fikstür Sekme Geçişi
     window.switchFixtureView = function(view) {
         document.getElementById('fixtureByDay').style.display = view === 'day' ? 'block' : 'none';
         document.getElementById('fixtureByPlayer').style.display = view === 'player' ? 'block' : 'none';
