@@ -38,8 +38,8 @@
         .top8 td:first-child { border-left: 4px solid var(--accent); font-weight: bold; color: var(--accent); }
 
         /* Çekilen Oyuncu Satırı (Siyah Arka Plan) */
-        .withdrawn-row { background-color: #333 !important; color: #bdc3c7 !important; }
-        .withdrawn-row td { border-bottom: 1px solid #555; }
+        .withdrawn-row { background-color: #222 !important; color: #bbb !important; }
+        .withdrawn-row td { border-bottom: 1px solid #444; }
         
         /* Fikstür Kartları */
         .day-header { text-align: center; margin: 25px 0 10px; font-weight: 800; color: var(--primary); text-transform: uppercase; letter-spacing: 1px; font-size: 13px; position: relative; }
@@ -225,11 +225,11 @@
                 <li>Masaya elle veya vücutla müdahale yasaktır.</li>
             </ul>
     
-            <h3>4. Sayı Rakibe Verilir Eğer</h3>
+            <h3>4. Sayı Rakibe Verilir Eğer;</h3>
             <ul>
                 <li>Top masaya değmeden dışarı giderse.</li>
                 <li>Top fileye takılıp karşıya geçmezse.</li>
-                <li>Top iki kez kendi sahanıza değerse.</li>
+                <li>Top iki kez kendi sahana değerse.</li>
                 <li>Servis kurallara uygun atılmazsa.</li>
             </ul>
     
@@ -246,7 +246,7 @@
             <ul>
                 <li>Galibiyet: <strong>2 Puan</strong>, Mağlubiyet: <strong>1 Puan</strong>.</li>
                 <li>Hükmen mağlubiyet durumunda <strong>0 Puan</strong> verilir.</li>
-                <li>Turnuvadan çekilen oyuncunun oynadığı ve oynayacağı tüm maçlar geçersiz sayılır (rakibe puan/etki vermez).</li>
+                <li><strong>Çekilen Oyuncu Kuralı:</strong> Turnuvadan çekilen oyuncu tüm maçlarını hükmen (0-2) kaybetmiş sayılır. Rakipleri oynanmış veya oynanmamış tüm maçlardan 2 puan kazanır.</li>
                 <li>Grup maçları sonunda puan cetvelindeki <strong>ilk 8 oyuncu</strong> Play-off oynamaya hak kazanır.</li>
                 <li>Puan eşitliğinde sırasıyla; Genel Averaj ve İsim Sıralaması dikkate alınır.</li>
             </ul>
@@ -287,9 +287,6 @@
 <div id="statusBar" class="status-bar"></div>
 
 <script>
-    // ============================================================
-    // 1. AYARLAR: FIREBASE BİLGİLERİ
-    // ============================================================
     const firebaseConfig = {
         apiKey:  "AIzaSyApl74nGCJrG42BWFJaR_v3gqHGlF2R_3M",
         authDomain: "otomotiv-masa-tenisi-turnuvasi.firebaseapp.com",
@@ -305,9 +302,6 @@
     const db = firebase.database();
     const auth = firebase.auth();
 
-    // ============================================================
-    // 2. STATE YÖNETİMİ
-    // ============================================================
     let appData = { players: [], matches: [], started: false };
     let isAdmin = false;
 
@@ -343,31 +337,49 @@
         });
     };
 
-    // ============================================================
-    // 3. İŞLEVLER (LOGIC)
-    // ============================================================
     function isValidScore(val) {
         return val !== null && val !== "" && !isNaN(val);
     }
 
     function calculateStandings() {
-        // İstatistikleri sıfırla
         appData.players.forEach(p => p.stats = { p:0, o:0, g:0, m:0, a:0, y:0, av:0 });
 
-        // Çekilenleri belirle
         const withdrawnPlayers = appData.players.filter(p => p.withdrawn).map(p => p.name);
 
         appData.matches.forEach(m => {
-            // ÖNEMLİ: Eğer oyunculardan biri bile çekildiyse, bu maçı HİÇ SAYMA
-            if (withdrawnPlayers.includes(m.p1) || withdrawnPlayers.includes(m.p2)) {
-                return; // Döngüyü atla
-            }
+            let p1 = appData.players.find(pl => pl.name === m.p1);
+            let p2 = appData.players.find(pl => pl.name === m.p2);
 
-            if (isValidScore(m.s1) && isValidScore(m.s2)) {
-                const p1 = appData.players.find(pl => pl.name === m.p1);
-                const p2 = appData.players.find(pl => pl.name === m.p2);
+            if (!p1 || !p2) return;
 
-                if (p1 && p2) {
+            // --- ÇEKİLME (HÜKMEN) KONTROLÜ ---
+            const p1W = withdrawnPlayers.includes(m.p1);
+            const p2W = withdrawnPlayers.includes(m.p2);
+
+            if (p1W && p2W) {
+                // İkisi de çekilmişse maç oynanmamış sayılır (veya iki taraf da 0 alır)
+                return;
+            } else if (p1W) {
+                // P1 Çekilmiş -> P2 Kazanır (2-0)
+                p1.stats.o++; p2.stats.o++;
+                p1.stats.y += 2; // P1 2 sayı yedi
+                p2.stats.a += 2; // P2 2 sayı attı
+                
+                p2.stats.g++; p2.stats.p += 2; // P2 Galip
+                p1.stats.m++; p1.stats.p += 0; // P1 Mağlup (Hükmen)
+            
+            } else if (p2W) {
+                // P2 Çekilmiş -> P1 Kazanır (2-0)
+                p1.stats.o++; p2.stats.o++;
+                p2.stats.y += 2;
+                p1.stats.a += 2;
+                
+                p1.stats.g++; p1.stats.p += 2; // P1 Galip
+                p2.stats.m++; p2.stats.p += 0; // P2 Mağlup
+            
+            } else {
+                // --- NORMAL MAÇ ---
+                if (isValidScore(m.s1) && isValidScore(m.s2)) {
                     const s1 = parseInt(m.s1);
                     const s2 = parseInt(m.s2);
 
@@ -386,7 +398,7 @@
             }
         });
 
-        // Averaj Hesapla
+        // Averaj
         appData.players.forEach(p => p.stats.av = (p.stats.a || 0) - (p.stats.y || 0));
 
         // Sıralama
@@ -399,7 +411,7 @@
         renderStandings();
     }
 
-    // --- OYUNCU ÇEKİLME (HÜKMEN) ---
+    // --- OYUNCU ÇEKİLME ---
     window.togglePlayerWithdrawal = function(playerName, event) {
         event.stopPropagation();
         if(!isAdmin) return;
@@ -407,24 +419,19 @@
         const player = appData.players.find(p => p.name === playerName);
         if(player) {
             player.withdrawn = !player.withdrawn;
-            
-            // Veriyi kaydetmeden önce hesaplama yapıp yerelde güncelle
             calculateStandings();
             renderFixture();
             renderStandings();
-            
-            showStatus(player.withdrawn ? `${playerName} çekildi. (Maçları silindi)` : `${playerName} geri döndü.`, "success");
+            showStatus(player.withdrawn ? `${playerName} çekildi. (Tüm maçları 0-2)` : `${playerName} geri döndü.`, "success");
         }
     }
 
-    // --- OY KULLANMA ---
     window.castVote = function(matchIdx, playerKey) {
         const storageKey = 'voted_match_' + matchIdx;
         if (localStorage.getItem(storageKey)) {
             showStatus("Zaten oy kullandınız!", "error");
             return;
         }
-
         const matchRef = db.ref('turnuva/matches/' + matchIdx);
         matchRef.transaction((match) => {
             if (match) {
@@ -441,7 +448,6 @@
         });
     }
 
-    // --- YÖNETİCİ ---
     function importFromPythonJson() {
         const fileInput = document.getElementById('jsonFileInput');
         const file = fileInput.files[0];
@@ -515,9 +521,6 @@
             .catch(err => alert(err.message));
     }
 
-    // ============================================================
-    // 4. ARAYÜZ (RENDER)
-    // ============================================================
     function renderStandings() {
         const standardBody = document.getElementById('standingsBody');
         const weightedBody = document.getElementById('weightedStandingsBody');
@@ -525,7 +528,6 @@
         standardBody.innerHTML = '';
         weightedBody.innerHTML = '';
 
-        // --- TABLO 1 ---
         appData.players.forEach((p, index) => {
             const rowClass = p.withdrawn ? 'withdrawn-row' : (index < 8 ? 'top8' : '');
             standardBody.innerHTML += `
@@ -540,14 +542,13 @@
                 </tr>`;
         });
 
-        // --- TABLO 2 ---
         const weightedPlayers = [...appData.players].sort((a, b) => {
+            // Çekilenleri en alta at (İsteğe bağlı, burada karışık kalabilir çünkü puanları zaten düşük olacak)
             if(a.withdrawn && !b.withdrawn) return 1; 
             if(!a.withdrawn && b.withdrawn) return -1;
             
             const avgA = a.stats.o > 0 ? a.stats.p / a.stats.o : 0;
             const avgB = b.stats.o > 0 ? b.stats.p / b.stats.o : 0;
-            
             if (avgB !== avgA) return avgB - avgA;
             return b.stats.p - a.stats.p;
         });
@@ -574,13 +575,43 @@
     }
 
     function createMatchCardHTML(m, forceLeftPlayer = null) {
-        const disabled = isAdmin ? '' : 'disabled';
+        // --- ÇEKİLME KONTROLÜ İÇİN OYUNCULARI BUL ---
+        const p1Obj = appData.players.find(p => p.name === m.p1);
+        const p2Obj = appData.players.find(p => p.name === m.p2);
+        
+        const p1Withdrawn = p1Obj ? p1Obj.withdrawn : false;
+        const p2Withdrawn = p2Obj ? p2Obj.withdrawn : false;
+        const isGameVoid = p1Withdrawn || p2Withdrawn;
+
+        const disabled = (isAdmin && !isGameVoid) ? '' : 'disabled';
+        
         let isSwapped = forceLeftPlayer && m.p2 === forceLeftPlayer;
 
         const pLeftName = isSwapped ? m.p2 : m.p1;
         const pRightName = isSwapped ? m.p1 : m.p2;
-        const sLeftVal = isSwapped ? m.s2 : m.s1;
-        const sRightVal = isSwapped ? m.s1 : m.s2;
+        
+        // --- SKORLARI BELİRLE ---
+        let sLeftVal, sRightVal;
+        
+        if (isGameVoid) {
+            // Çekilme varsa skoru otomatik ayarla
+            // Eğer SOLDAKİ çekilmişse -> 0 - 2
+            // Eğer SAĞDAKİ çekilmişse -> 2 - 0
+            const leftIsWithdrawn = isSwapped ? p2Withdrawn : p1Withdrawn;
+            
+            if (p1Withdrawn && p2Withdrawn) {
+                sLeftVal = 0; sRightVal = 0; // İkisi de yok
+            } else if (leftIsWithdrawn) {
+                sLeftVal = 0; sRightVal = 2;
+            } else {
+                sLeftVal = 2; sRightVal = 0;
+            }
+        } else {
+            // Normal skor
+            sLeftVal = isSwapped ? m.s2 : m.s1;
+            sRightVal = isSwapped ? m.s1 : m.s2;
+        }
+
         const fieldLeft = isSwapped ? 's2' : 's1';   
         const fieldRight = isSwapped ? 's1' : 's2';
         const vLeft = isSwapped ? (m.v2 || 0) : (m.v1 || 0);
@@ -597,8 +628,19 @@
         const pctLeft = total > 0 ? Math.round((vLeft / total) * 100) : 0;
         const pctRight = total > 0 ? Math.round((vRight / total) * 100) : 0;
         
-        let hukmenHtml = isAdmin ? `<div class="hukmen-toggle ${m.hukmen ? 'active' : ''}" onclick="toggleHukmen(${m.idx})">H</div>` : '';
-        let hukmenLabel = (!isAdmin && m.hukmen) ? '<span class="hukmen-indicator">(HÜKMEN)</span>' : '';
+        // Eğer çekilme varsa toggle yerine sabit etiket göster
+        let hukmenHtml = '';
+        let hukmenLabel = '';
+        
+        if (isGameVoid) {
+            hukmenLabel = '<span class="hukmen-indicator">(HÜKMEN)</span>';
+        } else {
+            hukmenHtml = isAdmin ? `<div class="hukmen-toggle ${m.hukmen ? 'active' : ''}" onclick="toggleHukmen(${m.idx})">H</div>` : '';
+            hukmenLabel = (!isAdmin && m.hukmen) ? '<span class="hukmen-indicator">(HÜKMEN)</span>' : '';
+        }
+
+        const inputL = `<input type="number" ${disabled} value="${sLeftVal !== null ? sLeftVal : ''}" oninput="updateScore(${m.idx}, '${fieldLeft}', this.value)">`;
+        const inputR = `<input type="number" ${disabled} value="${sRightVal !== null ? sRightVal : ''}" oninput="updateScore(${m.idx}, '${fieldRight}', this.value)">`;
 
         return `
             <div class="match-card">
@@ -607,9 +649,9 @@
                     <div class="player p1" style="${pLeftStyle}; margin-left:8px;">${pLeftName}</div>
                 </div>
                 <div class="scores">
-                    <input type="number" ${disabled} value="${sLeftVal !== null ? sLeftVal : ''}" oninput="updateScore(${m.idx}, '${fieldLeft}', this.value)">
+                    ${inputL}
                     <span>-</span>
-                    <input type="number" ${disabled} value="${sRightVal !== null ? sRightVal : ''}" oninput="updateScore(${m.idx}, '${fieldRight}', this.value)">
+                    ${inputR}
                     ${hukmenHtml}
                     ${hukmenLabel}
                 </div>
@@ -625,7 +667,6 @@
         
         const matchesWithIdx = appData.matches.map((m, index) => ({...m, idx: index}));
 
-        // --- GÜN GÖRÜNÜMÜ ---
         const dayContainer = document.getElementById('fixtureByDay');
         dayContainer.innerHTML = '';
         if (!matchesWithIdx.length) dayContainer.innerHTML = '<p style="text-align:center;">Maç yok.</p>';
@@ -638,7 +679,6 @@
             }
         }
 
-        // --- OYUNCU GÖRÜNÜMÜ ---
         const playerContainer = document.getElementById('fixtureByPlayer');
         playerContainer.innerHTML = '';
         const sortedPlayers = [...appData.players].sort((a, b) => a.name.localeCompare(b.name));
