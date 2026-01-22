@@ -23,7 +23,7 @@
         .tab-content { display: none; animation: fadeIn 0.4s ease; }
         .tab-content.active { display: block; }
 
-        /* Sub-Navbar (Ortak Kullanım) */
+        /* Sub-Navbar */
         .sub-navbar { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; background: #fff; padding: 10px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .sub-tab-btn { flex: 1; padding: 8px; border: 1px solid #ddd; background: #f9f9f9; color: #555; border-radius: 5px; cursor: pointer; font-size: 11px; font-weight: bold; transition: all 0.2s; text-transform: uppercase; }
         .sub-tab-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
@@ -38,14 +38,14 @@
         .top8 td:first-child { border-left: 4px solid var(--accent); font-weight: bold; color: var(--accent); }
 
         /* Çekilen Oyuncu Satırı (Siyah Arka Plan) */
-        .withdrawn-row { background-color: black !important; color: #bdc3c7 !important; }
-        .withdrawn-row td { border-bottom: 1px solid #444; }
+        .withdrawn-row { background-color: #333 !important; color: #bdc3c7 !important; }
+        .withdrawn-row td { border-bottom: 1px solid #555; }
         
         /* Fikstür Kartları */
         .day-header { text-align: center; margin: 25px 0 10px; font-weight: 800; color: var(--primary); text-transform: uppercase; letter-spacing: 1px; font-size: 13px; position: relative; }
         .day-header::after { content: ''; display: block; width: 40px; height: 3px; background: var(--accent); margin: 5px auto 0; border-radius: 2px; }
         
-        /* GÜNCELLENEN OYUNCU BAŞLIĞI (TOGGLE) */
+        /* Player Toggle Header */
         .player-header { 
             background: var(--primary); color: white; padding: 12px 15px; margin: 10px 0 2px 0; 
             border-radius: 5px; font-weight: bold; text-align: left; font-size: 14px; 
@@ -56,7 +56,7 @@
         .player-header .arrow { transition: transform 0.3s ease; font-size: 10px; }
         .player-header.active .arrow { transform: rotate(180deg); }
         
-        /* Çekilme Butonu (Player Header İçinde) */
+        /* Çekilme Butonu */
         .withdraw-btn {
             background: var(--danger); color: white; border: none; padding: 4px 8px; 
             border-radius: 4px; font-size: 10px; cursor: pointer; margin-right: 10px;
@@ -64,58 +64,35 @@
         }
         .withdraw-btn.active { background: #555; color: #bbb; border: 1px solid #777; }
 
-        /* GİZLİ MAÇ LİSTESİ */
+        /* Maç Listesi */
         .player-matches-container { display: none; padding-top: 5px; animation: slideDown 0.3s ease; }
-        
         .match-card { background: white; padding: 12px; margin-bottom: 10px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: space-between; }
         
-        /* Player Alanı ve Oy Oranları */
+        /* Player Alanı ve Skorlar */
         .player-container { width: 35%; display: flex; align-items: center; justify-content: space-between; }
         .player-container.left { flex-direction: row; text-align: left; }
         .player-container.right { flex-direction: row-reverse; text-align: right; }
-
         .player { font-weight: 600; font-size: 13px; word-wrap: break-word; line-height: 1.2; transition: color 0.3s; width: 100%; }
         
-        /* Güncellenen Oy Kutusu Stili */
-        .vote-ratio { 
-            font-size: 11px; color: #333; font-weight: bold; 
-            background: #f0f2f5; padding: 4px 6px; border-radius: 4px; 
-            min-width: 35px; text-align: center; line-height: 1.1; 
-        }
-        
-        /* Skor Alanı - Genişlik esnek yapıldı */
         .scores { display: flex; align-items: center; gap: 5px; justify-content: center; width: auto; min-width: 120px; }
         .scores input { width: 30px; height: 30px; text-align: center; font-size: 16px; border: 1px solid #ddd; border-radius: 4px; font-weight: bold; background: #f9f9f9; }
         .scores input:focus { outline: none; border-color: var(--accent); background: white; }
         .scores input:disabled { background: #eee; color: #333; border: none; }
 
-        /* Oylama Butonları */
-        .vote-btn { 
-            background: white; border: 1px solid #ddd; border-radius: 20px; 
-            padding: 5px 10px; font-size: 12px; cursor: pointer; color: #555; 
-            display: flex; align-items: center; gap: 5px; transition: 0.2s;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        }
+        .vote-ratio { font-size: 11px; color: #333; font-weight: bold; background: #f0f2f5; padding: 4px 6px; border-radius: 4px; min-width: 35px; text-align: center; line-height: 1.1; }
+        
+        .vote-btn { background: white; border: 1px solid #ddd; border-radius: 20px; padding: 5px 10px; font-size: 12px; cursor: pointer; color: #555; display: flex; align-items: center; gap: 5px; transition: 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .vote-btn:hover { background: #f9f9f9; border-color: var(--vote); color: var(--vote); }
         .vote-btn.voted { background: var(--vote); color: white; border-color: var(--vote); pointer-events: none; }
         
-        /* Hükmen Butonu */
-        .hukmen-toggle { 
-            width: 24px; height: 24px; border-radius: 4px; border: 1px solid #ccc; 
-            color: #777; font-size: 10px; font-weight: bold; display: flex; 
-            align-items: center; justify-content: center; cursor: pointer; 
-            margin-left: 8px; user-select: none; background: #fff; transition: all 0.2s; flex-shrink: 0;
-        }
+        .hukmen-toggle { width: 24px; height: 24px; border-radius: 4px; border: 1px solid #ccc; color: #777; font-size: 10px; font-weight: bold; display: flex; align-items: center; justify-content: center; cursor: pointer; margin-left: 8px; user-select: none; background: #fff; transition: all 0.2s; flex-shrink: 0; }
         .hukmen-toggle:hover { background: #f0f0f0; }
         .hukmen-toggle.active { background: var(--danger); color: white; border-color: var(--danger); }
         .hukmen-indicator { font-size: 10px; color: var(--danger); font-weight: bold; margin-left: 5px; }
 
-        /* Admin & Rules Box */
         .admin-box, .rules-box { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         .admin-box { text-align: center; }
         .rules-box { text-align: left; line-height: 1.6; color: #444; }
-        
-        /* Kurallar Listesi */
         .rules-box h3 { color: var(--accent); margin-top: 20px; font-size: 16px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
         .rules-box ul { margin: 10px 0; padding-left: 20px; }
         .rules-box li { margin-bottom: 5px; font-size: 14px; }
@@ -154,7 +131,6 @@
     <div id="loading" class="loader"></div>
 
     <div id="puanDurumu" class="tab-content" style="display:none;">
-        
         <div class="sub-navbar">
             <button class="sub-tab-btn active" id="btnStandingsStandard" onclick="switchStandingsView('standard')">GENEL PUAN</button>
             <button class="sub-tab-btn" id="btnStandingsWeighted" onclick="switchStandingsView('weighted')">AĞIRLIKLI ORTALAMA</button>
@@ -197,18 +173,15 @@
             </div>
             <p style="text-align:center; color:#7f8c8d; font-size:11px; margin-top:5px;">Sıralama: (Toplam Puan / Oynanan Maç)</p>
         </div>
-
     </div>
 
     <div id="fikstur" class="tab-content" style="display:none;">
-        
         <div class="sub-navbar">
             <button class="sub-tab-btn active" id="btnDayView" onclick="switchFixtureView('day')">📅 GÜN GÖRÜNÜMÜ</button>
             <button class="sub-tab-btn" id="btnPlayerView" onclick="switchFixtureView('player')">👤 OYUNCU GÖRÜNÜMÜ</button>
         </div>
 
         <div id="fixtureByDay"></div>
-        
         <div id="fixtureByPlayer" style="display:none;"></div>
 
         <div id="saveBtnArea" style="margin-top:20px; display:none; position:sticky; bottom:20px;">
@@ -252,11 +225,11 @@
                 <li>Masaya elle veya vücutla müdahale yasaktır.</li>
             </ul>
     
-            <h3>4. Sayı Rakibe Verilir Eğer;</h3>
+            <h3>4. Sayı Rakibe Verilir Eğer</h3>
             <ul>
                 <li>Top masaya değmeden dışarı giderse.</li>
                 <li>Top fileye takılıp karşıya geçmezse.</li>
-                <li>Top iki kez kendi sahana değerse.</li>
+                <li>Top iki kez kendi sahanıza değerse.</li>
                 <li>Servis kurallara uygun atılmazsa.</li>
             </ul>
     
@@ -273,6 +246,7 @@
             <ul>
                 <li>Galibiyet: <strong>2 Puan</strong>, Mağlubiyet: <strong>1 Puan</strong>.</li>
                 <li>Hükmen mağlubiyet durumunda <strong>0 Puan</strong> verilir.</li>
+                <li>Turnuvadan çekilen oyuncunun oynadığı ve oynayacağı tüm maçlar geçersiz sayılır (rakibe puan/etki vermez).</li>
                 <li>Grup maçları sonunda puan cetvelindeki <strong>ilk 8 oyuncu</strong> Play-off oynamaya hak kazanır.</li>
                 <li>Puan eşitliğinde sırasıyla; Genel Averaj ve İsim Sıralaması dikkate alınır.</li>
             </ul>
@@ -344,7 +318,7 @@
             document.getElementById('adminControls').style.display = isAdmin ? 'block' : 'none';
             document.getElementById('saveBtnArea').style.display = isAdmin ? 'block' : 'none';
             if(isAdmin) showStatus("Yönetici modundasınız.", "success");
-            renderFixture(); // Yetki değişince tekrar render et
+            renderFixture(); 
         });
 
         db.ref('turnuva').on('value', (snapshot) => {
@@ -377,17 +351,16 @@
     }
 
     function calculateStandings() {
-        // 1. Herkesin istatistiğini sıfırla
+        // İstatistikleri sıfırla
         appData.players.forEach(p => p.stats = { p:0, o:0, g:0, m:0, a:0, y:0, av:0 });
 
-        // 2. Çekilen oyuncuların listesini al
+        // Çekilenleri belirle
         const withdrawnPlayers = appData.players.filter(p => p.withdrawn).map(p => p.name);
 
-        // 3. Maçları dön
         appData.matches.forEach(m => {
-            // EĞER MAÇTAKİ OYUNCULARDAN BİRİ ÇEKİLDİYSE, BU MAÇI HESAPLAMAYA KATMA
+            // ÖNEMLİ: Eğer oyunculardan biri bile çekildiyse, bu maçı HİÇ SAYMA
             if (withdrawnPlayers.includes(m.p1) || withdrawnPlayers.includes(m.p2)) {
-                return; // Döngünün bu adımını atla (continue gibi çalışır forEach'te return)
+                return; // Döngüyü atla
             }
 
             if (isValidScore(m.s1) && isValidScore(m.s2)) {
@@ -413,10 +386,10 @@
             }
         });
 
-        // 4. Averaj Hesapla (Sadece aktif oyuncular için anlamlı, çekilenlerin zaten 0)
+        // Averaj Hesapla
         appData.players.forEach(p => p.stats.av = (p.stats.a || 0) - (p.stats.y || 0));
 
-        // 5. Sıralama
+        // Sıralama
         appData.players.sort((a, b) => {
             if (b.stats.p !== a.stats.p) return b.stats.p - a.stats.p;
             if (b.stats.av !== a.stats.av) return b.stats.av - a.stats.av;
@@ -428,20 +401,19 @@
 
     // --- OYUNCU ÇEKİLME (HÜKMEN) ---
     window.togglePlayerWithdrawal = function(playerName, event) {
-        event.stopPropagation(); // Accordion açılmasını engelle
+        event.stopPropagation();
         if(!isAdmin) return;
 
         const player = appData.players.find(p => p.name === playerName);
         if(player) {
-            // Durumu tersine çevir (Çekildi <-> Aktif)
             player.withdrawn = !player.withdrawn;
             
-            // Hesapla ve Arayüzü Güncelle
+            // Veriyi kaydetmeden önce hesaplama yapıp yerelde güncelle
             calculateStandings();
-            renderFixture(); // Butonun durumunu güncellemek için
-            renderStandings(); // Tabloyu güncellemek için
+            renderFixture();
+            renderStandings();
             
-            showStatus(player.withdrawn ? `${playerName} turnuvadan çekildi.` : `${playerName} tekrar aktif edildi.`, "success");
+            showStatus(player.withdrawn ? `${playerName} çekildi. (Maçları silindi)` : `${playerName} geri döndü.`, "success");
         }
     }
 
@@ -449,29 +421,19 @@
     window.castVote = function(matchIdx, playerKey) {
         const storageKey = 'voted_match_' + matchIdx;
         if (localStorage.getItem(storageKey)) {
-            showStatus("Bu maç için zaten oy kullandınız!", "error");
+            showStatus("Zaten oy kullandınız!", "error");
             return;
         }
 
         const matchRef = db.ref('turnuva/matches/' + matchIdx);
-        
         matchRef.transaction((match) => {
             if (match) {
-                if (playerKey === 1) {
-                    match.v1 = (match.v1 || 0) + 1;
-                } else {
-                    match.v2 = (match.v2 || 0) + 1;
-                }
+                if (playerKey === 1) match.v1 = (match.v1 || 0) + 1;
+                else match.v2 = (match.v2 || 0) + 1;
             }
             return match;
         }, (error, committed) => {
-            if (error) {
-                if (error.code === 'PERMISSION_DENIED') {
-                    showStatus("HATA: İzin Yok!", "error");
-                } else {
-                    showStatus("Oy verilemedi: " + error.message, "error");
-                }
-            } else if (committed) {
+            if (committed) {
                 localStorage.setItem(storageKey, "true");
                 showStatus("Oyunuz kaydedildi!", "success");
                 renderVoting(); 
@@ -483,14 +445,13 @@
     function importFromPythonJson() {
         const fileInput = document.getElementById('jsonFileInput');
         const file = fileInput.files[0];
-        if (!file) return alert("Lütfen bir dosya seçin.");
+        if (!file) return alert("Dosya seçiniz.");
 
         const reader = new FileReader();
         reader.onload = function(e) {
             try {
                 const pyData = JSON.parse(e.target.result);
-                if (!pyData.oyuncular || !pyData.maclar) return alert("Geçersiz dosya formatı.");
-                if(!confirm("Mevcut veriler silinecek. Onaylıyor musunuz?")) return;
+                if(!confirm("Veriler silinecek. Onaylıyor musunuz?")) return;
 
                 const newPlayers = pyData.oyuncular.map(name => ({
                     name: name,
@@ -511,21 +472,20 @@
                 calculateStandings();
 
                 db.ref('turnuva').set(appData)
-                    .then(() => { alert("Veriler yüklendi!"); openTab('puanDurumu'); })
+                    .then(() => { alert("Yüklendi!"); openTab('puanDurumu'); })
                     .catch(err => alert("Hata: " + err.message));
-
-            } catch (error) { alert("Dosya okuma hatası."); }
+            } catch (error) { alert("Dosya hatası."); }
         };
         reader.readAsText(file);
     }
 
     function downloadJsonData() {
-        if(!appData) return alert("İndirilecek veri yok.");
+        if(!appData) return alert("Veri yok.");
         const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appData, null, 2));
         const downloadAnchorNode = document.createElement('a');
         downloadAnchorNode.setAttribute("href", dataStr);
-        downloadAnchorNode.setAttribute("download", "turnuva_verisi_" + new Date().toISOString().slice(0,10) + ".json");
-        document.body.appendChild(downloadAnchorNode); // required for firefox
+        downloadAnchorNode.setAttribute("download", "turnuva_verisi.json");
+        document.body.appendChild(downloadAnchorNode);
         downloadAnchorNode.click();
         downloadAnchorNode.remove();
     }
@@ -551,12 +511,12 @@
         if(!isAdmin) return;
         calculateStandings(); 
         db.ref('turnuva').update(appData)
-            .then(() => showStatus("Değişiklikler yayınlandı!", "success"))
+            .then(() => showStatus("Yayınlandı!", "success"))
             .catch(err => alert(err.message));
     }
 
     // ============================================================
-    // 4. ARAYÜZ (RENDER) - GÜNCELLENDİ
+    // 4. ARAYÜZ (RENDER)
     // ============================================================
     function renderStandings() {
         const standardBody = document.getElementById('standingsBody');
@@ -565,10 +525,9 @@
         standardBody.innerHTML = '';
         weightedBody.innerHTML = '';
 
-        // --- 1. TABLO (STANDART) ---
+        // --- TABLO 1 ---
         appData.players.forEach((p, index) => {
             const rowClass = p.withdrawn ? 'withdrawn-row' : (index < 8 ? 'top8' : '');
-            
             standardBody.innerHTML += `
                 <tr class="${rowClass}">
                     <td>${index + 1}</td>
@@ -581,8 +540,11 @@
                 </tr>`;
         });
 
-        // --- 2. TABLO (AĞIRLIKLI ORTALAMA) ---
+        // --- TABLO 2 ---
         const weightedPlayers = [...appData.players].sort((a, b) => {
+            if(a.withdrawn && !b.withdrawn) return 1; 
+            if(!a.withdrawn && b.withdrawn) return -1;
+            
             const avgA = a.stats.o > 0 ? a.stats.p / a.stats.o : 0;
             const avgB = b.stats.o > 0 ? b.stats.p / b.stats.o : 0;
             
@@ -593,7 +555,6 @@
         weightedPlayers.forEach((p, index) => {
             const avg = p.stats.o > 0 ? (p.stats.p / p.stats.o).toFixed(2) : "0.00";
             const rowClass = p.withdrawn ? 'withdrawn-row' : '';
-            
             weightedBody.innerHTML += `
                 <tr class="${rowClass}">
                     <td>${index + 1}</td>
@@ -605,41 +566,29 @@
         });
     }
 
-    // Puan Durumu Sekme Geçişi
-    window.switchStandingsView = function(view) {
+    function switchStandingsView(view) {
         document.getElementById('standingsStandard').style.display = view === 'standard' ? 'block' : 'none';
         document.getElementById('standingsWeighted').style.display = view === 'weighted' ? 'block' : 'none';
-        
         document.getElementById('btnStandingsStandard').classList.toggle('active', view === 'standard');
         document.getElementById('btnStandingsWeighted').classList.toggle('active', view === 'weighted');
     }
 
-    // YARDIMCI FONKSİYON: Maç Kartı HTML'i Oluşturur
     function createMatchCardHTML(m, forceLeftPlayer = null) {
         const disabled = isAdmin ? '' : 'disabled';
-        
-        let isSwapped = false;
-        if (forceLeftPlayer && m.p2 === forceLeftPlayer) {
-            isSwapped = true;
-        }
+        let isSwapped = forceLeftPlayer && m.p2 === forceLeftPlayer;
 
         const pLeftName = isSwapped ? m.p2 : m.p1;
         const pRightName = isSwapped ? m.p1 : m.p2;
-        
         const sLeftVal = isSwapped ? m.s2 : m.s1;
         const sRightVal = isSwapped ? m.s1 : m.s2;
-
         const fieldLeft = isSwapped ? 's2' : 's1';   
         const fieldRight = isSwapped ? 's1' : 's2';
-        
         const vLeft = isSwapped ? (m.v2 || 0) : (m.v1 || 0);
         const vRight = isSwapped ? (m.v1 || 0) : (m.v2 || 0);
 
-        let pLeftStyle = '';
-        let pRightStyle = '';
+        let pLeftStyle = '', pRightStyle = '';
         if (sLeftVal !== null && sLeftVal !== "" && sRightVal !== null && sRightVal !== "") {
-            const valL = parseInt(sLeftVal);
-            const valR = parseInt(sRightVal);
+            const valL = parseInt(sLeftVal), valR = parseInt(sRightVal);
             if (valL > valR) { pLeftStyle = 'color:var(--accent);'; pRightStyle = 'color:var(--danger);'; } 
             else if (valR > valL) { pLeftStyle = 'color:var(--danger);'; pRightStyle = 'color:var(--accent);'; }
         }
@@ -647,34 +596,28 @@
         const total = vLeft + vRight;
         const pctLeft = total > 0 ? Math.round((vLeft / total) * 100) : 0;
         const pctRight = total > 0 ? Math.round((vRight / total) * 100) : 0;
-
-        const pLeftDisplay = `%${pctLeft} <span style="font-size:9px; display:block; color:#7f8c8d; font-weight:normal;">(${vLeft}/${total})</span>`;
-        const pRightDisplay = `%${pctRight} <span style="font-size:9px; display:block; color:#7f8c8d; font-weight:normal;">(${vRight}/${total})</span>`;
-
+        
         let hukmenHtml = isAdmin ? `<div class="hukmen-toggle ${m.hukmen ? 'active' : ''}" onclick="toggleHukmen(${m.idx})">H</div>` : '';
         let hukmenLabel = (!isAdmin && m.hukmen) ? '<span class="hukmen-indicator">(HÜKMEN)</span>' : '';
 
         return `
             <div class="match-card">
                 <div class="player-container left">
-                    <div class="vote-ratio" title="Oy Dağılımı">${pLeftDisplay}</div>
+                    <div class="vote-ratio">%${pctLeft} <span style="font-size:9px; display:block; color:#7f8c8d; font-weight:normal;">(${vLeft}/${total})</span></div>
                     <div class="player p1" style="${pLeftStyle}; margin-left:8px;">${pLeftName}</div>
                 </div>
-                
                 <div class="scores">
                     <input type="number" ${disabled} value="${sLeftVal !== null ? sLeftVal : ''}" oninput="updateScore(${m.idx}, '${fieldLeft}', this.value)">
-                    <span style="color:#ccc;">-</span>
+                    <span>-</span>
                     <input type="number" ${disabled} value="${sRightVal !== null ? sRightVal : ''}" oninput="updateScore(${m.idx}, '${fieldRight}', this.value)">
                     ${hukmenHtml}
                     ${hukmenLabel}
                 </div>
-
                 <div class="player-container right">
                     <div class="player p2" style="${pRightStyle}; margin-right:8px;">${pRightName}</div>
-                    <div class="vote-ratio" title="Oy Dağılımı">${pRightDisplay}</div>
+                    <div class="vote-ratio">%${pctRight} <span style="font-size:9px; display:block; color:#7f8c8d; font-weight:normal;">(${vRight}/${total})</span></div>
                 </div>
-            </div>
-        `;
+            </div>`;
     }
 
     function renderFixture() {
@@ -682,43 +625,27 @@
         
         const matchesWithIdx = appData.matches.map((m, index) => ({...m, idx: index}));
 
-        // --- 1. GÜN GÖRÜNÜMÜ ---
+        // --- GÜN GÖRÜNÜMÜ ---
         const dayContainer = document.getElementById('fixtureByDay');
         dayContainer.innerHTML = '';
-        if (!matchesWithIdx.length) {
-            dayContainer.innerHTML = '<p style="text-align:center; color:#999;">Maç yok.</p>';
-        } else {
+        if (!matchesWithIdx.length) dayContainer.innerHTML = '<p style="text-align:center;">Maç yok.</p>';
+        else {
             const rounds = {};
-            matchesWithIdx.forEach(m => {
-                if (!rounds[m.round]) rounds[m.round] = [];
-                rounds[m.round].push(m);
-            });
-
+            matchesWithIdx.forEach(m => { if (!rounds[m.round]) rounds[m.round] = []; rounds[m.round].push(m); });
             for (const [round, matches] of Object.entries(rounds)) {
-                const header = document.createElement('div');
-                header.className = 'day-header';
-                header.innerText = `${round}. GÜN`;
-                dayContainer.appendChild(header);
-
-                matches.forEach(m => {
-                    dayContainer.innerHTML += createMatchCardHTML(m);
-                });
+                dayContainer.innerHTML += `<div class="day-header">${round}. GÜN</div>`;
+                matches.forEach(m => dayContainer.innerHTML += createMatchCardHTML(m));
             }
         }
 
-        // --- 2. OYUNCU GÖRÜNÜMÜ (ACCORDION/TOGGLE) ---
+        // --- OYUNCU GÖRÜNÜMÜ ---
         const playerContainer = document.getElementById('fixtureByPlayer');
         playerContainer.innerHTML = '';
-        
         const sortedPlayers = [...appData.players].sort((a, b) => a.name.localeCompare(b.name));
         
         sortedPlayers.forEach((p, index) => {
             const playerMatches = matchesWithIdx.filter(m => m.p1 === p.name || m.p2 === p.name);
-            
             if (playerMatches.length > 0) {
-                const uniqueId = `matches-${index}`;
-                
-                // Hükmen Butonu (Sadece Admin Görür)
                 let withdrawBtn = '';
                 if(isAdmin) {
                     const btnClass = p.withdrawn ? 'withdraw-btn active' : 'withdraw-btn';
@@ -726,52 +653,37 @@
                     withdrawBtn = `<button class="${btnClass}" onclick="togglePlayerWithdrawal('${p.name}', event)">${btnText}</button>`;
                 }
 
-                // Toggle Başlığı
                 playerContainer.innerHTML += `
-                    <div class="player-header" onclick="togglePlayerAccordion('${uniqueId}', this)">
+                    <div class="player-header" onclick="togglePlayerAccordion('matches-${index}', this)">
                         <div style="display:flex; align-items:center;">
                             <span>${p.name}</span>
-                            <span style="font-size:10px; opacity:0.6; font-weight:normal; margin-left:8px;">${p.withdrawn ? '(ÇEKİLDİ)' : ''}</span>
+                            <span style="font-size:10px; opacity:0.6; margin-left:8px;">${p.withdrawn ? '(ÇEKİLDİ)' : ''}</span>
                         </div>
                         <div style="display:flex; align-items:center; gap:5px;">
                             ${withdrawBtn}
-                            <span style="font-size:11px; opacity:0.8; font-weight:normal;">${playerMatches.length} Maç</span>
+                            <span style="font-size:11px; opacity:0.8;">${playerMatches.length} Maç</span>
                             <span class="arrow">▼</span>
                         </div>
                     </div>
-                `;
-                
-                // Gizli İçerik Kutusu
-                let matchesHtml = `<div id="${uniqueId}" class="player-matches-container">`;
-                
-                playerMatches.sort((a, b) => a.round - b.round);
-                playerMatches.forEach(m => {
-                    const dayLabel = `<div style="text-align:center; font-size:10px; color:#999; margin-bottom:2px; font-weight:bold;">${m.round}. GÜN</div>`;
-                    const cardHtml = createMatchCardHTML(m, p.name);
-                    matchesHtml += `<div style="margin-top:-5px;">${dayLabel}${cardHtml}</div>`;
-                });
-                
-                matchesHtml += `</div>`;
-                playerContainer.innerHTML += matchesHtml;
+                    <div id="matches-${index}" class="player-matches-container">
+                        ${playerMatches.sort((a, b) => a.round - b.round).map(m => 
+                            `<div style="margin-top:-5px;"><div style="text-align:center; font-size:10px; color:#999; margin-bottom:2px; font-weight:bold;">${m.round}. GÜN</div>${createMatchCardHTML(m, p.name)}</div>`
+                        ).join('')}
+                    </div>`;
             }
         });
     }
 
-    // Accordion Toggle Fonksiyonu
-    window.togglePlayerAccordion = function(elementId, headerElement) {
-        const content = document.getElementById(elementId);
+    window.togglePlayerAccordion = function(id, el) {
+        const content = document.getElementById(id);
         const isVisible = content.style.display === 'block';
-        
-        // Aç / Kapa
         content.style.display = isVisible ? 'none' : 'block';
-        headerElement.classList.toggle('active', !isVisible);
+        el.classList.toggle('active', !isVisible);
     }
 
-    // Fikstür Sekme Geçişi
     window.switchFixtureView = function(view) {
         document.getElementById('fixtureByDay').style.display = view === 'day' ? 'block' : 'none';
         document.getElementById('fixtureByPlayer').style.display = view === 'player' ? 'block' : 'none';
-        
         document.getElementById('btnDayView').classList.toggle('active', view === 'day');
         document.getElementById('btnPlayerView').classList.toggle('active', view === 'player');
     }
@@ -779,40 +691,25 @@
     function renderVoting() {
         const container = document.getElementById('votingList');
         container.innerHTML = '';
-        
         const rounds = {};
-        appData.matches.forEach((m, index) => {
-            if (!rounds[m.round]) rounds[m.round] = [];
-            rounds[m.round].push({ ...m, idx: index });
-        });
+        appData.matches.forEach((m, index) => { if (!rounds[m.round]) rounds[m.round] = []; rounds[m.round].push({ ...m, idx: index }); });
 
         for (const [round, matches] of Object.entries(rounds)) {
-            const header = document.createElement('div');
-            header.className = 'day-header';
-            header.innerText = `${round}. GÜN`;
-            container.appendChild(header);
-
+            container.innerHTML += `<div class="day-header">${round}. GÜN</div>`;
             matches.forEach(m => {
-                const card = document.createElement('div');
-                card.className = 'match-card';
-                
-                const hasVoted = localStorage.getItem('voted_match_' + m.idx);
-                const disabledClass = hasVoted ? 'voted' : '';
-                
-                card.innerHTML = `
-                    <div style="width:45%; display:flex; justify-content:flex-end; align-items:center; gap:10px;">
-                        <span style="font-size:13px; font-weight:600;">${m.p1}</span>
-                        <button class="vote-btn ${disabledClass}" onclick="castVote(${m.idx}, 1)">👍</button>
-                    </div>
-                    
-                    <div style="width:10%; text-align:center; color:#ccc; font-weight:bold;">VS</div>
-
-                    <div style="width:45%; display:flex; justify-content:flex-start; align-items:center; gap:10px;">
-                        <button class="vote-btn ${disabledClass}" onclick="castVote(${m.idx}, 2)">👍</button>
-                        <span style="font-size:13px; font-weight:600;">${m.p2}</span>
-                    </div>
-                `;
-                container.appendChild(card);
+                const voted = localStorage.getItem('voted_match_' + m.idx) ? 'voted' : '';
+                container.innerHTML += `
+                    <div class="match-card">
+                        <div style="width:45%; display:flex; justify-content:flex-end; gap:10px; align-items:center;">
+                            <span style="font-size:13px; font-weight:600;">${m.p1}</span>
+                            <button class="vote-btn ${voted}" onclick="castVote(${m.idx}, 1)">👍</button>
+                        </div>
+                        <div style="width:10%; text-align:center; color:#ccc; font-weight:bold;">VS</div>
+                        <div style="width:45%; display:flex; justify-content:flex-start; gap:10px; align-items:center;">
+                            <button class="vote-btn ${voted}" onclick="castVote(${m.idx}, 2)">👍</button>
+                            <span style="font-size:13px; font-weight:600;">${m.p2}</span>
+                        </div>
+                    </div>`;
             });
         }
     }
@@ -820,17 +717,13 @@
     window.openTab = function(tabName) {
         document.querySelectorAll('.tab-content').forEach(t => { t.style.display = 'none'; t.classList.remove('active'); });
         document.querySelectorAll('.tab-link').forEach(t => t.classList.remove('active'));
-        
         const selected = document.getElementById(tabName);
         selected.style.display = 'block';
         setTimeout(() => selected.classList.add('active'), 10);
         
         const btns = document.querySelectorAll('.navbar button');
-        if(tabName === 'puanDurumu') btns[0].classList.add('active');
-        if(tabName === 'fikstur') btns[1].classList.add('active');
-        if(tabName === 'oylama') btns[2].classList.add('active');
-        if(tabName === 'kurallar') btns[3].classList.add('active');
-        if(tabName === 'admin') btns[4].classList.add('active');
+        const map = { 'puanDurumu':0, 'fikstur':1, 'oylama':2, 'kurallar':3, 'admin':4 };
+        if(map[tabName] !== undefined) btns[map[tabName]].classList.add('active');
     }
 
     function showStatus(msg, type) {
