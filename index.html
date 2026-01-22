@@ -377,9 +377,19 @@
     }
 
     function calculateStandings() {
+        // 1. Herkesin istatistiğini sıfırla
         appData.players.forEach(p => p.stats = { p:0, o:0, g:0, m:0, a:0, y:0, av:0 });
 
+        // 2. Çekilen oyuncuların listesini al
+        const withdrawnPlayers = appData.players.filter(p => p.withdrawn).map(p => p.name);
+
+        // 3. Maçları dön
         appData.matches.forEach(m => {
+            // EĞER MAÇTAKİ OYUNCULARDAN BİRİ ÇEKİLDİYSE, BU MAÇI HESAPLAMAYA KATMA
+            if (withdrawnPlayers.includes(m.p1) || withdrawnPlayers.includes(m.p2)) {
+                return; // Döngünün bu adımını atla (continue gibi çalışır forEach'te return)
+            }
+
             if (isValidScore(m.s1) && isValidScore(m.s2)) {
                 const p1 = appData.players.find(pl => pl.name === m.p1);
                 const p2 = appData.players.find(pl => pl.name === m.p2);
@@ -403,17 +413,10 @@
             }
         });
 
-        // ÇEKİLME KONTROLÜ (HÜKMEN)
-        appData.players.forEach(p => {
-            if(p.withdrawn) {
-                // Çekilen oyuncuyu sıfırla
-                p.stats = { p:0, o:0, g:0, m:0, a:0, y:0, av:0 };
-            } else {
-                p.stats.av = (p.stats.a || 0) - (p.stats.y || 0);
-            }
-        });
+        // 4. Averaj Hesapla (Sadece aktif oyuncular için anlamlı, çekilenlerin zaten 0)
+        appData.players.forEach(p => p.stats.av = (p.stats.a || 0) - (p.stats.y || 0));
 
-        // Standart Sıralama: 1. Puan, 2. Averaj, 3. İsim (A-Z)
+        // 5. Sıralama
         appData.players.sort((a, b) => {
             if (b.stats.p !== a.stats.p) return b.stats.p - a.stats.p;
             if (b.stats.av !== a.stats.av) return b.stats.av - a.stats.av;
