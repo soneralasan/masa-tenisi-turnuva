@@ -37,6 +37,10 @@
         .top8 { background-color: #e8f5e9 !important; } 
         .top8 td:first-child { border-left: 4px solid var(--accent); font-weight: bold; color: var(--accent); }
 
+        /* Çekilen Oyuncu Satırı (Siyah Arka Plan) */
+        .withdrawn-row { background-color: black !important; color: #bdc3c7 !important; }
+        .withdrawn-row td { border-bottom: 1px solid #444; }
+        
         /* Fikstür Kartları */
         .day-header { text-align: center; margin: 25px 0 10px; font-weight: 800; color: var(--primary); text-transform: uppercase; letter-spacing: 1px; font-size: 13px; position: relative; }
         .day-header::after { content: ''; display: block; width: 40px; height: 3px; background: var(--accent); margin: 5px auto 0; border-radius: 2px; }
@@ -52,6 +56,14 @@
         .player-header .arrow { transition: transform 0.3s ease; font-size: 10px; }
         .player-header.active .arrow { transform: rotate(180deg); }
         
+        /* Çekilme Butonu (Player Header İçinde) */
+        .withdraw-btn {
+            background: var(--danger); color: white; border: none; padding: 4px 8px; 
+            border-radius: 4px; font-size: 10px; cursor: pointer; margin-right: 10px;
+            font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .withdraw-btn.active { background: #555; color: #bbb; border: 1px solid #777; }
+
         /* GİZLİ MAÇ LİSTESİ */
         .player-matches-container { display: none; padding-top: 5px; animation: slideDown 0.3s ease; }
         
@@ -279,9 +291,16 @@
             <h3 style="color:var(--accent); margin-top:0;">Yönetim Paneli</h3>
             
             <div class="file-upload">
-                <h4 style="margin:0 0 10px 0; color:#555;">Python Verisini Yükle</h4>
+                <h4 style="margin:0 0 10px 0; color:#555;">Veri Yönetimi</h4>
+                
+                <label style="font-size:12px; font-weight:bold; display:block; text-align:left; margin-bottom:5px;">Veri Yükle (Upload):</label>
                 <input type="file" id="jsonFileInput" accept=".json" style="width:100%; margin-bottom:10px;">
                 <button class="btn btn-secondary" onclick="importFromPythonJson()">📂 YÜKLE VE YAYINLA</button>
+                
+                <hr style="border:0; border-top:1px dashed #eee; margin:15px 0;">
+                
+                <label style="font-size:12px; font-weight:bold; display:block; text-align:left; margin-bottom:5px;">Yedekle (Download):</label>
+                <button class="btn btn-primary" onclick="downloadJsonData()">💾 GÜNCEL VERİYİ İNDİR (JSON)</button>
             </div>
             
             <hr style="border:0; border-top:1px solid #eee; margin:20px 0;">
@@ -384,7 +403,15 @@
             }
         });
 
-        appData.players.forEach(p => p.stats.av = (p.stats.a || 0) - (p.stats.y || 0));
+        // ÇEKİLME KONTROLÜ (HÜKMEN)
+        appData.players.forEach(p => {
+            if(p.withdrawn) {
+                // Çekilen oyuncuyu sıfırla
+                p.stats = { p:0, o:0, g:0, m:0, a:0, y:0, av:0 };
+            } else {
+                p.stats.av = (p.stats.a || 0) - (p.stats.y || 0);
+            }
+        });
 
         // Standart Sıralama: 1. Puan, 2. Averaj, 3. İsim (A-Z)
         appData.players.sort((a, b) => {
@@ -394,6 +421,25 @@
         });
 
         renderStandings();
+    }
+
+    // --- OYUNCU ÇEKİLME (HÜKMEN) ---
+    window.togglePlayerWithdrawal = function(playerName, event) {
+        event.stopPropagation(); // Accordion açılmasını engelle
+        if(!isAdmin) return;
+
+        const player = appData.players.find(p => p.name === playerName);
+        if(player) {
+            // Durumu tersine çevir (Çekildi <-> Aktif)
+            player.withdrawn = !player.withdrawn;
+            
+            // Hesapla ve Arayüzü Güncelle
+            calculateStandings();
+            renderFixture(); // Butonun durumunu güncellemek için
+            renderStandings(); // Tabloyu güncellemek için
+            
+            showStatus(player.withdrawn ? `${playerName} turnuvadan çekildi.` : `${playerName} tekrar aktif edildi.`, "success");
+        }
     }
 
     // --- OY KULLANMA ---
@@ -445,6 +491,7 @@
 
                 const newPlayers = pyData.oyuncular.map(name => ({
                     name: name,
+                    withdrawn: false,
                     stats: { p:0, o:0, g:0, m:0, a:0, y:0, av:0 }
                 }));
 
@@ -467,6 +514,17 @@
             } catch (error) { alert("Dosya okuma hatası."); }
         };
         reader.readAsText(file);
+    }
+
+    function downloadJsonData() {
+        if(!appData) return alert("İndirilecek veri yok.");
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appData, null, 2));
+        const downloadAnchorNode = document.createElement('a');
+        downloadAnchorNode.setAttribute("href", dataStr);
+        downloadAnchorNode.setAttribute("download", "turnuva_verisi_" + new Date().toISOString().slice(0,10) + ".json");
+        document.body.appendChild(downloadAnchorNode); // required for firefox
+        downloadAnchorNode.click();
+        downloadAnchorNode.remove();
     }
 
     function login() {
@@ -505,12 +563,13 @@
         weightedBody.innerHTML = '';
 
         // --- 1. TABLO (STANDART) ---
-        // Global appData.players zaten standart kurallara göre sıralı geliyor
         appData.players.forEach((p, index) => {
+            const rowClass = p.withdrawn ? 'withdrawn-row' : (index < 8 ? 'top8' : '');
+            
             standardBody.innerHTML += `
-                <tr class="${index < 8 ? 'top8' : ''}">
+                <tr class="${rowClass}">
                     <td>${index + 1}</td>
-                    <td style="text-align:left; padding-left:15px; font-weight:600;">${p.name}</td>
+                    <td style="text-align:left; padding-left:15px; font-weight:600;">${p.name} ${p.withdrawn ? '(ÇEKİLDİ)' : ''}</td>
                     <td>${p.stats.o}</td>
                     <td>${p.stats.g}</td>
                     <td>${p.stats.m}</td>
@@ -520,26 +579,25 @@
         });
 
         // --- 2. TABLO (AĞIRLIKLI ORTALAMA) ---
-        // Yeni bir dizi oluşturup ağırlıklı ortalamaya göre sıralayalım
         const weightedPlayers = [...appData.players].sort((a, b) => {
             const avgA = a.stats.o > 0 ? a.stats.p / a.stats.o : 0;
             const avgB = b.stats.o > 0 ? b.stats.p / b.stats.o : 0;
             
-            // Büyükten küçüğe sırala
             if (avgB !== avgA) return avgB - avgA;
-            // Eşitse toplam puana bak
             return b.stats.p - a.stats.p;
         });
 
         weightedPlayers.forEach((p, index) => {
             const avg = p.stats.o > 0 ? (p.stats.p / p.stats.o).toFixed(2) : "0.00";
+            const rowClass = p.withdrawn ? 'withdrawn-row' : '';
+            
             weightedBody.innerHTML += `
-                <tr>
+                <tr class="${rowClass}">
                     <td>${index + 1}</td>
-                    <td style="text-align:left; padding-left:15px; font-weight:600;">${p.name}</td>
+                    <td style="text-align:left; padding-left:15px; font-weight:600;">${p.name} ${p.withdrawn ? '(ÇEKİLDİ)' : ''}</td>
                     <td>${p.stats.o}</td>
                     <td>${p.stats.p}</td>
-                    <td style="font-weight:bold; color:var(--accent); background:#f0f9f4;">${avg}</td>
+                    <td style="font-weight:bold; color:var(--accent); background:${p.withdrawn ? '#333' : '#f0f9f4'};">${avg}</td>
                 </tr>`;
         });
     }
@@ -657,11 +715,23 @@
             if (playerMatches.length > 0) {
                 const uniqueId = `matches-${index}`;
                 
+                // Hükmen Butonu (Sadece Admin Görür)
+                let withdrawBtn = '';
+                if(isAdmin) {
+                    const btnClass = p.withdrawn ? 'withdraw-btn active' : 'withdraw-btn';
+                    const btnText = p.withdrawn ? 'GERİ AL' : 'HÜKMEN';
+                    withdrawBtn = `<button class="${btnClass}" onclick="togglePlayerWithdrawal('${p.name}', event)">${btnText}</button>`;
+                }
+
                 // Toggle Başlığı
                 playerContainer.innerHTML += `
                     <div class="player-header" onclick="togglePlayerAccordion('${uniqueId}', this)">
-                        <span>${p.name}</span>
-                        <div style="display:flex; align-items:center; gap:10px;">
+                        <div style="display:flex; align-items:center;">
+                            <span>${p.name}</span>
+                            <span style="font-size:10px; opacity:0.6; font-weight:normal; margin-left:8px;">${p.withdrawn ? '(ÇEKİLDİ)' : ''}</span>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:5px;">
+                            ${withdrawBtn}
                             <span style="font-size:11px; opacity:0.8; font-weight:normal;">${playerMatches.length} Maç</span>
                             <span class="arrow">▼</span>
                         </div>
