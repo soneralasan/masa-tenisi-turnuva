@@ -41,13 +41,16 @@
         .withdrawn-row { background-color: #333 !important; color: #bdc3c7 !important; }
         .withdrawn-row td { border-bottom: 1px solid #555; }
         
+        /* Play-off Pas Geçen Oyuncu */
+        .skipped-row td { color: #999; text-decoration: line-through; }
+        .skipped-row td:first-child { text-decoration: none; color: #e74c3c; border-left: 4px solid #e74c3c; }
+
         /* TURNUVA AĞACI (BRACKET) STİLLERİ */
         .bracket-container { display: flex; flex-direction: row; justify-content: space-between; gap: 10px; overflow-x: auto; padding: 20px 0; }
         .round { display: flex; flex-direction: column; justify-content: space-around; flex: 1; min-width: 200px; }
         .round-title { text-align: center; font-weight: bold; color: var(--primary); margin-bottom: 15px; text-transform: uppercase; font-size: 12px; border-bottom: 2px solid var(--accent); padding-bottom: 5px; }
         
         .match-box { background: white; border: 1px solid #ddd; border-radius: 6px; padding: 10px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); position: relative; }
-        .match-box::after { /* Bağlantı çizgileri için */ content: ''; position: absolute; right: -10px; top: 50%; width: 10px; height: 1px; background: #ccc; display: none; }
         
         .match-player { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid #eee; font-size: 13px; }
         .match-player:last-child { border-bottom: none; }
@@ -68,6 +71,9 @@
         
         .withdraw-btn { background: var(--danger); color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 10px; cursor: pointer; margin-right: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; }
         .withdraw-btn.active { background: #555; color: #bbb; border: 1px solid #777; }
+
+        .skip-btn { background: #f39c12; color: white; border: none; padding: 2px 6px; border-radius: 4px; font-size: 10px; cursor: pointer; margin-left: 5px; }
+        .undo-btn { background: #7f8c8d; color: white; border: none; padding: 2px 6px; border-radius: 4px; font-size: 10px; cursor: pointer; margin-left: 5px; }
 
         .player-matches-container { display: none; padding-top: 5px; animation: slideDown 0.3s ease; }
         .match-card { background: white; padding: 12px; margin-bottom: 10px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: space-between; }
@@ -112,7 +118,7 @@
             .player { font-size: 12px; } 
             .vote-ratio { font-size: 10px; min-width: 30px; padding: 3px; }
             .navbar button { font-size: 10px; padding: 12px 5px; }
-            .bracket-container { min-width: 600px; } /* Mobilde kaydırma için */
+            .bracket-container { min-width: 600px; } 
         }
     </style>
 </head>
@@ -201,12 +207,10 @@
                 <div class="round-title">Çeyrek Final</div>
                 <div id="qf_matches"></div>
             </div>
-            
             <div class="round">
                 <div class="round-title">Yarı Final</div>
                 <div id="sf_matches"></div>
             </div>
-            
             <div class="round">
                 <div class="round-title">Final</div>
                 <div id="f_matches"></div>
@@ -268,9 +272,9 @@
             <ul>
                 <li>Galibiyet: <strong>2 Puan</strong>, Mağlubiyet: <strong>1 Puan</strong>.</li>
                 <li>Hükmen mağlubiyet durumunda <strong>0 Puan</strong> verilir.</li>
-                <li><strong>Çekilen Oyuncu Kuralı:</strong> Turnuvadan çekilen oyuncu tüm maçlarını hükmen (0-2) kaybetmiş sayılır. Rakipleri oynanmış veya oynanmamış tüm maçlardan 2 puan kazanır.</li>
+                <li>Turnuvadan çekilen oyuncu tüm maçlarını hükmen (0-2) kaybetmiş sayılır.</li>
                 <li>Grup maçları sonunda puan cetvelindeki <strong>ilk 8 oyuncu</strong> Play-off oynamaya hak kazanır.</li>
-                <li>Puan eşitliğinde sırasıyla; Genel Averaj ve İsim Sıralaması dikkate alınır.</li>
+                <li>Play-off oynamaya hak kazanıp oynayamayacak durumda olan oyuncular yöneticiler tarafından belirtilir ve bir alt sıradaki oyuncu 8. sıraya yükselir.</li>
             </ul>
         </div>
     </div>
@@ -288,19 +292,15 @@
             
             <div class="file-upload">
                 <h4 style="margin:0 0 10px 0; color:#555;">Veri Yönetimi</h4>
-                
                 <label style="font-size:12px; font-weight:bold; display:block; text-align:left; margin-bottom:5px;">Veri Yükle (Upload):</label>
                 <input type="file" id="jsonFileInput" accept=".json" style="width:100%; margin-bottom:10px;">
                 <button class="btn btn-secondary" onclick="importFromPythonJson()">📂 YÜKLE VE YAYINLA</button>
-                
                 <hr style="border:0; border-top:1px dashed #eee; margin:15px 0;">
-                
                 <label style="font-size:12px; font-weight:bold; display:block; text-align:left; margin-bottom:5px;">Yedekle (Download):</label>
                 <button class="btn btn-primary" onclick="downloadJsonData()">💾 GÜNCEL VERİYİ İNDİR (JSON)</button>
             </div>
             
             <hr style="border:0; border-top:1px solid #eee; margin:20px 0;">
-            
             <button class="btn btn-danger" onclick="firebase.auth().signOut()">Çıkış Yap</button>
         </div>
     </div>
@@ -353,7 +353,6 @@
                 
                 calculateStandings();
                 renderFixture();
-                // renderVoting(); // Commented out
                 renderFinals();
                 
                 if(document.querySelector('.tab-content.active') === null) {
@@ -382,9 +381,8 @@
             const p1W = withdrawnPlayers.includes(m.p1);
             const p2W = withdrawnPlayers.includes(m.p2);
 
-            if (p1W && p2W) {
-                return;
-            } else if (p1W) {
+            if (p1W && p2W) return;
+            else if (p1W) {
                 p1.stats.o++; p2.stats.o++;
                 p1.stats.y += 2; p2.stats.a += 2;
                 p2.stats.g++; p2.stats.p += 2;
@@ -414,23 +412,62 @@
             return a.name.localeCompare(b.name);
         });
 
+        // --- PLAY-OFF KATILIM AYARLAMASI (SKIP LOGIC) ---
+        // İlk 8'de olup oynamayacakları (skipPlayoff=true), 
+        // 8. sıradan sonrakilerle (skipPlayoff=false) takas et.
+        
+        let attempts = 0;
+        while(attempts < 20) { // Safety break
+            let skipperIndex = -1;
+            for(let i=0; i<8; i++) {
+                if(appData.players[i] && appData.players[i].skipPlayoff) {
+                    skipperIndex = i;
+                    break;
+                }
+            }
+
+            let replacementIndex = -1;
+            for(let i=8; i<appData.players.length; i++) {
+                if(appData.players[i] && !appData.players[i].skipPlayoff) {
+                    replacementIndex = i;
+                    break;
+                }
+            }
+
+            if(skipperIndex !== -1 && replacementIndex !== -1) {
+                let temp = appData.players[skipperIndex];
+                appData.players[skipperIndex] = appData.players[replacementIndex];
+                appData.players[replacementIndex] = temp;
+                attempts++;
+            } else {
+                break;
+            }
+        }
+
         renderStandings();
     }
 
-    // --- FİNALLER MANTIĞI ---
+    // --- PLAY-OFF SKIP TOGGLE ---
+    window.togglePlayoffSkip = function(playerName) {
+        if(!isAdmin) return;
+        const player = appData.players.find(p => p.name === playerName);
+        if(player) {
+            player.skipPlayoff = !player.skipPlayoff;
+            calculateStandings(); // Hesapla ve yeniden sırala
+            saveDataToFirebase();
+        }
+    }
+
     function endLeague() {
         if(!confirm("Ligi bitirip ilk 8 oyuncuyu finallere taşımak istediğinize emin misiniz?")) return;
         
-        // İlk 8 oyuncuyu al (Zaten sıralı)
         const seeds = appData.players.slice(0, 8).map(p => p.name);
-        
-        // Eğer 8'den az oyuncu varsa
         while(seeds.length < 8) seeds.push("BYE");
 
         appData.finals = {
             started: true,
             seeds: seeds,
-            matches: {} // Skorlar burada tutulacak: key: 'qf1', val: {s1:2, s2:1}
+            matches: {}
         };
         
         saveDataToFirebase();
@@ -444,7 +481,7 @@
         if(!appData.finals.matches[matchId]) appData.finals.matches[matchId] = {};
         
         appData.finals.matches[matchId][field] = value;
-        renderFinals(); // Anlık güncelleme için
+        renderFinals(); 
     }
 
     function renderFinals() {
@@ -458,7 +495,6 @@
         const seeds = started ? appData.finals.seeds : ["1. Sıra", "2. Sıra", "3. Sıra", "4. Sıra", "5. Sıra", "6. Sıra", "7. Sıra", "8. Sıra"];
         const matches = (appData.finals && appData.finals.matches) ? appData.finals.matches : {};
 
-        // Helper to get winner
         const getWinner = (p1, p2, mId) => {
             const m = matches[mId] || {};
             if(m.s1 != null && m.s2 != null) {
@@ -468,12 +504,6 @@
             return "???";
         };
 
-        // --- ÇEYREK FİNALLER (1-8, 4-5, 3-6, 2-7) ---
-        // QF1: 1 vs 8
-        // QF2: 4 vs 5
-        // QF3: 3 vs 6
-        // QF4: 2 vs 7
-        
         const qfPairs = [
             { id: 'qf1', p1Idx: 0, p2Idx: 7 }, // 1 vs 8
             { id: 'qf2', p1Idx: 3, p2Idx: 4 }, // 4 vs 5
@@ -482,22 +512,17 @@
         ];
 
         qfPairs.forEach(pair => {
-            const p1Name = seeds[pair.p1Idx];
-            const p2Name = seeds[pair.p2Idx];
-            qfDiv.innerHTML += createFinalMatchHTML(pair.id, p1Name, p2Name, matches[pair.id]);
+            qfDiv.innerHTML += createFinalMatchHTML(pair.id, seeds[pair.p1Idx], seeds[pair.p2Idx], matches[pair.id]);
         });
 
-        // --- YARI FİNALLER ---
         const sf1_p1 = getWinner(seeds[0], seeds[7], 'qf1');
         const sf1_p2 = getWinner(seeds[3], seeds[4], 'qf2');
-        
         const sf2_p1 = getWinner(seeds[2], seeds[5], 'qf3');
         const sf2_p2 = getWinner(seeds[1], seeds[6], 'qf4');
 
         sfDiv.innerHTML += createFinalMatchHTML('sf1', sf1_p1, sf1_p2, matches['sf1']);
         sfDiv.innerHTML += createFinalMatchHTML('sf2', sf2_p1, sf2_p2, matches['sf2']);
 
-        // --- FİNAL ---
         const f_p1 = getWinner(sf1_p1, sf1_p2, 'sf1');
         const f_p2 = getWinner(sf2_p1, sf2_p2, 'sf2');
 
@@ -509,7 +534,6 @@
         const s2 = scoreData ? scoreData.s2 : '';
         const disabled = isAdmin ? '' : 'disabled';
 
-        // Stil Belirleme
         let p1Class = '', p2Class = '';
         if (s1 !== '' && s2 !== '') {
             if (parseInt(s1) > parseInt(s2)) { p1Class = 'winner'; p2Class = 'loser'; }
@@ -530,7 +554,6 @@
         `;
     }
 
-    // --- OTHER FUNCTIONS ---
     function togglePlayerWithdrawal(playerName, event) {
         event.stopPropagation();
         if(!isAdmin) return;
@@ -539,8 +562,7 @@
             player.withdrawn = !player.withdrawn;
             calculateStandings();
             renderFixture();
-            renderStandings();
-            showStatus("Güncellendi", "success");
+            saveDataToFirebase(); // Hemen kaydet
         }
     }
 
@@ -553,7 +575,7 @@
             try {
                 const pyData = JSON.parse(e.target.result);
                 if(!confirm("Veriler silinecek. Onaylıyor musunuz?")) return;
-                const newPlayers = pyData.oyuncular.map(name => ({ name: name, withdrawn: false, stats: { p:0, o:0, g:0, m:0, a:0, y:0, av:0 } }));
+                const newPlayers = pyData.oyuncular.map(name => ({ name: name, withdrawn: false, skipPlayoff: false, stats: { p:0, o:0, g:0, m:0, a:0, y:0, av:0 } }));
                 const newMatches = pyData.maclar.map(m => ({ round: m.gun, p1: m.p1, p2: m.p2, s1: isValidScore(m.s1) ? parseInt(m.s1) : null, s2: isValidScore(m.s2) ? parseInt(m.s2) : null, hukmen: m.hukmen || false, v1: 0, v2: 0 }));
                 appData = { players: newPlayers, matches: newMatches, started: true, finals: { started: false, seeds: [], matches: {} } };
                 calculateStandings();
@@ -601,11 +623,23 @@
         standardBody.innerHTML = ''; weightedBody.innerHTML = '';
 
         appData.players.forEach((p, index) => {
-            const rowClass = p.withdrawn ? 'withdrawn-row' : (index < 8 ? 'top8' : '');
+            let rowClass = '';
+            if (p.withdrawn) rowClass = 'withdrawn-row';
+            else if (p.skipPlayoff) rowClass = 'skipped-row';
+            else if (index < 8) rowClass = 'top8';
+
+            let actionBtn = '';
+            if(isAdmin && !p.withdrawn) {
+                if(p.skipPlayoff) actionBtn = `<button class="undo-btn" onclick="togglePlayoffSkip('${p.name}')">↩️</button>`;
+                else if(index < 8) actionBtn = `<button class="skip-btn" onclick="togglePlayoffSkip('${p.name}')">🚫</button>`;
+            }
+
             standardBody.innerHTML += `
                 <tr class="${rowClass}">
                     <td>${index + 1}</td>
-                    <td style="text-align:left; padding-left:15px; font-weight:600;">${p.name} ${p.withdrawn ? '(ÇEKİLDİ)' : ''}</td>
+                    <td style="text-align:left; padding-left:15px; font-weight:600;">
+                        ${p.name} ${p.withdrawn ? '(ÇEKİLDİ)' : ''} ${p.skipPlayoff ? '(PLAY-OFF DIŞI)' : ''} ${actionBtn}
+                    </td>
                     <td>${p.stats.o}</td>
                     <td>${p.stats.g}</td>
                     <td>${p.stats.m}</td>
@@ -626,7 +660,7 @@
         weightedPlayers.forEach((p, index) => {
             const avg = p.stats.o > 0 ? (p.stats.p / p.stats.o).toFixed(2) : "0.00";
             const rowClass = p.withdrawn ? 'withdrawn-row' : '';
-            weightedBody.innerHTML += `<tr class="${rowClass}"><td>${index + 1}</td><td style="text-align:left; padding-left:15px; font-weight:600;">${p.name} ${p.withdrawn ? '(ÇEKİLDİ)' : ''}</td><td>${p.stats.o}</td><td>${p.stats.p}</td><td style="font-weight:bold; color:var(--accent); background:${p.withdrawn ? '#333' : '#f0f9f4'};">${avg}</td></tr>`;
+            weightedBody.innerHTML += `<tr class="${rowClass}"><td>${index + 1}</td><td style="text-align:left; padding-left:15px; font-weight:600;">${p.name}</td><td>${p.stats.o}</td><td>${p.stats.p}</td><td style="font-weight:bold; color:var(--accent); background:${p.withdrawn ? '#333' : '#f0f9f4'};">${avg}</td></tr>`;
         });
     }
 
@@ -737,7 +771,6 @@
     }
 
     // Commented out voting function as per request
-    /* function renderVoting() { ... } */
     function renderVoting() {} // Empty stub to prevent errors
 
     window.openTab = function(tabName) {
