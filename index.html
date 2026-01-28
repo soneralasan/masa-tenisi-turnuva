@@ -42,8 +42,11 @@
         .withdrawn-row td { border-bottom: 1px solid #555; }
         
         /* Play-off Pas Geçen Oyuncu */
-        .skipped-row td { color: #999; text-decoration: line-through; }
-        .skipped-row td:first-child { text-decoration: none; color: #e74c3c; border-left: 4px solid #e74c3c; }
+        .skipped-row { background-color: #fff5f5; }
+        .skipped-row td { color: #e74c3c; text-decoration: line-through; }
+        .skipped-row td:first-child { text-decoration: none; border-left: 4px solid #e74c3c; }
+        /* Pas geçenler için butonun üstü çizilmesin */
+        .skipped-row button { text-decoration: none !important; }
 
         /* TURNUVA AĞACI (BRACKET) STİLLERİ */
         .bracket-container { display: flex; flex-direction: row; justify-content: space-between; gap: 10px; overflow-x: auto; padding: 20px 0; }
@@ -406,43 +409,24 @@
         });
 
         appData.players.forEach(p => p.stats.av = (p.stats.a || 0) - (p.stats.y || 0));
+        
+        // --- YENİ SIRALAMA MANTIĞI (ÖNCELİK) ---
         appData.players.sort((a, b) => {
+            // 1. Kriter: Çekilenler en alta
+            if (a.withdrawn && !b.withdrawn) return 1; 
+            if (!a.withdrawn && b.withdrawn) return -1;
+
+            // 2. Kriter: Play-off'u pas geçenler (aktiflerin altına)
+            if (a.skipPlayoff && !b.skipPlayoff) return 1; 
+            if (!a.skipPlayoff && b.skipPlayoff) return -1;
+
+            // 3. Kriter: Puan
             if (b.stats.p !== a.stats.p) return b.stats.p - a.stats.p;
+            // 4. Kriter: Averaj
             if (b.stats.av !== a.stats.av) return b.stats.av - a.stats.av;
+            // 5. Kriter: İsim
             return a.name.localeCompare(b.name);
         });
-
-        // --- PLAY-OFF KATILIM AYARLAMASI (SKIP LOGIC) ---
-        // İlk 8'de olup oynamayacakları (skipPlayoff=true), 
-        // 8. sıradan sonrakilerle (skipPlayoff=false) takas et.
-        
-        let attempts = 0;
-        while(attempts < 20) { // Safety break
-            let skipperIndex = -1;
-            for(let i=0; i<8; i++) {
-                if(appData.players[i] && appData.players[i].skipPlayoff) {
-                    skipperIndex = i;
-                    break;
-                }
-            }
-
-            let replacementIndex = -1;
-            for(let i=8; i<appData.players.length; i++) {
-                if(appData.players[i] && !appData.players[i].skipPlayoff) {
-                    replacementIndex = i;
-                    break;
-                }
-            }
-
-            if(skipperIndex !== -1 && replacementIndex !== -1) {
-                let temp = appData.players[skipperIndex];
-                appData.players[skipperIndex] = appData.players[replacementIndex];
-                appData.players[replacementIndex] = temp;
-                attempts++;
-            } else {
-                break;
-            }
-        }
 
         renderStandings();
     }
@@ -453,7 +437,8 @@
         const player = appData.players.find(p => p.name === playerName);
         if(player) {
             player.skipPlayoff = !player.skipPlayoff;
-            calculateStandings(); // Hesapla ve yeniden sırala
+            // Sıralamayı ve veriyi hemen güncelle
+            calculateStandings();
             saveDataToFirebase();
         }
     }
@@ -630,8 +615,14 @@
 
             let actionBtn = '';
             if(isAdmin && !p.withdrawn) {
-                if(p.skipPlayoff) actionBtn = `<button class="undo-btn" onclick="togglePlayoffSkip('${p.name}')">↩️</button>`;
-                else if(index < 8) actionBtn = `<button class="skip-btn" onclick="togglePlayoffSkip('${p.name}')">🚫</button>`;
+                // Eğer oyuncu pas geçmişse, listede nerede olursa olsun Geri Al butonu görünmeli
+                if(p.skipPlayoff) {
+                    actionBtn = `<button class="undo-btn" onclick="togglePlayoffSkip('${p.name}')">↩️</button>`;
+                } 
+                // Eğer oyuncu pas geçmemişse ve ilk 8'deyse Pas Geç butonu görünmeli
+                else if(index < 8) {
+                    actionBtn = `<button class="skip-btn" onclick="togglePlayoffSkip('${p.name}')">🚫</button>`;
+                }
             }
 
             standardBody.innerHTML += `
