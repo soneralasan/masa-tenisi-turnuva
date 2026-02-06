@@ -54,37 +54,58 @@
         
         .bronze-title { text-align: center; font-weight: bold; color: #e67e22; margin: 30px 0 10px 0; text-transform: uppercase; font-size: 12px; border-bottom: 2px solid #e67e22; padding-bottom: 5px; }
 
-        /* KÜRSÜ (PODIUM) STİLLERİ */
+        /* KÜRSÜ (PODIUM) STİLLERİ - GÜNCELLENDİ */
         .podium-container { 
             margin-top: 30px; background: white; border-radius: 8px; padding: 25px; 
             box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; border: 1px solid #eee; 
             animation: slideDown 0.5s ease;
         }
-        .podium-header { font-size: 14px; color: #7f8c8d; font-weight: bold; text-transform: uppercase; margin-bottom: 20px; letter-spacing: 1px; }
-        .podium-list { display: flex; flex-direction: column; gap: 15px; align-items: center; }
+        .podium-header { font-size: 14px; color: #7f8c8d; font-weight: bold; text-transform: uppercase; margin-bottom: 25px; letter-spacing: 1px; }
+        .podium-list { display: flex; flex-direction: column; gap: 20px; align-items: center; }
         
-        .rank-item { display: flex; align-items: center; gap: 15px; justify-content: center; width: 100%; }
+        .rank-item { display: flex; align-items: center; gap: 20px; justify-content: center; width: 100%; }
         
-        /* Oyuncu Fotoğrafı (Yuvarlak) */
+        /* FOTOĞRAF STİLLERİ */
         .podium-img {
-            border-radius: 50%; object-fit: cover; border: 2px solid #fff; 
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            border-radius: 50%; object-fit: cover; border: 3px solid #fff; 
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease;
+            cursor: zoom-in; /* Tıklanabilir olduğunu göster */
         }
+        .podium-img:hover { transform: scale(1.1); }
 
-        /* 1. SIRA */
-        .rank-1 { color: #f1c40f; font-size: 24px; font-weight: 800; text-shadow: 0 1px 2px rgba(0,0,0,0.1); }
-        .rank-1 .icon { font-size: 28px; margin-right: 5px;}
-        .rank-1 .podium-img { width: 60px; height: 60px; border-color: #f1c40f; }
+        /* 1. SIRA (DAHA BÜYÜK) */
+        .rank-1 { color: #f1c40f; font-size: 28px; font-weight: 800; text-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+        .rank-1 .icon { font-size: 32px; margin-right: 5px;}
+        .rank-1 .podium-img { width: 120px; height: 120px; border-color: #f1c40f; }
         
         /* 2. SIRA */
-        .rank-2 { color: #7f8c8d; font-size: 18px; font-weight: 700; }
-        .rank-2 .icon { font-size: 22px; margin-right: 5px;}
-        .rank-2 .podium-img { width: 50px; height: 50px; border-color: #bdc3c7; }
+        .rank-2 { color: #7f8c8d; font-size: 22px; font-weight: 700; }
+        .rank-2 .icon { font-size: 26px; margin-right: 5px;}
+        .rank-2 .podium-img { width: 90px; height: 90px; border-color: #bdc3c7; }
         
         /* 3. SIRA */
-        .rank-3 { color: #d35400; font-size: 16px; font-weight: 600; }
-        .rank-3 .icon { font-size: 18px; margin-right: 5px;}
-        .rank-3 .podium-img { width: 45px; height: 45px; border-color: #e67e22; }
+        .rank-3 { color: #d35400; font-size: 18px; font-weight: 600; }
+        .rank-3 .icon { font-size: 22px; margin-right: 5px;}
+        .rank-3 .podium-img { width: 80px; height: 80px; border-color: #e67e22; }
+
+        /* MODAL (LIGHTBOX) STİLLERİ */
+        .modal {
+            display: none; position: fixed; z-index: 2000; padding-top: 50px; 
+            left: 0; top: 0; width: 100%; height: 100%; overflow: auto; 
+            background-color: rgba(0,0,0,0.9);
+        }
+        .modal-content {
+            margin: auto; display: block; width: 80%; max-width: 600px;
+            border-radius: 10px; border: 2px solid white;
+            animation: zoom 0.6s;
+        }
+        .modal-close {
+            position: absolute; top: 15px; right: 35px; color: #f1f1f1; 
+            font-size: 40px; font-weight: bold; transition: 0.3s; cursor: pointer;
+        }
+        .modal-close:hover, .modal-close:focus { color: #bbb; text-decoration: none; cursor: pointer; }
+        @keyframes zoom { from {transform:scale(0)} to {transform:scale(1)} }
 
         .match-box { background: white; border: 1px solid #ddd; border-radius: 6px; padding: 10px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); position: relative; }
         .match-player { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid #eee; font-size: 13px; }
@@ -359,6 +380,11 @@
     </div>
 </div>
 
+<div id="photoModal" class="modal" onclick="closePhotoModal()">
+    <span class="modal-close">&times;</span>
+    <img class="modal-content" id="modalImg">
+</div>
+
 <div id="statusBar" class="status-bar"></div>
 
 <script>
@@ -402,7 +428,6 @@
             
             if (data) {
                 appData = data;
-                // Veri güvenliği
                 if(!appData.players) appData.players = [];
                 if(!appData.matches) appData.matches = [];
                 if(!appData.finals) appData.finals = { started: false, seeds: [], matches: {} };
@@ -486,7 +511,6 @@
         const select = document.getElementById('photoPlayerSelect');
         if(!select) return;
         select.innerHTML = '<option value="">Oyuncu Seçiniz...</option>';
-        // Tüm oyuncuları alfabetik sırayla listele
         [...appData.players].sort((a,b)=>a.name.localeCompare(b.name)).forEach(p => {
             const option = document.createElement('option');
             option.value = p.name;
@@ -508,11 +532,11 @@
         reader.onload = function(e) {
             const img = new Image();
             img.onload = function() {
-                // Resize Image (Canvas)
                 const canvas = document.createElement('canvas');
                 const ctx = canvas.getContext('2d');
-                const MAX_WIDTH = 150;
-                const MAX_HEIGHT = 150;
+                // Daha yüksek çözünürlük için limiti artırdık (800px)
+                const MAX_WIDTH = 800;
+                const MAX_HEIGHT = 800;
                 let width = img.width;
                 let height = img.height;
 
@@ -526,10 +550,8 @@
                 canvas.height = height;
                 ctx.drawImage(img, 0, 0, width, height);
                 
-                // Base64 Data URL
-                const dataUrl = canvas.toDataURL('image/jpeg', 0.7); // Quality 0.7
+                const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
                 
-                // Save to Player Object
                 const player = appData.players.find(p => p.name === playerName);
                 if(player) {
                     player.photo = dataUrl;
@@ -540,6 +562,18 @@
             img.src = e.target.result;
         };
         reader.readAsDataURL(file);
+    }
+
+    // --- MODAL (LIGHTBOX) ---
+    window.openPhotoModal = function(src) {
+        const modal = document.getElementById('photoModal');
+        const modalImg = document.getElementById('modalImg');
+        modal.style.display = "block";
+        modalImg.src = src;
+    }
+
+    window.closePhotoModal = function() {
+        document.getElementById('photoModal').style.display = "none";
     }
 
     window.togglePlayoffSkip = function(playerName) {
@@ -600,7 +634,6 @@
             return "???";
         };
 
-        // Quarter Finals
         const qfPairs = [
             { id: 'qf1', p1Idx: 0, p2Idx: 7 },
             { id: 'qf2', p1Idx: 3, p2Idx: 4 },
@@ -631,7 +664,7 @@
         fDiv.innerHTML += '<div class="bronze-title">3. Lük Maçı</div>';
         fDiv.innerHTML += createFinalMatchHTML('3rdPlace', t_p1, t_p2, matches['3rdPlace']);
 
-        // --- PODIUM (KÜRSÜ) ---
+        // --- PODIUM ---
         const first = getWinner(f_p1, f_p2, 'final');
         const second = getLoser(f_p1, f_p2, 'final');
         const third = getWinner(t_p1, t_p2, '3rdPlace');
@@ -639,7 +672,8 @@
         if(first !== "???" && second !== "???" && third !== "???") {
             const getPhotoHtml = (name) => {
                 const p = appData.players.find(x => x.name === name);
-                return (p && p.photo) ? `<img src="${p.photo}" class="podium-img">` : '';
+                // Fotoğraf varsa IMG döndür, tıklandığında modal açsın
+                return (p && p.photo) ? `<img src="${p.photo}" class="podium-img" onclick="openPhotoModal(this.src)">` : '';
             };
 
             podiumDiv.innerHTML = `
