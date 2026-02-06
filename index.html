@@ -1,536 +1,105 @@
-<!DOCTYPE html>
-<html lang="tr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Masa Tenisi Turnuva Yönetim Sistemi</title>
+# Bu script RTA4004 cihazındaki bus table dan çekilen dataları analiz eder.
+
+import os
+import glob
+import time
+import sys
+
+# Kütüphane kontrolü
+try:
+    import pandas as pd
+    import matplotlib.pyplot as plt
+except ImportError:
+    print("HATA: 'pandas' veya 'matplotlib' kütüphanesi yüklü değil.")
+    input("\nÇıkmak için Enter'a basın...")
+    sys.exit()
+
+def parse_t100_verified(hex_str):
+    """
+    16-bit Little Endian Parsing (Örn: 3690D1075C08...)
+    X: Byte 2 (LSB), Byte 3 (MSB) -> D1 07 -> 0x07D1 (2001)
+    Y: Byte 4 (LSB), Byte 5 (MSB) -> 5C 08 -> 0x085C (2140)
+    """
+    try:
+        data = bytes.fromhex(hex_str.replace("0x", "").replace(" ", ""))
+        if len(data) < 7: return None
+        
+        status = data[1]
+        x = data[2] | (data[3] << 8)
+        y = data[4] | (data[5] << 8)
+        pressure = data[6]
+        
+        return {
+            'id': data[0], 'x': x, 'y': y, 'p': pressure,
+            'detect': bool(status & 0x80), # Bit 7: Detect
+            'rel': bool(status & 0x20)    # Bit 5: Release
+        }
+    except: return None
+
+def main():
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    os.chdir(script_dir)
     
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-
-    <style>
-        :root { --primary: #2c3e50; --accent: #27ae60; --light: #ecf0f1; --danger: #e74c3c; --vote: #f39c12; --gold: #f1c40f; }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; background: #f0f2f5; color: #333; padding-bottom: 80px; }
-        
-        /* Main Navbar */
-        .main-navbar { background: var(--primary); display: flex; justify-content: space-around; padding: 0; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
-        .main-navbar button { flex: 1; padding: 15px; background: transparent; border: none; color: #bdc3c7; font-size: 12px; font-weight: bold; cursor: pointer; transition: 0.3s; border-bottom: 4px solid transparent; text-transform: uppercase; }
-        .main-navbar button.active { color: white; border-bottom: 4px solid var(--accent); background: rgba(255,255,255,0.05); }
-
-        /* Container */
-        .container { max-width: 900px; margin: 0 auto; padding: 15px; }
-        .main-tab-content { display: none; animation: fadeIn 0.3s ease; }
-        .main-tab-content.active { display: block; }
-
-        /* Generic Styles */
-        .card { background: white; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); padding: 15px; margin-bottom: 15px; }
-        .btn { padding: 10px 15px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; color: white; transition: 0.2s; width: 100%; margin-top: 5px;}
-        .btn-primary { background: var(--accent); }
-        .btn-danger { background: var(--danger); }
-        .btn-secondary { background: #34495e; }
-        
-        /* Input Styles */
-        input, select { width: 100%; padding: 10px; margin: 5px 0 15px 0; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
-
-        /* History Accordion */
-        .history-type-tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; }
-        .history-btn { padding: 8px 15px; background: #ddd; border: none; border-radius: 20px; cursor: pointer; font-weight: bold; color: #555; }
-        .history-btn.active { background: var(--primary); color: white; }
-
-        .accordion-item { border: 1px solid #ddd; border-radius: 5px; margin-bottom: 10px; background: white; overflow: hidden; }
-        .accordion-header { padding: 15px; background: #f9f9f9; cursor: pointer; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
-        .accordion-header:hover { background: #f1f1f1; }
-        .accordion-content { display: none; padding: 15px; border-top: 1px solid #ddd; }
-        .accordion-content.open { display: block; }
-
-        /* Tournament Internal Tabs (Shared Logic) */
-        .inner-navbar { display: flex; border-bottom: 1px solid #ddd; margin-bottom: 15px; }
-        .inner-navbar button { flex: 1; padding: 10px; background: transparent; border: none; cursor: pointer; color: #777; font-weight: 600; border-bottom: 3px solid transparent; }
-        .inner-navbar button.active { color: var(--primary); border-bottom: 3px solid var(--primary); }
-        
-        /* Table Styles */
-        table { width: 100%; border-collapse: collapse; font-size: 13px; }
-        th, td { padding: 10px; text-align: center; border-bottom: 1px solid #eee; }
-        th { background: #eee; color: #333; }
-        .top8 { background-color: #e8f5e9; }
-        .withdrawn-row { background: #333; color: #ccc; }
-
-        /* Fixture Styles */
-        .match-card { display: flex; justify-content: space-between; align-items: center; background: #fafafa; border: 1px solid #eee; padding: 10px; margin-bottom: 8px; border-radius: 6px; }
-        .player-name { font-weight: 600; font-size: 13px; width: 40%; }
-        .score-area { width: 20%; display: flex; justify-content: center; gap: 5px; }
-        .score-input { width: 30px; text-align: center; font-weight: bold; }
-
-        /* Admin Forms */
-        .participant-row { display: flex; gap: 5px; margin-bottom: 5px; }
-        .hidden { display: none; }
-
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-    </style>
-</head>
-<body>
-
-<div class="main-navbar">
-    <button class="main-link active" onclick="openMainTab('tabCurrent')">GÜNCEL TURNUVA</button>
-    <button class="main-link" onclick="openMainTab('tabHistory')">ESKİ TURNUVALAR</button>
-    <button class="main-link" onclick="openMainTab('tabAdmin')">YÖNETİCİ PANELİ</button>
-</div>
-
-<div class="container">
-    <div id="loading" style="text-align:center; padding:20px;">Veriler Yükleniyor...</div>
-
-    <div id="tabCurrent" class="main-tab-content active">
-        <div id="currentTournamentArea">
-            <div style="text-align:center; color:#777; margin-top:50px;">
-                <h3>Şu anda aktif bir turnuva yok.</h3>
-                <p>Yönetici panelinden yeni bir turnuva başlatabilirsiniz.</p>
-            </div>
-        </div>
-    </div>
-
-    <div id="tabHistory" class="main-tab-content">
-        <div class="history-type-tabs">
-            <button class="history-btn active" onclick="filterHistory('individual')">Bireysel Turnuvalar</button>
-            <button class="history-btn" onclick="filterHistory('doubles')">Çift Turnuvaları</button>
-        </div>
-        <div id="historyList"></div>
-    </div>
-
-    <div id="tabAdmin" class="main-tab-content">
-        <div id="loginPanel" class="card">
-            <h3>Yönetici Girişi</h3>
-            <input type="email" id="email" placeholder="E-Posta">
-            <input type="password" id="password" placeholder="Şifre">
-            <button class="btn btn-primary" onclick="login()">Giriş Yap</button>
-        </div>
-
-        <div id="adminControls" class="card" style="display:none;">
-            <h3>Yönetim Paneli</h3>
-            
-            <div style="display:flex; gap:10px; margin-bottom:20px;">
-                <button class="btn btn-secondary" onclick="showNewTournamentForm()">➕ YENİ TURNUVA BAŞLAT</button>
-                <button class="btn btn-danger" onclick="endCurrentTournament()">🏁 GÜNCEL TURNUVAYI BİTİR</button>
-            </div>
-
-            <div id="newTournamentForm" class="hidden" style="background:#f9f9f9; padding:15px; border-radius:8px; border:1px solid #ddd;">
-                <h4>Yeni Turnuva Kurulumu</h4>
-                
-                <label>Turnuva Tipi:</label>
-                <select id="newTourType" onchange="toggleTeamInput()">
-                    <option value="individual">Bireysel Turnuva</option>
-                    <option value="doubles">Çift (Takım) Turnuvası</option>
-                </select>
-
-                <div id="participantList"></div>
-                
-                <button class="btn btn-secondary" style="width:auto; margin-top:10px;" onclick="addParticipantRow()">+ Katılımcı Ekle</button>
-                <hr>
-                <button class="btn btn-primary" onclick="startNewTournament()">🚀 TURNUVAYI BAŞLAT</button>
-            </div>
-
-            <hr>
-            <button class="btn btn-danger" onclick="logout()">Çıkış Yap</button>
-        </div>
-    </div>
-</div>
-
-<datalist id="registeredPlayers"></datalist>
-
-<script>
-    // --- FIREBASE CONFIG ---
-    const firebaseConfig = {
-        apiKey:  "AIzaSyApl74nGCJrG42BWFJaR_v3gqHGlF2R_3M",
-        authDomain: "otomotiv-masa-tenisi-turnuvasi.firebaseapp.com",
-        databaseURL: "https://otomotiv-masa-tenisi-turnuvasi-default-rtdb.firebaseio.com",
-        projectId: "otomotiv-masa-tenisi-turnuvasi",
-        storageBucket: "otomotiv-masa-tenisi-turnuvasi.firebasestorage.app",
-        messagingSenderId: "88398060894",
-        appId: "1:88398060894:web:8b9e4e1198466aae1283cf",
-        measurementId: "G-GC6ND6CK6J"
-    };
-
-    if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
-    const db = firebase.database();
-    const auth = firebase.auth();
-
-    let dbData = { current: null, history: [], globalPlayers: [] };
-    let isAdmin = false;
-
-    window.onload = function() {
-        auth.onAuthStateChanged(user => {
-            isAdmin = !!user;
-            updateAdminUI();
-            if(dbData.current) renderTournamentView(dbData.current, 'currentTournamentArea', true);
-        });
-
-        db.ref('turnuva_v2').on('value', (snapshot) => {
-            document.getElementById('loading').style.display = 'none';
-            const val = snapshot.val();
-            
-            if (val) {
-                dbData = val;
-                if(!dbData.history) dbData.history = [];
-                if(!dbData.globalPlayers) dbData.globalPlayers = [];
-            } else {
-                // Veritabanı boşsa (ilk kez çalışıyorsa) başlat
-                db.ref('turnuva_v2').set(dbData);
-            }
-
-            updateGlobalPlayerList();
-            renderCurrentTournament();
-            renderHistory('individual');
-        });
-    };
-
-    // --- RENDER LOGIC ---
-    function renderTournamentView(tData, containerId, isEditable) {
-        const container = document.getElementById(containerId);
-        if(!tData) {
-            container.innerHTML = '<div style="padding:20px; text-align:center;">Turnuva verisi bulunamadı.</div>';
-            return;
-        }
-
-        const uid = Math.random().toString(36).substr(2, 9);
-
-        let html = `
-            <div class="card">
-                <h2 style="color:var(--primary); text-align:center; border-bottom:2px solid var(--accent); padding-bottom:10px;">
-                    ${tData.name} <span style="font-size:12px; font-weight:normal; color:#777;">(${tData.type === 'individual' ? 'Bireysel' : 'Çiftler'})</span>
-                </h2>
-                
-                <div class="inner-navbar">
-                    <button class="active" onclick="switchInnerTab('${uid}', 'standings')">PUAN DURUMU</button>
-                    <button onclick="switchInnerTab('${uid}', 'fixture')">FİKSTÜR</button>
-                    <button onclick="switchInnerTab('${uid}', 'rules')">KURALLAR</button>
-                </div>
-
-                <div id="${uid}-standings" class="inner-content" style="display:block;">
-                    ${generateStandingsHTML(tData)}
-                </div>
-
-                <div id="${uid}-fixture" class="inner-content" style="display:none;">
-                    ${generateFixtureHTML(tData, isEditable, containerId)}
-                </div>
-
-                <div id="${uid}-rules" class="inner-content" style="display:none;">
-                    <div style="padding:15px; line-height:1.6;">
-                        <h4>Turnuva Kuralları</h4>
-                        <ul>
-                            <li>Maçlar 3 set üzerinden oynanır.</li>
-                            <li>Setler 21 sayıda biter.</li>
-                            <li>Galibiyet 2 puan, Mağlubiyet 1 puan.</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        `;
-        container.innerHTML = html;
-    }
-
-    function generateStandingsHTML(tData) {
-        let players = [...(tData.players || [])];
-        
-        // Basit Puan Hesaplama (Kaydedilmiş stats'ları kullanır)
-        players.sort((a, b) => {
-            if (b.stats.p !== a.stats.p) return b.stats.p - a.stats.p;
-            if (b.stats.av !== a.stats.av) return b.stats.av - a.stats.av;
-            return a.name.localeCompare(b.name);
-        });
-
-        let rows = players.map((p, i) => {
-            let rowClass = (i < 8) ? 'top8' : '';
-            return `<tr class="${rowClass}">
-                <td>${i+1}</td>
-                <td style="text-align:left;">${p.name}</td>
-                <td>${p.stats.o}</td>
-                <td>${p.stats.g}</td>
-                <td>${p.stats.m}</td>
-                <td>${p.stats.av}</td>
-                <td><strong>${p.stats.p}</strong></td>
-            </tr>`;
-        }).join('');
-
-        return `<table><thead><tr><th>#</th><th>İsim</th><th>O</th><th>G</th><th>M</th><th>Av</th><th>P</th></tr></thead><tbody>${rows}</tbody></table>`;
-    }
-
-    function generateFixtureHTML(tData, isEditable, pathContext) {
-        if(!tData.matches || tData.matches.length === 0) return '<p style="text-align:center;">Fikstür Yok.</p>';
-        
-        let rounds = {};
-        tData.matches.forEach((m, idx) => {
-            if(!rounds[m.round]) rounds[m.round] = [];
-            rounds[m.round].push({...m, idx: idx});
-        });
-
-        let html = '';
-        for(let r in rounds) {
-            html += `<div class="day-header" style="text-align:center; font-weight:bold; margin:15px 0;">${r}. TUR</div>`;
-            rounds[r].forEach(m => {
-                const disabled = (isEditable && isAdmin) ? '' : 'disabled';
-                html += `
-                <div class="match-card">
-                    <div class="player-name" style="text-align:right;">${m.p1}</div>
-                    <div class="score-area">
-                        <input type="number" class="score-input" ${disabled} value="${m.s1!=null?m.s1:''}" 
-                            onchange="updateMatchScore('${pathContext}', ${m.idx}, 's1', this.value)">
-                        -
-                        <input type="number" class="score-input" ${disabled} value="${m.s2!=null?m.s2:''}" 
-                            onchange="updateMatchScore('${pathContext}', ${m.idx}, 's2', this.value)">
-                    </div>
-                    <div class="player-name">${m.p2}</div>
-                </div>`;
-            });
-        }
-        return html;
-    }
-
-    // --- NAVIGATION ---
-    window.openMainTab = function(tabId) {
-        document.querySelectorAll('.main-tab-content').forEach(el => el.classList.remove('active'));
-        document.querySelectorAll('.main-link').forEach(el => el.classList.remove('active'));
-        document.getElementById(tabId).classList.add('active');
-        // event.target.classList.add('active'); // Manuel eklemeye gerek yok, CSS ile handle edilebilir ama basitlik için kalsın.
-    }
-
-    window.switchInnerTab = function(uid, tabName) {
-        const parent = document.getElementById(uid + '-' + tabName).parentElement;
-        parent.querySelectorAll('.inner-content').forEach(el => el.style.display = 'none');
-        document.getElementById(uid + '-' + tabName).style.display = 'block';
-        
-        const btnContainer = parent.querySelector('.inner-navbar');
-        btnContainer.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
-        event.target.classList.add('active');
-    }
-
-    window.filterHistory = function(type) {
-        renderHistory(type);
-        document.querySelectorAll('.history-btn').forEach(b => b.classList.remove('active'));
-        event.target.classList.add('active');
-    }
-
-    function renderHistory(type) {
-        const container = document.getElementById('historyList');
-        container.innerHTML = '';
-
-        const filtered = dbData.history.filter(t => t.type === type);
-        if(filtered.length === 0) {
-            container.innerHTML = '<p style="text-align:center; color:#999;">Bu kategoride geçmiş turnuva bulunamadı.</p>';
-            return;
-        }
-
-        filtered.reverse().forEach((t, idx) => {
-            const itemId = `hist-${type}-${idx}`;
-            // t.data eski yapıdan geliyorsa onu, yoksa t'nin kendisini kullan (yeni yapı)
-            const tournamentData = t.data || t; 
-            
-            const html = `
-                <div class="accordion-item">
-                    <div class="accordion-header" onclick="toggleAccordion('${itemId}')">
-                        <span>${tournamentData.name} <small>(${t.date || '-'})</small></span>
-                        <span>▼</span>
-                    </div>
-                    <div id="${itemId}" class="accordion-content"></div>
-                </div>
-            `;
-            container.innerHTML += html;
-            
-            // Accordion içeriğini render et (DOM'a eklendikten sonra)
-            // setTimeout ile DOM'un güncellenmesini bekliyoruz
-            setTimeout(() => {
-                renderTournamentView(tournamentData, itemId, false);
-            }, 0);
-        });
-    }
-
-    window.toggleAccordion = function(id) {
-        const el = document.getElementById(id);
-        const isOpen = el.classList.contains('open');
-        document.querySelectorAll('.accordion-content').forEach(d => d.classList.remove('open'));
-        if(!isOpen) el.classList.add('open');
-    }
-
-    function renderCurrentTournament() {
-        if(dbData.current) {
-            renderTournamentView(dbData.current, 'currentTournamentArea', true);
-        } else {
-            document.getElementById('currentTournamentArea').innerHTML = `
-                <div style="text-align:center; color:#777; margin-top:50px;">
-                    <h3>Şu anda aktif bir turnuva yok.</h3>
-                    <p>Yönetici panelinden yeni bir turnuva başlatabilirsiniz.</p>
-                </div>`;
-        }
-    }
-
-    // --- ADMIN LOGIC ---
-    function updateAdminUI() {
-        document.getElementById('loginPanel').style.display = isAdmin ? 'none' : 'block';
-        document.getElementById('adminControls').style.display = isAdmin ? 'block' : 'none';
-        if(isAdmin) populatePlayerDatalist();
-    }
-
-    function updateGlobalPlayerList() {
-        const dl = document.getElementById('registeredPlayers');
-        dl.innerHTML = '';
-        if(dbData.globalPlayers) {
-            dbData.globalPlayers.sort().forEach(name => {
-                const opt = document.createElement('option');
-                opt.value = name;
-                dl.appendChild(opt);
-            });
-        }
-    }
+    csv_files = []
+    for ext in ["*.csv", "*.CSV"]:
+        csv_files.extend(glob.glob(ext))
+    csv_files = list(set(csv_files))
     
-    function populatePlayerDatalist() { updateGlobalPlayerList(); }
+    if not csv_files:
+        print(f"\nHATA: CSV bulunamadı!")
+    else:
+        output_txt = "touch_analiz_sonuclari.txt"
+        with open(output_txt, "w", encoding="utf-8") as f_out:
+            f_out.write(f"ATMEL MAXTOUCH T100 ANALİZ RAPORU\n")
+            
+            for file in csv_files:
+                print(f"İşleniyor: {file}...")
+                try:
+                    df = pd.read_csv(file, skiprows=2)
+                    
+                    # SÜTUN BAŞLIĞI DÜZELTMESİ:
+                    # 'Start Time in s' veya 'Time Diff. in s' hangisi varsa onu kullan
+                    time_col = None
+                    for col in ['Start Time in s', 'Time Diff. in s']:
+                        if col in df.columns:
+                            time_col = col
+                            break
+                    
+                    if not time_col:
+                        print(f"   -> HATA: Zaman sütunu bulunamadı! Mevcut sütunlar: {df.columns.tolist()}")
+                        continue
 
-    function showNewTournamentForm() {
-        document.getElementById('newTournamentForm').classList.remove('hidden');
-        document.getElementById('participantList').innerHTML = '';
-        addParticipantRow();
-        addParticipantRow();
-    }
+                    f_out.write(f"\nDOSYA: {file}\n" + "-"*40 + "\n")
+                    points_x, points_y = [], []
 
-    function toggleTeamInput() {
-        document.getElementById('participantList').innerHTML = '';
-        addParticipantRow();
-        addParticipantRow();
-    }
+                    for _, row in df.iterrows():
+                        if str(row['Type']).strip() == 'Read' and '0x' in str(row['Data']):
+                            p = parse_t100_verified(str(row['Data']))
+                            if p:
+                                t = float(row[time_col])
+                                durum = "DOKUNMA" if p['detect'] else "IDLE"
+                                f_out.write(f"{t:<12.6f} | X:{p['x']:<4} | Y:{p['y']:<4} | {durum}\n")
+                                
+                                if p['detect']:
+                                    points_x.append(p['x'])
+                                    points_y.append(p['y'])
 
-    function addParticipantRow() {
-        const type = document.getElementById('newTourType').value;
-        const container = document.getElementById('participantList');
-        const div = document.createElement('div');
-        div.className = 'participant-row';
+                    # Görselleştirme
+                    if points_x:
+                        plt.figure(figsize=(10, 8))
+                        plt.xlim(0, 4095)
+                        plt.ylim(0, 4095)
+                        plt.gca().invert_yaxis() # Origin Sol Üst
+                        plt.plot(points_x, points_y, 'b-o', markersize=2, alpha=0.5)
+                        plt.title(f"Simülasyon: {file}")
+                        plt.savefig(f"{os.path.splitext(file)[0]}_simulasyon.png")
+                        plt.close()
+
+                except Exception as e:
+                    print(f"   -> Hata: {file} işlenemedi: {e}")
         
-        if (type === 'individual') {
-            div.innerHTML = `<input type="text" placeholder="Ad Soyad" list="registeredPlayers" class="p-input">`;
-        } else {
-            div.innerHTML = `
-                <input type="text" placeholder="Takım İsmi" class="t-name" style="width:30%">
-                <input type="text" placeholder="Oyuncu 1" list="registeredPlayers" class="p1-input" style="width:30%">
-                <input type="text" placeholder="Oyuncu 2" list="registeredPlayers" class="p2-input" style="width:30%">
-            `;
-        }
-        container.appendChild(div);
-    }
+    print(f"\nİşlem tamamlandı. ENTER'a basın.")
+    input()
 
-    function startNewTournament() {
-        if(dbData.current) return alert("Zaten aktif bir turnuva var.");
-
-        const type = document.getElementById('newTourType').value;
-        const inputs = document.querySelectorAll('#participantList .participant-row');
-        let players = [];
-
-        inputs.forEach(row => {
-            if(type === 'individual') {
-                const name = row.querySelector('.p-input').value.trim();
-                if(name) players.push({ name: name, withdrawn: false, stats: {p:0,o:0,g:0,m:0,av:0} });
-            } else {
-                const tName = row.querySelector('.t-name').value.trim();
-                const p1 = row.querySelector('.p1-input').value.trim();
-                const p2 = row.querySelector('.p2-input').value.trim();
-                if(tName && p1 && p2) {
-                    players.push({ name: tName, members: [p1, p2], withdrawn: false, stats: {p:0,o:0,g:0,m:0,av:0} });
-                }
-            }
-        });
-
-        if(players.length < 2) return alert("En az 2 katılımcı/takım gerekli.");
-
-        const count = dbData.history.filter(t => t.type === type).length + 1;
-        const tourName = `${count}. ${type === 'individual' ? 'Bireysel' : 'Çiftler'} Turnuvası`;
-
-        let matches = [];
-        for(let i=0; i<players.length; i++) {
-            for(let j=i+1; j<players.length; j++) {
-                matches.push({ round: 1, p1: players[i].name, p2: players[j].name, s1: null, s2: null });
-            }
-        }
-
-        let newGlobals = [...dbData.globalPlayers];
-        players.forEach(p => {
-            if(p.members) p.members.forEach(m => { if(!newGlobals.includes(m)) newGlobals.push(m); });
-            else if(!newGlobals.includes(p.name)) newGlobals.push(p.name);
-        });
-
-        dbData.current = {
-            id: Date.now().toString(),
-            name: tourName,
-            type: type,
-            players: players,
-            matches: matches,
-            finals: { started: false }
-        };
-        dbData.globalPlayers = newGlobals;
-
-        db.ref('turnuva_v2').update(dbData).then(() => {
-            alert("Yeni turnuva başlatıldı!");
-            document.getElementById('newTournamentForm').classList.add('hidden');
-            openMainTab('tabCurrent');
-        });
-    }
-
-    function endCurrentTournament() {
-        if(!dbData.current) return alert("Aktif turnuva yok.");
-        if(!confirm("Turnuvayı bitirip arşive kaldırmak istiyor musunuz?")) return;
-
-        const tourToArchive = {
-            id: dbData.current.id || Date.now(),
-            type: dbData.current.type,
-            name: dbData.current.name,
-            date: new Date().toLocaleDateString(),
-            data: dbData.current
-        };
-
-        if(!dbData.history) dbData.history = [];
-        dbData.history.push(tourToArchive);
-        dbData.current = null;
-
-        db.ref('turnuva_v2').set(dbData).then(() => {
-            alert("Turnuva arşivlendi.");
-            renderCurrentTournament();
-            renderHistory('individual');
-        });
-    }
-
-    window.updateMatchScore = function(context, matchIdx, field, value) {
-        if(!isAdmin) return;
-        
-        if(context === 'currentTournamentArea' && dbData.current) {
-            dbData.current.matches[matchIdx][field] = value;
-            calculateStandings(dbData.current);
-            db.ref('turnuva_v2/current').set(dbData.current);
-        }
-    }
-
-    function calculateStandings(tData) {
-        if(!tData) return;
-        tData.players.forEach(p => p.stats = {p:0,o:0,g:0,m:0,av:0});
-        tData.matches.forEach(m => {
-            if(m.s1 != null && m.s2 != null && m.s1 !== "" && m.s2 !== "") {
-                const p1 = tData.players.find(p => p.name === m.p1);
-                const p2 = tData.players.find(p => p.name === m.p2);
-                if(p1 && p2) {
-                    const s1 = parseInt(m.s1); const s2 = parseInt(m.s2);
-                    p1.stats.o++; p2.stats.o++;
-                    p1.stats.av += (s1-s2); p2.stats.av += (s2-s1);
-                    if(s1 > s2) { p1.stats.g++; p1.stats.p += 2; p2.stats.m++; p2.stats.p += 1; }
-                    else { p2.stats.g++; p2.stats.p += 2; p1.stats.m++; p1.stats.p += 1; }
-                }
-            }
-        });
-    }
-
-    function login() {
-        const e = document.getElementById('email').value;
-        const p = document.getElementById('password').value;
-        auth.signInWithEmailAndPassword(e, p).catch(err => alert(err.message));
-    }
-    
-    function logout() {
-        auth.signOut();
-    }
-</script>
-
-</body>
-</html>
+if __name__ == "__main__":
+    main()
