@@ -49,14 +49,81 @@
 
         /* TURNUVA AĞACI (BRACKET) STİLLERİ */
         .bracket-container { display: flex; flex-direction: row; justify-content: space-between; gap: 10px; overflow-x: auto; padding: 20px 0; }
-        .round { display: flex; flex-direction: column; justify-content: flex-start; flex: 1; min-width: 200px; } /* flex-start yapıldı ki 3.lük maçı düzgün dursun */
+        .round { display: flex; flex-direction: column; justify-content: flex-start; flex: 1; min-width: 200px; }
         .round-title { text-align: center; font-weight: bold; color: var(--primary); margin-bottom: 15px; text-transform: uppercase; font-size: 12px; border-bottom: 2px solid var(--accent); padding-bottom: 5px; }
         
-        /* 3. Lük Maçı Başlığı */
         .bronze-title { text-align: center; font-weight: bold; color: #e67e22; margin: 30px 0 10px 0; text-transform: uppercase; font-size: 12px; border-bottom: 2px solid #e67e22; padding-bottom: 5px; }
 
-        .match-box { background: white; border: 1px solid #ddd; border-radius: 6px; padding: 10px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); position: relative; }
+        /* KÜRSÜ (PODIUM) STİLLERİ */
+        .podium-container { 
+            margin-top: 30px; background: white; border-radius: 8px; padding: 25px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; border: 1px solid #eee; 
+            animation: slideDown 0.5s ease;
+        }
+        .podium-header { font-size: 14px; color: #7f8c8d; font-weight: bold; text-transform: uppercase; margin-bottom: 25px; letter-spacing: 1px; }
+        .podium-list { display: flex; flex-direction: column; gap: 20px; align-items: center; }
+        .rank-item { display: flex; align-items: center; gap: 15px; justify-content: center; width: 100%; }
         
+        /* FOTOĞRAF STİLLERİ */
+        .podium-img {
+            border-radius: 50%; object-fit: cover; border: 3px solid #fff; 
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease;
+            cursor: zoom-in;
+        }
+        .podium-img:hover { transform: scale(1.1); border-color: var(--primary) !important; }
+
+        .rank-1 { color: #f1c40f; font-size: 28px; font-weight: 800; text-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+        .rank-1 .icon { font-size: 32px; margin-right: 5px;}
+        .rank-1 .podium-img { width: 120px; height: 120px; border-color: #f1c40f; }
+        
+        .rank-2 { color: #7f8c8d; font-size: 22px; font-weight: 700; }
+        .rank-2 .icon { font-size: 26px; margin-right: 5px;}
+        .rank-2 .podium-img { width: 90px; height: 90px; border-color: #bdc3c7; }
+        
+        .rank-3 { color: #d35400; font-size: 18px; font-weight: 600; }
+        .rank-3 .icon { font-size: 22px; margin-right: 5px;}
+        .rank-3 .podium-img { width: 80px; height: 80px; border-color: #e67e22; }
+
+        /* MODAL (TAM EKRAN GÖRÜNTÜLEME) STİLLERİ GÜNCELLENDİ */
+        .modal {
+            display: none; position: fixed; z-index: 3000; 
+            left: 0; top: 0; width: 100%; height: 100%; 
+            background-color: rgba(0,0,0,0.95); /* Daha koyu arka plan */
+            backdrop-filter: blur(5px);
+            display: flex; align-items: center; justify-content: center; /* Ortala */
+        }
+        
+        /* Modal varsayılan olarak gizli olmalı, display:flex JS ile verilecek */
+        #photoModal { display: none; } 
+
+        .modal-content {
+            margin: auto;
+            display: block;
+            max-width: 95%; /* Ekran genişliğinin %95'i */
+            max-height: 95vh; /* Ekran yüksekliğinin %95'i */
+            width: auto; 
+            height: auto;
+            border-radius: 5px; 
+            border: 2px solid white;
+            box-shadow: 0 0 20px rgba(255,255,255,0.2);
+            animation: zoom 0.4s;
+            object-fit: contain; /* Görüntü oranını koru */
+        }
+        
+        .modal-close {
+            position: absolute; top: 20px; right: 30px; 
+            color: #f1f1f1; font-size: 50px; font-weight: bold; 
+            transition: 0.3s; cursor: pointer; z-index: 3001;
+            background: rgba(0,0,0,0.5); width: 60px; height: 60px;
+            line-height: 60px; text-align: center; border-radius: 50%;
+        }
+        .modal-close:hover { background: rgba(255,255,255,0.2); color: white; }
+        
+        @keyframes zoom { from {transform:scale(0.8); opacity:0;} to {transform:scale(1); opacity:1;} }
+
+        /* Diğer Stiller... */
+        .match-box { background: white; border: 1px solid #ddd; border-radius: 6px; padding: 10px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); position: relative; }
         .match-player { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid #eee; font-size: 13px; }
         .match-player:last-child { border-bottom: none; }
         .match-player input { width: 30px; text-align: center; border: 1px solid #ccc; border-radius: 3px; font-weight: bold; }
@@ -64,7 +131,6 @@
         .winner { color: var(--accent); font-weight: bold; }
         .loser { color: var(--danger); opacity: 0.5; text-decoration: line-through; }
 
-        /* Ortak Öğeler */
         .day-header { text-align: center; margin: 25px 0 10px; font-weight: 800; color: var(--primary); text-transform: uppercase; letter-spacing: 1px; font-size: 13px; position: relative; }
         .day-header::after { content: ''; display: block; width: 40px; height: 3px; background: var(--accent); margin: 5px auto 0; border-radius: 2px; }
         
@@ -89,8 +155,14 @@
         
         .scores { display: flex; align-items: center; gap: 5px; justify-content: center; width: auto; min-width: 120px; }
         .scores input { width: 30px; height: 30px; text-align: center; font-size: 16px; border: 1px solid #ddd; border-radius: 4px; font-weight: bold; background: #f9f9f9; }
-        
+        .scores input:focus { outline: none; border-color: var(--accent); background: white; }
+        .scores input:disabled { background: #eee; color: #333; border: none; }
+
         .vote-ratio { font-size: 11px; color: #333; font-weight: bold; background: #f0f2f5; padding: 4px 6px; border-radius: 4px; min-width: 35px; text-align: center; line-height: 1.1; }
+        
+        .vote-btn { background: white; border: 1px solid #ddd; border-radius: 20px; padding: 5px 10px; font-size: 12px; cursor: pointer; color: #555; display: flex; align-items: center; gap: 5px; transition: 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .vote-btn:hover { background: #f9f9f9; border-color: var(--vote); color: var(--vote); }
+        .vote-btn.voted { background: var(--vote); color: white; border-color: var(--vote); pointer-events: none; }
         
         .hukmen-toggle { width: 24px; height: 24px; border-radius: 4px; border: 1px solid #ccc; color: #777; font-size: 10px; font-weight: bold; display: flex; align-items: center; justify-content: center; cursor: pointer; margin-left: 8px; user-select: none; background: #fff; transition: all 0.2s; flex-shrink: 0; }
         .hukmen-toggle:hover { background: #f0f0f0; }
@@ -104,7 +176,7 @@
         .rules-box ul { margin: 10px 0; padding-left: 20px; }
         .rules-box li { margin-bottom: 5px; font-size: 14px; }
 
-        .admin-box input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
+        .admin-box input, .admin-box select { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
         .btn { width: 100%; padding: 12px; border: none; border-radius: 6px; font-size: 14px; font-weight: bold; cursor: pointer; transition: 0.2s; margin-top: 5px; text-transform: uppercase; }
         .btn-primary { background: var(--accent); color: white; }
         .btn-danger { background: var(--danger); color: white; margin-top: 20px; }
@@ -221,6 +293,8 @@
                 </div>
         </div>
         
+        <div id="podiumArea"></div>
+
         <div id="saveFinalsBtnArea" style="margin-top:20px; display:none; position:sticky; bottom:20px; text-align:center;">
             <button class="btn btn-primary" onclick="saveDataToFirebase()">💾 FİNAL SKORLARINI KAYDET</button>
         </div>
@@ -295,6 +369,17 @@
             <h3 style="color:var(--accent); margin-top:0;">Yönetim Paneli</h3>
             
             <div class="file-upload">
+                <h4 style="margin:0 0 10px 0; color:#555;">Oyuncu Fotoğrafı Yükle</h4>
+                <select id="photoPlayerSelect">
+                    <option value="">Oyuncu Seçiniz...</option>
+                </select>
+                <input type="file" id="photoInput" accept="image/*" style="width:100%; margin:10px 0;">
+                <button class="btn btn-secondary" onclick="uploadPlayerPhoto()">📷 FOTOĞRAFI KAYDET</button>
+            </div>
+
+            <hr style="border:0; border-top:1px dashed #eee; margin:20px 0;">
+
+            <div class="file-upload">
                 <h4 style="margin:0 0 10px 0; color:#555;">Veri Yönetimi</h4>
                 <label style="font-size:12px; font-weight:bold; display:block; text-align:left; margin-bottom:5px;">Veri Yükle (Upload):</label>
                 <input type="file" id="jsonFileInput" accept=".json" style="width:100%; margin-bottom:10px;">
@@ -308,6 +393,11 @@
             <button class="btn btn-danger" onclick="firebase.auth().signOut()">Çıkış Yap</button>
         </div>
     </div>
+</div>
+
+<div id="photoModal" class="modal" onclick="closePhotoModal()">
+    <span class="modal-close" onclick="closePhotoModal()">&times;</span>
+    <img class="modal-content" id="modalImg">
 </div>
 
 <div id="statusBar" class="status-bar"></div>
@@ -340,9 +430,11 @@
             document.getElementById('saveFinalsBtnArea').style.display = isAdmin ? 'block' : 'none';
             document.getElementById('endLeagueBtnArea').style.display = isAdmin ? 'block' : 'none';
             
-            if(isAdmin) showStatus("Yönetici modundasınız.", "success");
-            renderFixture();
-            renderFinals(); 
+            if(isAdmin) {
+                showStatus("Yönetici modundasınız.", "success");
+                populatePlayerSelect();
+            }
+            try { renderFixture(); renderFinals(); } catch(e) { console.error(e); }
         });
 
         db.ref('turnuva').on('value', (snapshot) => {
@@ -351,13 +443,20 @@
             
             if (data) {
                 appData = data;
+                // Veri güvenliği kontrolleri
                 if(!appData.players) appData.players = [];
                 if(!appData.matches) appData.matches = [];
                 if(!appData.finals) appData.finals = { started: false, seeds: [], matches: {} };
                 
-                calculateStandings();
-                renderFixture();
-                renderFinals();
+                try {
+                    calculateStandings();
+                    renderFixture();
+                    renderFinals();
+                    if(isAdmin) populatePlayerSelect();
+                } catch (err) {
+                    console.error("Render hatası:", err);
+                    showStatus("Veri işlenirken hata oluştu.", "error");
+                }
                 
                 if(document.querySelector('.tab-content.active') === null) {
                     openTab('puanDurumu');
@@ -410,26 +509,88 @@
         });
 
         appData.players.forEach(p => p.stats.av = (p.stats.a || 0) - (p.stats.y || 0));
-        
-        // --- YENİ SIRALAMA MANTIĞI (ÖNCELİK) ---
         appData.players.sort((a, b) => {
-            // 1. Kriter: Çekilenler en alta
             if (a.withdrawn && !b.withdrawn) return 1; 
             if (!a.withdrawn && b.withdrawn) return -1;
-
-            // 2. Kriter: Play-off'u pas geçenler (aktiflerin altına)
             if (a.skipPlayoff && !b.skipPlayoff) return 1; 
             if (!a.skipPlayoff && b.skipPlayoff) return -1;
-
-            // 3. Kriter: Puan
             if (b.stats.p !== a.stats.p) return b.stats.p - a.stats.p;
-            // 4. Kriter: Averaj
             if (b.stats.av !== a.stats.av) return b.stats.av - a.stats.av;
-            // 5. Kriter: İsim
             return a.name.localeCompare(b.name);
         });
 
         renderStandings();
+    }
+
+    // --- FOTOĞRAF YÜKLEME ---
+    function populatePlayerSelect() {
+        const select = document.getElementById('photoPlayerSelect');
+        if(!select) return;
+        select.innerHTML = '<option value="">Oyuncu Seçiniz...</option>';
+        [...appData.players].sort((a,b)=>a.name.localeCompare(b.name)).forEach(p => {
+            const option = document.createElement('option');
+            option.value = p.name;
+            option.innerText = p.name;
+            select.appendChild(option);
+        });
+    }
+
+    function uploadPlayerPhoto() {
+        const playerName = document.getElementById('photoPlayerSelect').value;
+        const fileInput = document.getElementById('photoInput');
+        
+        if (!playerName) return alert("Lütfen bir oyuncu seçin.");
+        if (fileInput.files.length === 0) return alert("Lütfen bir dosya seçin.");
+
+        const file = fileInput.files[0];
+        const reader = new FileReader();
+
+        reader.onload = function(e) {
+            const img = new Image();
+            img.onload = function() {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                // GÜNCELLENDİ: Daha Yüksek Çözünürlük (1500px)
+                const MAX_WIDTH = 1500;
+                const MAX_HEIGHT = 1500;
+                let width = img.width;
+                let height = img.height;
+
+                if (width > height) {
+                    if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+                } else {
+                    if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
+                }
+                
+                canvas.width = width;
+                canvas.height = height;
+                ctx.drawImage(img, 0, 0, width, height);
+                
+                // Kaliteyi artır (0.9)
+                const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+                
+                const player = appData.players.find(p => p.name === playerName);
+                if(player) {
+                    player.photo = dataUrl;
+                    saveDataToFirebase();
+                    showStatus(`${playerName} için fotoğraf yüklendi!`, "success");
+                }
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+
+    // --- MODAL (LIGHTBOX) FONKSİYONLARI ---
+    window.openPhotoModal = function(src) {
+        const modal = document.getElementById('photoModal');
+        const modalImg = document.getElementById('modalImg');
+        modal.style.display = "flex"; // flex ile ortalıyoruz
+        modalImg.src = src;
+    }
+
+    window.closePhotoModal = function() {
+        document.getElementById('photoModal').style.display = "none";
     }
 
     window.togglePlayoffSkip = function(playerName) {
@@ -464,7 +625,9 @@
         const qfDiv = document.getElementById('qf_matches');
         const sfDiv = document.getElementById('sf_matches');
         const fDiv = document.getElementById('f_matches');
-        qfDiv.innerHTML = ''; sfDiv.innerHTML = ''; fDiv.innerHTML = '';
+        const podiumDiv = document.getElementById('podiumArea');
+        
+        qfDiv.innerHTML = ''; sfDiv.innerHTML = ''; fDiv.innerHTML = ''; podiumDiv.innerHTML = '';
 
         const started = appData.finals && appData.finals.started;
         const seeds = started ? appData.finals.seeds : ["1. Sıra", "2. Sıra", "3. Sıra", "4. Sıra", "5. Sıra", "6. Sıra", "7. Sıra", "8. Sıra"];
@@ -488,7 +651,6 @@
             return "???";
         };
 
-        // Quarter Finals
         const qfPairs = [
             { id: 'qf1', p1Idx: 0, p2Idx: 7 },
             { id: 'qf2', p1Idx: 3, p2Idx: 4 },
@@ -500,7 +662,6 @@
             qfDiv.innerHTML += createFinalMatchHTML(pair.id, seeds[pair.p1Idx], seeds[pair.p2Idx], matches[pair.id]);
         });
 
-        // Semi Finals
         const sf1_p1 = getWinner(seeds[0], seeds[7], 'qf1');
         const sf1_p2 = getWinner(seeds[3], seeds[4], 'qf2');
         const sf2_p1 = getWinner(seeds[2], seeds[5], 'qf3');
@@ -509,18 +670,40 @@
         sfDiv.innerHTML += createFinalMatchHTML('sf1', sf1_p1, sf1_p2, matches['sf1']);
         sfDiv.innerHTML += createFinalMatchHTML('sf2', sf2_p1, sf2_p2, matches['sf2']);
 
-        // Finals
         const f_p1 = getWinner(sf1_p1, sf1_p2, 'sf1');
         const f_p2 = getWinner(sf2_p1, sf2_p2, 'sf2');
         
         fDiv.innerHTML += createFinalMatchHTML('final', f_p1, f_p2, matches['final']);
 
-        // 3rd Place Match
         const t_p1 = getLoser(sf1_p1, sf1_p2, 'sf1');
         const t_p2 = getLoser(sf2_p1, sf2_p2, 'sf2');
         
         fDiv.innerHTML += '<div class="bronze-title">3. Lük Maçı</div>';
         fDiv.innerHTML += createFinalMatchHTML('3rdPlace', t_p1, t_p2, matches['3rdPlace']);
+
+        // --- PODIUM ---
+        const first = getWinner(f_p1, f_p2, 'final');
+        const second = getLoser(f_p1, f_p2, 'final');
+        const third = getWinner(t_p1, t_p2, '3rdPlace');
+
+        if(first !== "???" && second !== "???" && third !== "???") {
+            const getPhotoHtml = (name) => {
+                const p = appData.players.find(x => x.name === name);
+                // Fotoğrafı tıklandığında büyütmek için onclick ekledik
+                return (p && p.photo) ? `<img src="${p.photo}" class="podium-img" onclick="openPhotoModal(this.src)">` : '';
+            };
+
+            podiumDiv.innerHTML = `
+                <div class="podium-container">
+                    <div class="podium-header">🏆 TURNUVA SONUCU</div>
+                    <div class="podium-list">
+                        <div class="rank-item rank-1">${getPhotoHtml(first)}<span class="icon">🏆</span> ${first}</div>
+                        <div class="rank-item rank-2">${getPhotoHtml(second)}<span class="icon">🥈</span> ${second}</div>
+                        <div class="rank-item rank-3">${getPhotoHtml(third)}<span class="icon">🥉</span> ${third}</div>
+                    </div>
+                </div>
+            `;
+        }
     }
 
     function createFinalMatchHTML(id, p1, p2, scoreData) {
