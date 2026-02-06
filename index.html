@@ -63,19 +63,28 @@
         .podium-header { font-size: 14px; color: #7f8c8d; font-weight: bold; text-transform: uppercase; margin-bottom: 20px; letter-spacing: 1px; }
         .podium-list { display: flex; flex-direction: column; gap: 15px; align-items: center; }
         
-        .rank-item { display: flex; align-items: center; gap: 10px; justify-content: center; width: 100%; }
+        .rank-item { display: flex; align-items: center; gap: 15px; justify-content: center; width: 100%; }
         
+        /* Oyuncu Fotoğrafı (Yuvarlak) */
+        .podium-img {
+            border-radius: 50%; object-fit: cover; border: 2px solid #fff; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
         /* 1. SIRA */
         .rank-1 { color: #f1c40f; font-size: 24px; font-weight: 800; text-shadow: 0 1px 2px rgba(0,0,0,0.1); }
-        .rank-1 .icon { font-size: 28px; }
+        .rank-1 .icon { font-size: 28px; margin-right: 5px;}
+        .rank-1 .podium-img { width: 60px; height: 60px; border-color: #f1c40f; }
         
         /* 2. SIRA */
         .rank-2 { color: #7f8c8d; font-size: 18px; font-weight: 700; }
-        .rank-2 .icon { font-size: 22px; }
+        .rank-2 .icon { font-size: 22px; margin-right: 5px;}
+        .rank-2 .podium-img { width: 50px; height: 50px; border-color: #bdc3c7; }
         
         /* 3. SIRA */
-        .rank-3 { color: #d35400; font-size: 15px; font-weight: 600; }
-        .rank-3 .icon { font-size: 18px; }
+        .rank-3 { color: #d35400; font-size: 16px; font-weight: 600; }
+        .rank-3 .icon { font-size: 18px; margin-right: 5px;}
+        .rank-3 .podium-img { width: 45px; height: 45px; border-color: #e67e22; }
 
         .match-box { background: white; border: 1px solid #ddd; border-radius: 6px; padding: 10px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); position: relative; }
         .match-player { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid #eee; font-size: 13px; }
@@ -131,7 +140,7 @@
         .rules-box ul { margin: 10px 0; padding-left: 20px; }
         .rules-box li { margin-bottom: 5px; font-size: 14px; }
 
-        .admin-box input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
+        .admin-box input, .admin-box select { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
         .btn { width: 100%; padding: 12px; border: none; border-radius: 6px; font-size: 14px; font-weight: bold; cursor: pointer; transition: 0.2s; margin-top: 5px; text-transform: uppercase; }
         .btn-primary { background: var(--accent); color: white; }
         .btn-danger { background: var(--danger); color: white; margin-top: 20px; }
@@ -324,6 +333,17 @@
             <h3 style="color:var(--accent); margin-top:0;">Yönetim Paneli</h3>
             
             <div class="file-upload">
+                <h4 style="margin:0 0 10px 0; color:#555;">Oyuncu Fotoğrafı Yükle</h4>
+                <select id="photoPlayerSelect">
+                    <option value="">Oyuncu Seçiniz...</option>
+                </select>
+                <input type="file" id="photoInput" accept="image/*" style="width:100%; margin:10px 0;">
+                <button class="btn btn-secondary" onclick="uploadPlayerPhoto()">📷 FOTOĞRAFI KAYDET</button>
+            </div>
+
+            <hr style="border:0; border-top:1px dashed #eee; margin:20px 0;">
+
+            <div class="file-upload">
                 <h4 style="margin:0 0 10px 0; color:#555;">Veri Yönetimi</h4>
                 <label style="font-size:12px; font-weight:bold; display:block; text-align:left; margin-bottom:5px;">Veri Yükle (Upload):</label>
                 <input type="file" id="jsonFileInput" accept=".json" style="width:100%; margin-bottom:10px;">
@@ -369,7 +389,10 @@
             document.getElementById('saveFinalsBtnArea').style.display = isAdmin ? 'block' : 'none';
             document.getElementById('endLeagueBtnArea').style.display = isAdmin ? 'block' : 'none';
             
-            if(isAdmin) showStatus("Yönetici modundasınız.", "success");
+            if(isAdmin) {
+                showStatus("Yönetici modundasınız.", "success");
+                populatePlayerSelect();
+            }
             try { renderFixture(); renderFinals(); } catch(e) { console.error(e); }
         });
 
@@ -379,6 +402,7 @@
             
             if (data) {
                 appData = data;
+                // Veri güvenliği
                 if(!appData.players) appData.players = [];
                 if(!appData.matches) appData.matches = [];
                 if(!appData.finals) appData.finals = { started: false, seeds: [], matches: {} };
@@ -387,6 +411,7 @@
                     calculateStandings();
                     renderFixture();
                     renderFinals();
+                    if(isAdmin) populatePlayerSelect();
                 } catch (err) {
                     console.error("Render hatası:", err);
                     showStatus("Veri işlenirken hata oluştu.", "error");
@@ -456,6 +481,67 @@
         renderStandings();
     }
 
+    // --- FOTOĞRAF YÜKLEME ---
+    function populatePlayerSelect() {
+        const select = document.getElementById('photoPlayerSelect');
+        if(!select) return;
+        select.innerHTML = '<option value="">Oyuncu Seçiniz...</option>';
+        // Tüm oyuncuları alfabetik sırayla listele
+        [...appData.players].sort((a,b)=>a.name.localeCompare(b.name)).forEach(p => {
+            const option = document.createElement('option');
+            option.value = p.name;
+            option.innerText = p.name;
+            select.appendChild(option);
+        });
+    }
+
+    function uploadPlayerPhoto() {
+        const playerName = document.getElementById('photoPlayerSelect').value;
+        const fileInput = document.getElementById('photoInput');
+        
+        if (!playerName) return alert("Lütfen bir oyuncu seçin.");
+        if (fileInput.files.length === 0) return alert("Lütfen bir dosya seçin.");
+
+        const file = fileInput.files[0];
+        const reader = new FileReader();
+
+        reader.onload = function(e) {
+            const img = new Image();
+            img.onload = function() {
+                // Resize Image (Canvas)
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                const MAX_WIDTH = 150;
+                const MAX_HEIGHT = 150;
+                let width = img.width;
+                let height = img.height;
+
+                if (width > height) {
+                    if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+                } else {
+                    if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
+                }
+                
+                canvas.width = width;
+                canvas.height = height;
+                ctx.drawImage(img, 0, 0, width, height);
+                
+                // Base64 Data URL
+                const dataUrl = canvas.toDataURL('image/jpeg', 0.7); // Quality 0.7
+                
+                // Save to Player Object
+                const player = appData.players.find(p => p.name === playerName);
+                if(player) {
+                    player.photo = dataUrl;
+                    saveDataToFirebase();
+                    showStatus(`${playerName} için fotoğraf yüklendi!`, "success");
+                }
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+
     window.togglePlayoffSkip = function(playerName) {
         if(!isAdmin) return;
         const player = appData.players.find(p => p.name === playerName);
@@ -514,6 +600,7 @@
             return "???";
         };
 
+        // Quarter Finals
         const qfPairs = [
             { id: 'qf1', p1Idx: 0, p2Idx: 7 },
             { id: 'qf2', p1Idx: 3, p2Idx: 4 },
@@ -544,19 +631,24 @@
         fDiv.innerHTML += '<div class="bronze-title">3. Lük Maçı</div>';
         fDiv.innerHTML += createFinalMatchHTML('3rdPlace', t_p1, t_p2, matches['3rdPlace']);
 
-        // --- PODIUM ---
+        // --- PODIUM (KÜRSÜ) ---
         const first = getWinner(f_p1, f_p2, 'final');
         const second = getLoser(f_p1, f_p2, 'final');
         const third = getWinner(t_p1, t_p2, '3rdPlace');
 
         if(first !== "???" && second !== "???" && third !== "???") {
+            const getPhotoHtml = (name) => {
+                const p = appData.players.find(x => x.name === name);
+                return (p && p.photo) ? `<img src="${p.photo}" class="podium-img">` : '';
+            };
+
             podiumDiv.innerHTML = `
                 <div class="podium-container">
                     <div class="podium-header">🏆 TURNUVA SONUCU</div>
                     <div class="podium-list">
-                        <div class="rank-item rank-1"><span class="icon">🏆</span> ${first}</div>
-                        <div class="rank-item rank-2"><span class="icon">🥈</span> ${second}</div>
-                        <div class="rank-item rank-3"><span class="icon">🥉</span> ${third}</div>
+                        <div class="rank-item rank-1">${getPhotoHtml(first)}<span class="icon">🏆</span> ${first}</div>
+                        <div class="rank-item rank-2">${getPhotoHtml(second)}<span class="icon">🥈</span> ${second}</div>
+                        <div class="rank-item rank-3">${getPhotoHtml(third)}<span class="icon">🥉</span> ${third}</div>
                     </div>
                 </div>
             `;
