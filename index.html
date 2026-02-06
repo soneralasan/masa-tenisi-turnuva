@@ -1,105 +1,791 @@
-# Bu script RTA4004 cihazındaki bus table dan çekilen dataları analiz eder.
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canlı Masa Tenisi Turnuvası</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 
-import os
-import glob
-import time
-import sys
-
-# Kütüphane kontrolü
-try:
-    import pandas as pd
-    import matplotlib.pyplot as plt
-except ImportError:
-    print("HATA: 'pandas' veya 'matplotlib' kütüphanesi yüklü değil.")
-    input("\nÇıkmak için Enter'a basın...")
-    sys.exit()
-
-def parse_t100_verified(hex_str):
-    """
-    16-bit Little Endian Parsing (Örn: 3690D1075C08...)
-    X: Byte 2 (LSB), Byte 3 (MSB) -> D1 07 -> 0x07D1 (2001)
-    Y: Byte 4 (LSB), Byte 5 (MSB) -> 5C 08 -> 0x085C (2140)
-    """
-    try:
-        data = bytes.fromhex(hex_str.replace("0x", "").replace(" ", ""))
-        if len(data) < 7: return None
+    <style>
+        :root { --primary: #2c3e50; --accent: #27ae60; --light: #ecf0f1; --danger: #e74c3c; --vote: #f39c12; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; background: #f0f2f5; color: #333; padding-bottom: 60px; }
         
-        status = data[1]
-        x = data[2] | (data[3] << 8)
-        y = data[4] | (data[5] << 8)
-        pressure = data[6]
+        /* Navbar */
+        .navbar { background: var(--primary); display: flex; justify-content: space-around; padding: 0; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        .navbar button { flex: 1; padding: 15px; background: transparent; border: none; color: #bdc3c7; font-size: 11px; font-weight: bold; cursor: pointer; transition: 0.3s; border-bottom: 4px solid transparent; }
+        .navbar button.active { color: white; border-bottom: 4px solid var(--accent); background: rgba(255,255,255,0.05); }
+
+        /* Container */
+        .container { max-width: 900px; margin: 0 auto; padding: 15px; }
+        .tab-content { display: none; animation: fadeIn 0.4s ease; }
+        .tab-content.active { display: block; }
+
+        /* Sub-Navbar */
+        .sub-navbar { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; background: #fff; padding: 10px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .sub-tab-btn { flex: 1; padding: 8px; border: 1px solid #ddd; background: #f9f9f9; color: #555; border-radius: 5px; cursor: pointer; font-size: 11px; font-weight: bold; transition: all 0.2s; text-transform: uppercase; }
+        .sub-tab-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+        /* Tablo */
+        .table-container { overflow-x: auto; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); background: white; margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; min-width: 350px; }
+        th, td { padding: 12px 8px; text-align: center; border-bottom: 1px solid #eee; font-size: 14px; }
+        th { background: var(--primary); color: white; font-weight: 600; font-size: 12px; letter-spacing: 0.5px; }
+        tr:nth-child(even) { background-color: #f9f9f9; }
+        .top8 { background-color: #e8f5e9 !important; } 
+        .top8 td:first-child { border-left: 4px solid var(--accent); font-weight: bold; color: var(--accent); }
+
+        /* Çekilen Oyuncu */
+        .withdrawn-row { background-color: #333 !important; color: #bdc3c7 !important; }
+        .withdrawn-row td { border-bottom: 1px solid #555; }
         
-        return {
-            'id': data[0], 'x': x, 'y': y, 'p': pressure,
-            'detect': bool(status & 0x80), # Bit 7: Detect
-            'rel': bool(status & 0x20)    # Bit 5: Release
+        /* Play-off Pas Geçen Oyuncu */
+        .skipped-row { background-color: #fff5f5; }
+        .skipped-row td { color: #e74c3c; text-decoration: line-through; }
+        .skipped-row td:first-child { text-decoration: none; border-left: 4px solid #e74c3c; }
+        .skipped-row button { text-decoration: none !important; }
+
+        /* TURNUVA AĞACI (BRACKET) STİLLERİ */
+        .bracket-container { display: flex; flex-direction: row; justify-content: space-between; gap: 10px; overflow-x: auto; padding: 20px 0; }
+        .round { display: flex; flex-direction: column; justify-content: flex-start; flex: 1; min-width: 200px; } /* flex-start yapıldı ki 3.lük maçı düzgün dursun */
+        .round-title { text-align: center; font-weight: bold; color: var(--primary); margin-bottom: 15px; text-transform: uppercase; font-size: 12px; border-bottom: 2px solid var(--accent); padding-bottom: 5px; }
+        
+        /* 3. Lük Maçı Başlığı */
+        .bronze-title { text-align: center; font-weight: bold; color: #e67e22; margin: 30px 0 10px 0; text-transform: uppercase; font-size: 12px; border-bottom: 2px solid #e67e22; padding-bottom: 5px; }
+
+        .match-box { background: white; border: 1px solid #ddd; border-radius: 6px; padding: 10px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); position: relative; }
+        
+        .match-player { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid #eee; font-size: 13px; }
+        .match-player:last-child { border-bottom: none; }
+        .match-player input { width: 30px; text-align: center; border: 1px solid #ccc; border-radius: 3px; font-weight: bold; }
+        
+        .winner { color: var(--accent); font-weight: bold; }
+        .loser { color: var(--danger); opacity: 0.5; text-decoration: line-through; }
+
+        /* Ortak Öğeler */
+        .day-header { text-align: center; margin: 25px 0 10px; font-weight: 800; color: var(--primary); text-transform: uppercase; letter-spacing: 1px; font-size: 13px; position: relative; }
+        .day-header::after { content: ''; display: block; width: 40px; height: 3px; background: var(--accent); margin: 5px auto 0; border-radius: 2px; }
+        
+        .player-header { background: var(--primary); color: white; padding: 12px 15px; margin: 10px 0 2px 0; border-radius: 5px; font-weight: bold; text-align: left; font-size: 14px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: background 0.2s; user-select: none; }
+        .player-header:hover { background: #34495e; }
+        .player-header .arrow { transition: transform 0.3s ease; font-size: 10px; }
+        .player-header.active .arrow { transform: rotate(180deg); }
+        
+        .withdraw-btn { background: var(--danger); color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 10px; cursor: pointer; margin-right: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; }
+        .withdraw-btn.active { background: #555; color: #bbb; border: 1px solid #777; }
+
+        .skip-btn { background: #f39c12; color: white; border: none; padding: 2px 6px; border-radius: 4px; font-size: 10px; cursor: pointer; margin-left: 5px; }
+        .undo-btn { background: #7f8c8d; color: white; border: none; padding: 2px 6px; border-radius: 4px; font-size: 10px; cursor: pointer; margin-left: 5px; }
+
+        .player-matches-container { display: none; padding-top: 5px; animation: slideDown 0.3s ease; }
+        .match-card { background: white; padding: 12px; margin-bottom: 10px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: space-between; }
+        
+        .player-container { width: 35%; display: flex; align-items: center; justify-content: space-between; }
+        .player-container.left { flex-direction: row; text-align: left; }
+        .player-container.right { flex-direction: row-reverse; text-align: right; }
+        .player { font-weight: 600; font-size: 13px; word-wrap: break-word; line-height: 1.2; transition: color 0.3s; width: 100%; }
+        
+        .scores { display: flex; align-items: center; gap: 5px; justify-content: center; width: auto; min-width: 120px; }
+        .scores input { width: 30px; height: 30px; text-align: center; font-size: 16px; border: 1px solid #ddd; border-radius: 4px; font-weight: bold; background: #f9f9f9; }
+        
+        .vote-ratio { font-size: 11px; color: #333; font-weight: bold; background: #f0f2f5; padding: 4px 6px; border-radius: 4px; min-width: 35px; text-align: center; line-height: 1.1; }
+        
+        .hukmen-toggle { width: 24px; height: 24px; border-radius: 4px; border: 1px solid #ccc; color: #777; font-size: 10px; font-weight: bold; display: flex; align-items: center; justify-content: center; cursor: pointer; margin-left: 8px; user-select: none; background: #fff; transition: all 0.2s; flex-shrink: 0; }
+        .hukmen-toggle:hover { background: #f0f0f0; }
+        .hukmen-toggle.active { background: var(--danger); color: white; border-color: var(--danger); }
+        .hukmen-indicator { font-size: 10px; color: var(--danger); font-weight: bold; margin-left: 5px; }
+
+        .admin-box, .rules-box { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .admin-box { text-align: center; }
+        .rules-box { text-align: left; line-height: 1.6; color: #444; }
+        .rules-box h3 { color: var(--accent); margin-top: 20px; font-size: 16px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+        .rules-box ul { margin: 10px 0; padding-left: 20px; }
+        .rules-box li { margin-bottom: 5px; font-size: 14px; }
+
+        .admin-box input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
+        .btn { width: 100%; padding: 12px; border: none; border-radius: 6px; font-size: 14px; font-weight: bold; cursor: pointer; transition: 0.2s; margin-top: 5px; text-transform: uppercase; }
+        .btn-primary { background: var(--accent); color: white; }
+        .btn-danger { background: var(--danger); color: white; margin-top: 20px; }
+        .btn-secondary { background: #34495e; color: white; }
+        .btn-success { background: #27ae60; color: white; margin-top: 20px; box-shadow: 0 4px 10px rgba(39, 174, 96, 0.3); }
+        .file-upload { background: #f1f1f1; padding: 15px; border-radius: 6px; margin-top: 15px; border: 2px dashed #ccc; }
+
+        .status-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: #333; color: white; padding: 12px; text-align: center; font-size: 13px; z-index: 2000; display: none; }
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid var(--accent); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 20px auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+
+        @media (max-width: 600px) { 
+            .player { font-size: 12px; } 
+            .vote-ratio { font-size: 10px; min-width: 30px; padding: 3px; }
+            .navbar button { font-size: 10px; padding: 12px 5px; }
+            .bracket-container { min-width: 600px; } 
         }
-    except: return None
+    </style>
+</head>
+<body>
 
-def main():
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    os.chdir(script_dir)
-    
-    csv_files = []
-    for ext in ["*.csv", "*.CSV"]:
-        csv_files.extend(glob.glob(ext))
-    csv_files = list(set(csv_files))
-    
-    if not csv_files:
-        print(f"\nHATA: CSV bulunamadı!")
-    else:
-        output_txt = "touch_analiz_sonuclari.txt"
-        with open(output_txt, "w", encoding="utf-8") as f_out:
-            f_out.write(f"ATMEL MAXTOUCH T100 ANALİZ RAPORU\n")
-            
-            for file in csv_files:
-                print(f"İşleniyor: {file}...")
-                try:
-                    df = pd.read_csv(file, skiprows=2)
-                    
-                    # SÜTUN BAŞLIĞI DÜZELTMESİ:
-                    # 'Start Time in s' veya 'Time Diff. in s' hangisi varsa onu kullan
-                    time_col = None
-                    for col in ['Start Time in s', 'Time Diff. in s']:
-                        if col in df.columns:
-                            time_col = col
-                            break
-                    
-                    if not time_col:
-                        print(f"   -> HATA: Zaman sütunu bulunamadı! Mevcut sütunlar: {df.columns.tolist()}")
-                        continue
+<div class="navbar">
+    <button class="tab-link active" onclick="openTab('puanDurumu')">PUAN DURUMU</button>
+    <button class="tab-link" onclick="openTab('fikstur')">FİKSTÜR</button>
+    <button class="tab-link" onclick="openTab('finaller')">FİNALLER</button>
+    <button class="tab-link" onclick="openTab('kurallar')">KURALLAR</button>
+    <button class="tab-link" onclick="openTab('admin')">YÖNETİCİ</button>
+</div>
 
-                    f_out.write(f"\nDOSYA: {file}\n" + "-"*40 + "\n")
-                    points_x, points_y = [], []
+<div class="container">
+    <div id="loading" class="loader"></div>
 
-                    for _, row in df.iterrows():
-                        if str(row['Type']).strip() == 'Read' and '0x' in str(row['Data']):
-                            p = parse_t100_verified(str(row['Data']))
-                            if p:
-                                t = float(row[time_col])
-                                durum = "DOKUNMA" if p['detect'] else "IDLE"
-                                f_out.write(f"{t:<12.6f} | X:{p['x']:<4} | Y:{p['y']:<4} | {durum}\n")
-                                
-                                if p['detect']:
-                                    points_x.append(p['x'])
-                                    points_y.append(p['y'])
+    <div id="puanDurumu" class="tab-content" style="display:none;">
+        <div class="sub-navbar">
+            <button class="sub-tab-btn active" id="btnStandingsStandard" onclick="switchStandingsView('standard')">GENEL PUAN</button>
+            <button class="sub-tab-btn" id="btnStandingsWeighted" onclick="switchStandingsView('weighted')">AĞIRLIKLI ORTALAMA</button>
+        </div>
 
-                    # Görselleştirme
-                    if points_x:
-                        plt.figure(figsize=(10, 8))
-                        plt.xlim(0, 4095)
-                        plt.ylim(0, 4095)
-                        plt.gca().invert_yaxis() # Origin Sol Üst
-                        plt.plot(points_x, points_y, 'b-o', markersize=2, alpha=0.5)
-                        plt.title(f"Simülasyon: {file}")
-                        plt.savefig(f"{os.path.splitext(file)[0]}_simulasyon.png")
-                        plt.close()
+        <div id="standingsStandard">
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th width="10%">#</th>
+                            <th width="40%" style="text-align:left; padding-left:15px;">OYUNCU</th>
+                            <th width="10%">O</th>
+                            <th width="10%">G</th>
+                            <th width="10%">M</th>
+                            <th width="10%">AV</th>
+                            <th width="10%">P</th>
+                        </tr>
+                    </thead>
+                    <tbody id="standingsBody"></tbody>
+                </table>
+            </div>
+            <p style="text-align:center; color:#7f8c8d; font-size:11px; margin-top:5px;">Sıralama: Puan > Averaj > İsim | G:2 Puan, M:1 Puan, Hükmen: 0 Puan</p>
+        </div>
 
-                except Exception as e:
-                    print(f"   -> Hata: {file} işlenemedi: {e}")
+        <div id="standingsWeighted" style="display:none;">
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th width="10%">#</th>
+                            <th width="40%" style="text-align:left; padding-left:15px;">OYUNCU</th>
+                            <th width="10%">O</th>
+                            <th width="10%">P</th>
+                            <th width="15%" style="background:#27ae60;">ORT</th>
+                        </tr>
+                    </thead>
+                    <tbody id="weightedStandingsBody"></tbody>
+                </table>
+            </div>
+            <p style="text-align:center; color:#7f8c8d; font-size:11px; margin-top:5px;">Sıralama: (Toplam Puan / Oynanan Maç)</p>
+        </div>
+
+        <div id="endLeagueBtnArea" style="text-align:center; margin-top:30px; display:none;">
+            <button class="btn btn-success" onclick="endLeague()">🏆 LİGİ BİTİR VE FİNALLERİ BAŞLAT</button>
+            <p style="font-size:11px; color:#777; margin-top:5px;">Dikkat: Bu işlem ilk 8'i finallere taşır.</p>
+        </div>
+    </div>
+
+    <div id="fikstur" class="tab-content" style="display:none;">
+        <div class="sub-navbar">
+            <button class="sub-tab-btn active" id="btnDayView" onclick="switchFixtureView('day')">📅 GÜN GÖRÜNÜMÜ</button>
+            <button class="sub-tab-btn" id="btnPlayerView" onclick="switchFixtureView('player')">👤 OYUNCU GÖRÜNÜMÜ</button>
+        </div>
+
+        <div id="fixtureByDay"></div>
+        <div id="fixtureByPlayer" style="display:none;"></div>
+
+        <div id="saveBtnArea" style="margin-top:20px; display:none; position:sticky; bottom:20px;">
+            <button class="btn btn-primary" style="box-shadow: 0 4px 10px rgba(0,0,0,0.3);" onclick="saveDataToFirebase()">💾 SKORLARI KAYDET VE YAYINLA</button>
+        </div>
+    </div>
+
+    <div id="finaller" class="tab-content" style="display:none;">
+        <div style="text-align:center; margin-bottom:10px; color:#555; font-size:13px;">Play-off Eşleşmeleri</div>
         
-    print(f"\nİşlem tamamlandı. ENTER'a basın.")
-    input()
+        <div class="bracket-container">
+            <div class="round">
+                <div class="round-title">Çeyrek Final</div>
+                <div id="qf_matches"></div>
+            </div>
+            <div class="round">
+                <div class="round-title">Yarı Final</div>
+                <div id="sf_matches"></div>
+            </div>
+            <div class="round">
+                <div class="round-title">Final</div>
+                <div id="f_matches"></div>
+                </div>
+        </div>
+        
+        <div id="saveFinalsBtnArea" style="margin-top:20px; display:none; position:sticky; bottom:20px; text-align:center;">
+            <button class="btn btn-primary" onclick="saveDataToFirebase()">💾 FİNAL SKORLARINI KAYDET</button>
+        </div>
+    </div>
 
-if __name__ == "__main__":
-    main()
+    <div id="kurallar" class="tab-content" style="display:none;">
+        <div class="rules-box">
+            <h2 style="color:var(--primary); text-align:center; margin-bottom: 20px; border-bottom: 2px solid var(--accent); padding-bottom:10px;">VESTEL MOBILITY <br> MASA TENİSİ TURNUVASI</h2>
+            
+            <h3>1. Genel Kurallar</h3>
+            <ul>
+                <li>Maçlar tekler (1'e 1) oynanır.</li>
+                <li>Maçlar 3 set üzerinden oynanır (2 set kazanan maçı kazanır).</li>
+                <li>Setler 21 sayıda biter.</li>
+                <li>20-20 durumunda fark 2 olana kadar devam edilir.</li>
+            </ul>
+    
+            <h3>2. Servis Kuralları</h3>
+            <ul>
+                <li>Servis açık avuç içinden atılır.</li>
+                <li>Top önce servis atan sahaya, sonra rakip sahaya değmelidir.</li>
+                <li>Fileye değip karşıya geçen servis tekrar edilir (let).</li>
+                <li>Her 5 sayıda bir servis değişir.</li>
+                <li>20-20 sonrası servis her sayıda bir değişir.</li>
+            </ul>
+    
+            <h3>3. Oyun Sırasında</h3>
+            <ul>
+                <li>Top fileye değip karşı sahaya düşerse oyun devam eder.</li>
+                <li>Top arka arkaya iki kez rakete vurulamaz.</li>
+                <li>Top el, kol veya vücudun başka bir yerine değerse sayı rakibe gider.</li>
+                <li>Masaya elle veya vücutla müdahale yasaktır.</li>
+            </ul>
+    
+            <h3>4. Sayı Rakibe Verilir Eğer;</h3>
+            <ul>
+                <li>Top masaya değmeden dışarı giderse.</li>
+                <li>Top fileye takılıp karşıya geçmezse.</li>
+                <li>Top iki kez kendi sahana değerse.</li>
+                <li>Servis kurallara uygun atılmazsa.</li>
+            </ul>
+    
+            <h3>5. Fair Play</h3>
+            <ul>
+                <li>Kararlarda saygı ve dürüstlük esastır.</li>
+                <li>Hakem yoksa oyuncular uzlaşır.</li>
+                <li>Tartışmalarda turnuva sorumlusu karar verir.</li>
+            </ul>
+    
+            <hr style="border:0; border-top:1px solid #eee; margin:20px 0;">
+    
+            <h3 style="color:var(--primary);">Fikstür İşleyişi</h3>
+            <ul>
+                <li>Galibiyet: <strong>2 Puan</strong>, Mağlubiyet: <strong>1 Puan</strong>.</li>
+                <li>Hükmen mağlubiyet durumunda <strong>0 Puan</strong> verilir.</li>
+                <li>Turnuvadan çekilen oyuncu tüm maçlarını hükmen (0-2) kaybetmiş sayılır.</li>
+                <li>Grup maçları sonunda puan cetvelindeki <strong>ilk 8 oyuncu</strong> Play-off oynamaya hak kazanır.</li>
+                <li>Play-off oynamaya hak kazanıp oynayamayacak durumda olan oyuncular yöneticiler tarafından belirtilir ve bir alt sıradaki oyuncu 8. sıraya yükselir.</li>
+            </ul>
+        </div>
+    </div>
+
+    <div id="admin" class="tab-content" style="display:none;">
+        <div id="loginPanel" class="admin-box">
+            <h2 style="color:var(--primary);">Yönetici Girişi</h2>
+            <input type="email" id="email" placeholder="E-Posta">
+            <input type="password" id="password" placeholder="Şifre">
+            <button class="btn btn-primary" onclick="login()">Giriş Yap</button>
+        </div>
+
+        <div id="adminControls" class="admin-box" style="display:none;">
+            <h3 style="color:var(--accent); margin-top:0;">Yönetim Paneli</h3>
+            
+            <div class="file-upload">
+                <h4 style="margin:0 0 10px 0; color:#555;">Veri Yönetimi</h4>
+                <label style="font-size:12px; font-weight:bold; display:block; text-align:left; margin-bottom:5px;">Veri Yükle (Upload):</label>
+                <input type="file" id="jsonFileInput" accept=".json" style="width:100%; margin-bottom:10px;">
+                <button class="btn btn-secondary" onclick="importFromPythonJson()">📂 YÜKLE VE YAYINLA</button>
+                <hr style="border:0; border-top:1px dashed #eee; margin:15px 0;">
+                <label style="font-size:12px; font-weight:bold; display:block; text-align:left; margin-bottom:5px;">Yedekle (Download):</label>
+                <button class="btn btn-primary" onclick="downloadJsonData()">💾 GÜNCEL VERİYİ İNDİR (JSON)</button>
+            </div>
+            
+            <hr style="border:0; border-top:1px solid #eee; margin:20px 0;">
+            <button class="btn btn-danger" onclick="firebase.auth().signOut()">Çıkış Yap</button>
+        </div>
+    </div>
+</div>
+
+<div id="statusBar" class="status-bar"></div>
+
+<script>
+    const firebaseConfig = {
+        apiKey:  "AIzaSyApl74nGCJrG42BWFJaR_v3gqHGlF2R_3M",
+        authDomain: "otomotiv-masa-tenisi-turnuvasi.firebaseapp.com",
+        databaseURL: "https://otomotiv-masa-tenisi-turnuvasi-default-rtdb.firebaseio.com",
+        projectId: "otomotiv-masa-tenisi-turnuvasi",
+        storageBucket: "otomotiv-masa-tenisi-turnuvasi.firebasestorage.app",
+        messagingSenderId: "88398060894",
+        appId: "1:88398060894:web:8b9e4e1198466aae1283cf",
+        measurementId: "G-GC6ND6CK6J"
+    };
+
+    if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
+    const db = firebase.database();
+    const auth = firebase.auth();
+
+    let appData = { players: [], matches: [], started: false, finals: { started: false, seeds: [], matches: {} } };
+    let isAdmin = false;
+
+    window.onload = function() {
+        auth.onAuthStateChanged(user => {
+            isAdmin = !!user;
+            document.getElementById('loginPanel').style.display = isAdmin ? 'none' : 'block';
+            document.getElementById('adminControls').style.display = isAdmin ? 'block' : 'none';
+            document.getElementById('saveBtnArea').style.display = isAdmin ? 'block' : 'none';
+            document.getElementById('saveFinalsBtnArea').style.display = isAdmin ? 'block' : 'none';
+            document.getElementById('endLeagueBtnArea').style.display = isAdmin ? 'block' : 'none';
+            
+            if(isAdmin) showStatus("Yönetici modundasınız.", "success");
+            renderFixture();
+            renderFinals(); 
+        });
+
+        db.ref('turnuva').on('value', (snapshot) => {
+            const data = snapshot.val();
+            document.getElementById('loading').style.display = 'none';
+            
+            if (data) {
+                appData = data;
+                if(!appData.players) appData.players = [];
+                if(!appData.matches) appData.matches = [];
+                if(!appData.finals) appData.finals = { started: false, seeds: [], matches: {} };
+                
+                calculateStandings();
+                renderFixture();
+                renderFinals();
+                
+                if(document.querySelector('.tab-content.active') === null) {
+                    openTab('puanDurumu');
+                }
+            } else {
+                openTab('puanDurumu');
+            }
+        });
+    };
+
+    function isValidScore(val) {
+        return val !== null && val !== "" && !isNaN(val);
+    }
+
+    function calculateStandings() {
+        appData.players.forEach(p => p.stats = { p:0, o:0, g:0, m:0, a:0, y:0, av:0 });
+        const withdrawnPlayers = appData.players.filter(p => p.withdrawn).map(p => p.name);
+
+        appData.matches.forEach(m => {
+            let p1 = appData.players.find(pl => pl.name === m.p1);
+            let p2 = appData.players.find(pl => pl.name === m.p2);
+
+            if (!p1 || !p2) return;
+
+            const p1W = withdrawnPlayers.includes(m.p1);
+            const p2W = withdrawnPlayers.includes(m.p2);
+
+            if (p1W && p2W) return;
+            else if (p1W) {
+                p1.stats.o++; p2.stats.o++;
+                p1.stats.y += 2; p2.stats.a += 2;
+                p2.stats.g++; p2.stats.p += 2;
+                p1.stats.m++; p1.stats.p += 0;
+            } else if (p2W) {
+                p1.stats.o++; p2.stats.o++;
+                p2.stats.y += 2; p1.stats.a += 2;
+                p1.stats.g++; p1.stats.p += 2;
+                p2.stats.m++; p2.stats.p += 0;
+            } else {
+                if (isValidScore(m.s1) && isValidScore(m.s2)) {
+                    const s1 = parseInt(m.s1);
+                    const s2 = parseInt(m.s2);
+                    p1.stats.o++; p2.stats.o++;
+                    p1.stats.a += s1; p1.stats.y += s2;
+                    p2.stats.a += s2; p2.stats.y += s1;
+                    if (s1 > s2) { p1.stats.g++; p1.stats.p += 2; p2.stats.m++; p2.stats.p += m.hukmen ? 0 : 1; } 
+                    else if (s2 > s1) { p2.stats.g++; p2.stats.p += 2; p1.stats.m++; p1.stats.p += m.hukmen ? 0 : 1; }
+                }
+            }
+        });
+
+        appData.players.forEach(p => p.stats.av = (p.stats.a || 0) - (p.stats.y || 0));
+        
+        // --- YENİ SIRALAMA MANTIĞI (ÖNCELİK) ---
+        appData.players.sort((a, b) => {
+            // 1. Kriter: Çekilenler en alta
+            if (a.withdrawn && !b.withdrawn) return 1; 
+            if (!a.withdrawn && b.withdrawn) return -1;
+
+            // 2. Kriter: Play-off'u pas geçenler (aktiflerin altına)
+            if (a.skipPlayoff && !b.skipPlayoff) return 1; 
+            if (!a.skipPlayoff && b.skipPlayoff) return -1;
+
+            // 3. Kriter: Puan
+            if (b.stats.p !== a.stats.p) return b.stats.p - a.stats.p;
+            // 4. Kriter: Averaj
+            if (b.stats.av !== a.stats.av) return b.stats.av - a.stats.av;
+            // 5. Kriter: İsim
+            return a.name.localeCompare(b.name);
+        });
+
+        renderStandings();
+    }
+
+    window.togglePlayoffSkip = function(playerName) {
+        if(!isAdmin) return;
+        const player = appData.players.find(p => p.name === playerName);
+        if(player) {
+            player.skipPlayoff = !player.skipPlayoff;
+            calculateStandings();
+            saveDataToFirebase();
+        }
+    }
+
+    function endLeague() {
+        if(!confirm("Ligi bitirip ilk 8 oyuncuyu finallere taşımak istediğinize emin misiniz?")) return;
+        const seeds = appData.players.slice(0, 8).map(p => p.name);
+        while(seeds.length < 8) seeds.push("BYE");
+        appData.finals = { started: true, seeds: seeds, matches: {} };
+        saveDataToFirebase();
+        showStatus("Lig tamamlandı, finaller başladı!", "success");
+        openTab('finaller');
+    }
+
+    function updateFinalScore(matchId, field, value) {
+        if(!isAdmin) return;
+        if(!appData.finals.matches) appData.finals.matches = {};
+        if(!appData.finals.matches[matchId]) appData.finals.matches[matchId] = {};
+        appData.finals.matches[matchId][field] = value;
+        renderFinals(); 
+    }
+
+    function renderFinals() {
+        const qfDiv = document.getElementById('qf_matches');
+        const sfDiv = document.getElementById('sf_matches');
+        const fDiv = document.getElementById('f_matches');
+        qfDiv.innerHTML = ''; sfDiv.innerHTML = ''; fDiv.innerHTML = '';
+
+        const started = appData.finals && appData.finals.started;
+        const seeds = started ? appData.finals.seeds : ["1. Sıra", "2. Sıra", "3. Sıra", "4. Sıra", "5. Sıra", "6. Sıra", "7. Sıra", "8. Sıra"];
+        const matches = (appData.finals && appData.finals.matches) ? appData.finals.matches : {};
+
+        const getWinner = (p1, p2, mId) => {
+            const m = matches[mId] || {};
+            if(m.s1 != null && m.s2 != null) {
+                if(parseInt(m.s1) > parseInt(m.s2)) return p1;
+                if(parseInt(m.s2) > parseInt(m.s1)) return p2;
+            }
+            return "???";
+        };
+
+        const getLoser = (p1, p2, mId) => {
+            const m = matches[mId] || {};
+            if(m.s1 != null && m.s2 != null) {
+                if(parseInt(m.s1) > parseInt(m.s2)) return p2;
+                if(parseInt(m.s2) > parseInt(m.s1)) return p1;
+            }
+            return "???";
+        };
+
+        // Quarter Finals
+        const qfPairs = [
+            { id: 'qf1', p1Idx: 0, p2Idx: 7 },
+            { id: 'qf2', p1Idx: 3, p2Idx: 4 },
+            { id: 'qf3', p1Idx: 2, p2Idx: 5 },
+            { id: 'qf4', p1Idx: 1, p2Idx: 6 }
+        ];
+
+        qfPairs.forEach(pair => {
+            qfDiv.innerHTML += createFinalMatchHTML(pair.id, seeds[pair.p1Idx], seeds[pair.p2Idx], matches[pair.id]);
+        });
+
+        // Semi Finals
+        const sf1_p1 = getWinner(seeds[0], seeds[7], 'qf1');
+        const sf1_p2 = getWinner(seeds[3], seeds[4], 'qf2');
+        const sf2_p1 = getWinner(seeds[2], seeds[5], 'qf3');
+        const sf2_p2 = getWinner(seeds[1], seeds[6], 'qf4');
+
+        sfDiv.innerHTML += createFinalMatchHTML('sf1', sf1_p1, sf1_p2, matches['sf1']);
+        sfDiv.innerHTML += createFinalMatchHTML('sf2', sf2_p1, sf2_p2, matches['sf2']);
+
+        // Finals
+        const f_p1 = getWinner(sf1_p1, sf1_p2, 'sf1');
+        const f_p2 = getWinner(sf2_p1, sf2_p2, 'sf2');
+        
+        fDiv.innerHTML += createFinalMatchHTML('final', f_p1, f_p2, matches['final']);
+
+        // 3rd Place Match
+        const t_p1 = getLoser(sf1_p1, sf1_p2, 'sf1');
+        const t_p2 = getLoser(sf2_p1, sf2_p2, 'sf2');
+        
+        fDiv.innerHTML += '<div class="bronze-title">3. Lük Maçı</div>';
+        fDiv.innerHTML += createFinalMatchHTML('3rdPlace', t_p1, t_p2, matches['3rdPlace']);
+    }
+
+    function createFinalMatchHTML(id, p1, p2, scoreData) {
+        const s1 = scoreData ? scoreData.s1 : '';
+        const s2 = scoreData ? scoreData.s2 : '';
+        const disabled = isAdmin ? '' : 'disabled';
+
+        let p1Class = '', p2Class = '';
+        if (s1 !== '' && s2 !== '') {
+            if (parseInt(s1) > parseInt(s2)) { p1Class = 'winner'; p2Class = 'loser'; }
+            else if (parseInt(s2) > parseInt(s1)) { p1Class = 'loser'; p2Class = 'winner'; }
+        }
+
+        return `
+            <div class="match-box">
+                <div class="match-player">
+                    <span class="${p1Class}">${p1}</span>
+                    <input type="number" ${disabled} value="${s1}" oninput="updateFinalScore('${id}', 's1', this.value)">
+                </div>
+                <div class="match-player">
+                    <span class="${p2Class}">${p2}</span>
+                    <input type="number" ${disabled} value="${s2}" oninput="updateFinalScore('${id}', 's2', this.value)">
+                </div>
+            </div>
+        `;
+    }
+
+    function togglePlayerWithdrawal(playerName, event) {
+        event.stopPropagation();
+        if(!isAdmin) return;
+        const player = appData.players.find(p => p.name === playerName);
+        if(player) {
+            player.withdrawn = !player.withdrawn;
+            calculateStandings();
+            renderFixture();
+            saveDataToFirebase();
+        }
+    }
+
+    function importFromPythonJson() {
+        const fileInput = document.getElementById('jsonFileInput');
+        const file = fileInput.files[0];
+        if (!file) return alert("Dosya seçiniz.");
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const pyData = JSON.parse(e.target.result);
+                if(!confirm("Veriler silinecek. Onaylıyor musunuz?")) return;
+                const newPlayers = pyData.oyuncular.map(name => ({ name: name, withdrawn: false, skipPlayoff: false, stats: { p:0, o:0, g:0, m:0, a:0, y:0, av:0 } }));
+                const newMatches = pyData.maclar.map(m => ({ round: m.gun, p1: m.p1, p2: m.p2, s1: isValidScore(m.s1) ? parseInt(m.s1) : null, s2: isValidScore(m.s2) ? parseInt(m.s2) : null, hukmen: m.hukmen || false, v1: 0, v2: 0 }));
+                appData = { players: newPlayers, matches: newMatches, started: true, finals: { started: false, seeds: [], matches: {} } };
+                calculateStandings();
+                db.ref('turnuva').set(appData).then(() => { alert("Yüklendi!"); openTab('puanDurumu'); }).catch(err => alert("Hata: " + err.message));
+            } catch (error) { alert("Dosya hatası."); }
+        };
+        reader.readAsText(file);
+    }
+
+    function downloadJsonData() {
+        if(!appData) return alert("Veri yok.");
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appData, null, 2));
+        const a = document.createElement('a');
+        a.setAttribute("href", dataStr);
+        a.setAttribute("download", "turnuva_verisi.json");
+        document.body.appendChild(a); a.click(); a.remove();
+    }
+
+    function login() {
+        const email = document.getElementById('email').value;
+        const pass = document.getElementById('password').value;
+        auth.signInWithEmailAndPassword(email, pass).catch(e => alert(e.message));
+    }
+
+    window.updateScore = function(index, field, value) {
+        if(!isAdmin) return;
+        appData.matches[index][field] = value === '' ? null : parseInt(value);
+    }
+
+    window.toggleHukmen = function(index) {
+        if(!isAdmin) return;
+        appData.matches[index].hukmen = !appData.matches[index].hukmen;
+        renderFixture(); 
+    }
+
+    window.saveDataToFirebase = function() {
+        if(!isAdmin) return;
+        calculateStandings(); 
+        db.ref('turnuva').update(appData).then(() => showStatus("Yayınlandı!", "success")).catch(err => alert(err.message));
+    }
+
+    function renderStandings() {
+        const standardBody = document.getElementById('standingsBody');
+        const weightedBody = document.getElementById('weightedStandingsBody');
+        standardBody.innerHTML = ''; weightedBody.innerHTML = '';
+
+        appData.players.forEach((p, index) => {
+            let rowClass = '';
+            if (p.withdrawn) rowClass = 'withdrawn-row';
+            else if (p.skipPlayoff) rowClass = 'skipped-row';
+            else if (index < 8) rowClass = 'top8';
+
+            let actionBtn = '';
+            if(isAdmin && !p.withdrawn) {
+                if(p.skipPlayoff) actionBtn = `<button class="undo-btn" onclick="togglePlayoffSkip('${p.name}')">↩️</button>`;
+                else if(index < 8) actionBtn = `<button class="skip-btn" onclick="togglePlayoffSkip('${p.name}')">🚫</button>`;
+            }
+
+            standardBody.innerHTML += `
+                <tr class="${rowClass}">
+                    <td>${index + 1}</td>
+                    <td style="text-align:left; padding-left:15px; font-weight:600;">
+                        ${p.name} ${p.withdrawn ? '(ÇEKİLDİ)' : ''} ${p.skipPlayoff ? '(PLAY-OFF DIŞI)' : ''} ${actionBtn}
+                    </td>
+                    <td>${p.stats.o}</td>
+                    <td>${p.stats.g}</td>
+                    <td>${p.stats.m}</td>
+                    <td>${p.stats.av}</td>
+                    <td><strong>${p.stats.p}</strong></td>
+                </tr>`;
+        });
+
+        const weightedPlayers = [...appData.players].sort((a, b) => {
+            if(a.withdrawn && !b.withdrawn) return 1; 
+            if(!a.withdrawn && b.withdrawn) return -1;
+            const avgA = a.stats.o > 0 ? a.stats.p / a.stats.o : 0;
+            const avgB = b.stats.o > 0 ? b.stats.p / b.stats.o : 0;
+            if (avgB !== avgA) return avgB - avgA;
+            return b.stats.p - a.stats.p;
+        });
+
+        weightedPlayers.forEach((p, index) => {
+            const avg = p.stats.o > 0 ? (p.stats.p / p.stats.o).toFixed(2) : "0.00";
+            const rowClass = p.withdrawn ? 'withdrawn-row' : '';
+            weightedBody.innerHTML += `<tr class="${rowClass}"><td>${index + 1}</td><td style="text-align:left; padding-left:15px; font-weight:600;">${p.name}</td><td>${p.stats.o}</td><td>${p.stats.p}</td><td style="font-weight:bold; color:var(--accent); background:${p.withdrawn ? '#333' : '#f0f9f4'};">${avg}</td></tr>`;
+        });
+    }
+
+    function switchStandingsView(view) {
+        document.getElementById('standingsStandard').style.display = view === 'standard' ? 'block' : 'none';
+        document.getElementById('standingsWeighted').style.display = view === 'weighted' ? 'block' : 'none';
+        document.getElementById('btnStandingsStandard').classList.toggle('active', view === 'standard');
+        document.getElementById('btnStandingsWeighted').classList.toggle('active', view === 'weighted');
+    }
+
+    function createMatchCardHTML(m, forceLeftPlayer = null) {
+        const p1Obj = appData.players.find(p => p.name === m.p1);
+        const p2Obj = appData.players.find(p => p.name === m.p2);
+        const p1Withdrawn = p1Obj ? p1Obj.withdrawn : false;
+        const p2Withdrawn = p2Obj ? p2Obj.withdrawn : false;
+        const isGameVoid = p1Withdrawn || p2Withdrawn;
+        const disabled = (isAdmin && !isGameVoid) ? '' : 'disabled';
+        let isSwapped = forceLeftPlayer && m.p2 === forceLeftPlayer;
+
+        const pLeftName = isSwapped ? m.p2 : m.p1;
+        const pRightName = isSwapped ? m.p1 : m.p2;
+        
+        let sLeftVal, sRightVal;
+        if (isGameVoid) {
+            const leftIsWithdrawn = isSwapped ? p2Withdrawn : p1Withdrawn;
+            if (p1Withdrawn && p2Withdrawn) { sLeftVal = 0; sRightVal = 0; }
+            else if (leftIsWithdrawn) { sLeftVal = 0; sRightVal = 2; }
+            else { sLeftVal = 2; sRightVal = 0; }
+        } else {
+            sLeftVal = isSwapped ? m.s2 : m.s1;
+            sRightVal = isSwapped ? m.s1 : m.s2;
+        }
+
+        const fieldLeft = isSwapped ? 's2' : 's1';   
+        const fieldRight = isSwapped ? 's1' : 's2';
+        const vLeft = isSwapped ? (m.v2 || 0) : (m.v1 || 0);
+        const vRight = isSwapped ? (m.v1 || 0) : (m.v2 || 0);
+
+        let pLeftStyle = '', pRightStyle = '';
+        if (sLeftVal !== null && sLeftVal !== "" && sRightVal !== null && sRightVal !== "") {
+            const valL = parseInt(sLeftVal), valR = parseInt(sRightVal);
+            if (valL > valR) { pLeftStyle = 'color:var(--accent);'; pRightStyle = 'color:var(--danger);'; } 
+            else if (valR > valL) { pLeftStyle = 'color:var(--danger);'; pRightStyle = 'color:var(--accent);'; }
+        }
+        
+        const total = vLeft + vRight;
+        const pctLeft = total > 0 ? Math.round((vLeft / total) * 100) : 0;
+        const pctRight = total > 0 ? Math.round((vRight / total) * 100) : 0;
+        
+        let hukmenHtml = '', hukmenLabel = '';
+        if (isGameVoid) hukmenLabel = '<span class="hukmen-indicator">(HÜKMEN)</span>';
+        else {
+            hukmenHtml = isAdmin ? `<div class="hukmen-toggle ${m.hukmen ? 'active' : ''}" onclick="toggleHukmen(${m.idx})">H</div>` : '';
+            hukmenLabel = (!isAdmin && m.hukmen) ? '<span class="hukmen-indicator">(HÜKMEN)</span>' : '';
+        }
+
+        return `<div class="match-card">
+                <div class="player-container left"><div class="vote-ratio">%${pctLeft} <span style="font-size:9px; display:block; color:#7f8c8d; font-weight:normal;">(${vLeft}/${total})</span></div><div class="player p1" style="${pLeftStyle}; margin-left:8px;">${pLeftName}</div></div>
+                <div class="scores"><input type="number" ${disabled} value="${sLeftVal !== null ? sLeftVal : ''}" oninput="updateScore(${m.idx}, '${fieldLeft}', this.value)"><span>-</span><input type="number" ${disabled} value="${sRightVal !== null ? sRightVal : ''}" oninput="updateScore(${m.idx}, '${fieldRight}', this.value)">${hukmenHtml}${hukmenLabel}</div>
+                <div class="player-container right"><div class="player p2" style="${pRightStyle}; margin-right:8px;">${pRightName}</div><div class="vote-ratio">%${pctRight} <span style="font-size:9px; display:block; color:#7f8c8d; font-weight:normal;">(${vRight}/${total})</span></div></div></div>`;
+    }
+
+    function renderFixture() {
+        if(document.activeElement.tagName === "INPUT") return;
+        const matchesWithIdx = appData.matches.map((m, index) => ({...m, idx: index}));
+        const dayContainer = document.getElementById('fixtureByDay');
+        dayContainer.innerHTML = '';
+        if (!matchesWithIdx.length) dayContainer.innerHTML = '<p style="text-align:center;">Maç yok.</p>';
+        else {
+            const rounds = {};
+            matchesWithIdx.forEach(m => { if (!rounds[m.round]) rounds[m.round] = []; rounds[m.round].push(m); });
+            for (const [round, matches] of Object.entries(rounds)) {
+                dayContainer.innerHTML += `<div class="day-header">${round}. GÜN</div>`;
+                matches.forEach(m => dayContainer.innerHTML += createMatchCardHTML(m));
+            }
+        }
+
+        const playerContainer = document.getElementById('fixtureByPlayer');
+        playerContainer.innerHTML = '';
+        const sortedPlayers = [...appData.players].sort((a, b) => a.name.localeCompare(b.name));
+        
+        sortedPlayers.forEach((p, index) => {
+            const playerMatches = matchesWithIdx.filter(m => m.p1 === p.name || m.p2 === p.name);
+            if (playerMatches.length > 0) {
+                let withdrawBtn = '';
+                if(isAdmin) {
+                    const btnClass = p.withdrawn ? 'withdraw-btn active' : 'withdraw-btn';
+                    const btnText = p.withdrawn ? 'GERİ AL' : 'HÜKMEN';
+                    withdrawBtn = `<button class="${btnClass}" onclick="togglePlayerWithdrawal('${p.name}', event)">${btnText}</button>`;
+                }
+                playerContainer.innerHTML += `<div class="player-header" onclick="togglePlayerAccordion('matches-${index}', this)"><div style="display:flex; align-items:center;"><span>${p.name}</span><span style="font-size:10px; opacity:0.6; margin-left:8px;">${p.withdrawn ? '(ÇEKİLDİ)' : ''}</span></div><div style="display:flex; align-items:center; gap:5px;">${withdrawBtn}<span style="font-size:11px; opacity:0.8;">${playerMatches.length} Maç</span><span class="arrow">▼</span></div></div><div id="matches-${index}" class="player-matches-container">${playerMatches.sort((a, b) => a.round - b.round).map(m => `<div style="margin-top:-5px;"><div style="text-align:center; font-size:10px; color:#999; margin-bottom:2px; font-weight:bold;">${m.round}. GÜN</div>${createMatchCardHTML(m, p.name)}</div>`).join('')}</div>`;
+            }
+        });
+    }
+
+    window.togglePlayerAccordion = function(id, el) {
+        const content = document.getElementById(id);
+        const isVisible = content.style.display === 'block';
+        content.style.display = isVisible ? 'none' : 'block';
+        el.classList.toggle('active', !isVisible);
+    }
+
+    window.switchFixtureView = function(view) {
+        document.getElementById('fixtureByDay').style.display = view === 'day' ? 'block' : 'none';
+        document.getElementById('fixtureByPlayer').style.display = view === 'player' ? 'block' : 'none';
+        document.getElementById('btnDayView').classList.toggle('active', view === 'day');
+        document.getElementById('btnPlayerView').classList.toggle('active', view === 'player');
+    }
+
+    function renderVoting() {} 
+
+    window.openTab = function(tabName) {
+        document.querySelectorAll('.tab-content').forEach(t => { t.style.display = 'none'; t.classList.remove('active'); });
+        document.querySelectorAll('.tab-link').forEach(t => t.classList.remove('active'));
+        const selected = document.getElementById(tabName);
+        selected.style.display = 'block';
+        setTimeout(() => selected.classList.add('active'), 10);
+        
+        const btns = document.querySelectorAll('.navbar button');
+        const map = { 'puanDurumu':0, 'fikstur':1, 'finaller':2, 'kurallar':3, 'admin':4 };
+        if(map[tabName] !== undefined) btns[map[tabName]].classList.add('active');
+    }
+
+    function showStatus(msg, type) {
+        const bar = document.getElementById('statusBar');
+        bar.innerText = msg;
+        bar.style.background = type === 'success' ? '#27ae60' : (type === 'error' ? '#e74c3c' : '#333');
+        bar.style.display = 'block';
+        setTimeout(() => { bar.style.display = 'none'; }, 3000);
+    }
+</script>
+
+</body>
+</html>
