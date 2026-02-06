@@ -49,23 +49,35 @@
 
         /* TURNUVA AĞACI (BRACKET) STİLLERİ */
         .bracket-container { display: flex; flex-direction: row; justify-content: space-between; gap: 10px; overflow-x: auto; padding: 20px 0; }
-        .round { display: flex; flex-direction: column; justify-content: flex-start; flex: 1; min-width: 200px; } 
+        .round { display: flex; flex-direction: column; justify-content: flex-start; flex: 1; min-width: 200px; }
         .round-title { text-align: center; font-weight: bold; color: var(--primary); margin-bottom: 15px; text-transform: uppercase; font-size: 12px; border-bottom: 2px solid var(--accent); padding-bottom: 5px; }
         
-        /* 3. Lük Maçı Başlığı */
         .bronze-title { text-align: center; font-weight: bold; color: #e67e22; margin: 30px 0 10px 0; text-transform: uppercase; font-size: 12px; border-bottom: 2px solid #e67e22; padding-bottom: 5px; }
 
-        /* KÜRSÜ / PODIUM STİLLERİ (YENİ) */
-        .podium-container { margin-top: 40px; background: white; border-radius: 8px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; animation: slideDown 0.5s ease; border: 1px solid #eee; }
-        .podium-header { font-size: 16px; font-weight: bold; color: var(--primary); text-transform: uppercase; margin-bottom: 20px; border-bottom: 2px solid var(--accent); display: inline-block; padding-bottom: 5px; }
-        .rank-item { margin: 15px 0; display: flex; align-items: center; justify-content: center; gap: 10px; }
-        .rank-1 { font-size: 26px; color: #f1c40f; font-weight: 800; text-shadow: 1px 1px 0px rgba(0,0,0,0.1); } /* GOLD */
-        .rank-2 { font-size: 20px; color: #95a5a6; font-weight: 700; } /* SILVER */
-        .rank-3 { font-size: 16px; color: #d35400; font-weight: 600; } /* BRONZE */
-        .trophy-icon { font-size: 1.2em; }
+        /* KÜRSÜ (PODIUM) STİLLERİ */
+        .podium-container { 
+            margin-top: 30px; background: white; border-radius: 8px; padding: 25px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; border: 1px solid #eee; 
+            animation: slideDown 0.5s ease;
+        }
+        .podium-header { font-size: 14px; color: #7f8c8d; font-weight: bold; text-transform: uppercase; margin-bottom: 20px; letter-spacing: 1px; }
+        .podium-list { display: flex; flex-direction: column; gap: 15px; align-items: center; }
+        
+        .rank-item { display: flex; align-items: center; gap: 10px; justify-content: center; width: 100%; }
+        
+        /* 1. SIRA */
+        .rank-1 { color: #f1c40f; font-size: 24px; font-weight: 800; text-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+        .rank-1 .icon { font-size: 28px; }
+        
+        /* 2. SIRA */
+        .rank-2 { color: #7f8c8d; font-size: 18px; font-weight: 700; }
+        .rank-2 .icon { font-size: 22px; }
+        
+        /* 3. SIRA */
+        .rank-3 { color: #d35400; font-size: 15px; font-weight: 600; }
+        .rank-3 .icon { font-size: 18px; }
 
         .match-box { background: white; border: 1px solid #ddd; border-radius: 6px; padding: 10px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); position: relative; }
-        
         .match-player { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid #eee; font-size: 13px; }
         .match-player:last-child { border-bottom: none; }
         .match-player input { width: 30px; text-align: center; border: 1px solid #ccc; border-radius: 3px; font-weight: bold; }
@@ -98,8 +110,14 @@
         
         .scores { display: flex; align-items: center; gap: 5px; justify-content: center; width: auto; min-width: 120px; }
         .scores input { width: 30px; height: 30px; text-align: center; font-size: 16px; border: 1px solid #ddd; border-radius: 4px; font-weight: bold; background: #f9f9f9; }
-        
+        .scores input:focus { outline: none; border-color: var(--accent); background: white; }
+        .scores input:disabled { background: #eee; color: #333; border: none; }
+
         .vote-ratio { font-size: 11px; color: #333; font-weight: bold; background: #f0f2f5; padding: 4px 6px; border-radius: 4px; min-width: 35px; text-align: center; line-height: 1.1; }
+        
+        .vote-btn { background: white; border: 1px solid #ddd; border-radius: 20px; padding: 5px 10px; font-size: 12px; cursor: pointer; color: #555; display: flex; align-items: center; gap: 5px; transition: 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .vote-btn:hover { background: #f9f9f9; border-color: var(--vote); color: var(--vote); }
+        .vote-btn.voted { background: var(--vote); color: white; border-color: var(--vote); pointer-events: none; }
         
         .hukmen-toggle { width: 24px; height: 24px; border-radius: 4px; border: 1px solid #ccc; color: #777; font-size: 10px; font-weight: bold; display: flex; align-items: center; justify-content: center; cursor: pointer; margin-left: 8px; user-select: none; background: #fff; transition: all 0.2s; flex-shrink: 0; }
         .hukmen-toggle:hover { background: #f0f0f0; }
@@ -352,8 +370,7 @@
             document.getElementById('endLeagueBtnArea').style.display = isAdmin ? 'block' : 'none';
             
             if(isAdmin) showStatus("Yönetici modundasınız.", "success");
-            renderFixture();
-            renderFinals(); 
+            try { renderFixture(); renderFinals(); } catch(e) { console.error(e); }
         });
 
         db.ref('turnuva').on('value', (snapshot) => {
@@ -366,9 +383,14 @@
                 if(!appData.matches) appData.matches = [];
                 if(!appData.finals) appData.finals = { started: false, seeds: [], matches: {} };
                 
-                calculateStandings();
-                renderFixture();
-                renderFinals();
+                try {
+                    calculateStandings();
+                    renderFixture();
+                    renderFinals();
+                } catch (err) {
+                    console.error("Render hatası:", err);
+                    showStatus("Veri işlenirken hata oluştu.", "error");
+                }
                 
                 if(document.querySelector('.tab-content.active') === null) {
                     openTab('puanDurumu');
@@ -463,4 +485,347 @@
     }
 
     function renderFinals() {
-        const qfDiv = document.getElementById('qf_
+        const qfDiv = document.getElementById('qf_matches');
+        const sfDiv = document.getElementById('sf_matches');
+        const fDiv = document.getElementById('f_matches');
+        const podiumDiv = document.getElementById('podiumArea');
+        
+        qfDiv.innerHTML = ''; sfDiv.innerHTML = ''; fDiv.innerHTML = ''; podiumDiv.innerHTML = '';
+
+        const started = appData.finals && appData.finals.started;
+        const seeds = started ? appData.finals.seeds : ["1. Sıra", "2. Sıra", "3. Sıra", "4. Sıra", "5. Sıra", "6. Sıra", "7. Sıra", "8. Sıra"];
+        const matches = (appData.finals && appData.finals.matches) ? appData.finals.matches : {};
+
+        const getWinner = (p1, p2, mId) => {
+            const m = matches[mId] || {};
+            if(m.s1 != null && m.s2 != null) {
+                if(parseInt(m.s1) > parseInt(m.s2)) return p1;
+                if(parseInt(m.s2) > parseInt(m.s1)) return p2;
+            }
+            return "???";
+        };
+
+        const getLoser = (p1, p2, mId) => {
+            const m = matches[mId] || {};
+            if(m.s1 != null && m.s2 != null) {
+                if(parseInt(m.s1) > parseInt(m.s2)) return p2;
+                if(parseInt(m.s2) > parseInt(m.s1)) return p1;
+            }
+            return "???";
+        };
+
+        const qfPairs = [
+            { id: 'qf1', p1Idx: 0, p2Idx: 7 },
+            { id: 'qf2', p1Idx: 3, p2Idx: 4 },
+            { id: 'qf3', p1Idx: 2, p2Idx: 5 },
+            { id: 'qf4', p1Idx: 1, p2Idx: 6 }
+        ];
+
+        qfPairs.forEach(pair => {
+            qfDiv.innerHTML += createFinalMatchHTML(pair.id, seeds[pair.p1Idx], seeds[pair.p2Idx], matches[pair.id]);
+        });
+
+        const sf1_p1 = getWinner(seeds[0], seeds[7], 'qf1');
+        const sf1_p2 = getWinner(seeds[3], seeds[4], 'qf2');
+        const sf2_p1 = getWinner(seeds[2], seeds[5], 'qf3');
+        const sf2_p2 = getWinner(seeds[1], seeds[6], 'qf4');
+
+        sfDiv.innerHTML += createFinalMatchHTML('sf1', sf1_p1, sf1_p2, matches['sf1']);
+        sfDiv.innerHTML += createFinalMatchHTML('sf2', sf2_p1, sf2_p2, matches['sf2']);
+
+        const f_p1 = getWinner(sf1_p1, sf1_p2, 'sf1');
+        const f_p2 = getWinner(sf2_p1, sf2_p2, 'sf2');
+        
+        fDiv.innerHTML += createFinalMatchHTML('final', f_p1, f_p2, matches['final']);
+
+        const t_p1 = getLoser(sf1_p1, sf1_p2, 'sf1');
+        const t_p2 = getLoser(sf2_p1, sf2_p2, 'sf2');
+        
+        fDiv.innerHTML += '<div class="bronze-title">3. Lük Maçı</div>';
+        fDiv.innerHTML += createFinalMatchHTML('3rdPlace', t_p1, t_p2, matches['3rdPlace']);
+
+        // --- PODIUM ---
+        const first = getWinner(f_p1, f_p2, 'final');
+        const second = getLoser(f_p1, f_p2, 'final');
+        const third = getWinner(t_p1, t_p2, '3rdPlace');
+
+        if(first !== "???" && second !== "???" && third !== "???") {
+            podiumDiv.innerHTML = `
+                <div class="podium-container">
+                    <div class="podium-header">🏆 TURNUVA SONUCU</div>
+                    <div class="podium-list">
+                        <div class="rank-item rank-1"><span class="icon">🏆</span> ${first}</div>
+                        <div class="rank-item rank-2"><span class="icon">🥈</span> ${second}</div>
+                        <div class="rank-item rank-3"><span class="icon">🥉</span> ${third}</div>
+                    </div>
+                </div>
+            `;
+        }
+    }
+
+    function createFinalMatchHTML(id, p1, p2, scoreData) {
+        const s1 = scoreData ? scoreData.s1 : '';
+        const s2 = scoreData ? scoreData.s2 : '';
+        const disabled = isAdmin ? '' : 'disabled';
+
+        let p1Class = '', p2Class = '';
+        if (s1 !== '' && s2 !== '') {
+            if (parseInt(s1) > parseInt(s2)) { p1Class = 'winner'; p2Class = 'loser'; }
+            else if (parseInt(s2) > parseInt(s1)) { p1Class = 'loser'; p2Class = 'winner'; }
+        }
+
+        return `
+            <div class="match-box">
+                <div class="match-player">
+                    <span class="${p1Class}">${p1}</span>
+                    <input type="number" ${disabled} value="${s1}" oninput="updateFinalScore('${id}', 's1', this.value)">
+                </div>
+                <div class="match-player">
+                    <span class="${p2Class}">${p2}</span>
+                    <input type="number" ${disabled} value="${s2}" oninput="updateFinalScore('${id}', 's2', this.value)">
+                </div>
+            </div>
+        `;
+    }
+
+    function togglePlayerWithdrawal(playerName, event) {
+        event.stopPropagation();
+        if(!isAdmin) return;
+        const player = appData.players.find(p => p.name === playerName);
+        if(player) {
+            player.withdrawn = !player.withdrawn;
+            calculateStandings();
+            renderFixture();
+            saveDataToFirebase();
+        }
+    }
+
+    function importFromPythonJson() {
+        const fileInput = document.getElementById('jsonFileInput');
+        const file = fileInput.files[0];
+        if (!file) return alert("Dosya seçiniz.");
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const pyData = JSON.parse(e.target.result);
+                if(!confirm("Veriler silinecek. Onaylıyor musunuz?")) return;
+                const newPlayers = pyData.oyuncular.map(name => ({ name: name, withdrawn: false, skipPlayoff: false, stats: { p:0, o:0, g:0, m:0, a:0, y:0, av:0 } }));
+                const newMatches = pyData.maclar.map(m => ({ round: m.gun, p1: m.p1, p2: m.p2, s1: isValidScore(m.s1) ? parseInt(m.s1) : null, s2: isValidScore(m.s2) ? parseInt(m.s2) : null, hukmen: m.hukmen || false, v1: 0, v2: 0 }));
+                appData = { players: newPlayers, matches: newMatches, started: true, finals: { started: false, seeds: [], matches: {} } };
+                calculateStandings();
+                db.ref('turnuva').set(appData).then(() => { alert("Yüklendi!"); openTab('puanDurumu'); }).catch(err => alert("Hata: " + err.message));
+            } catch (error) { alert("Dosya hatası."); }
+        };
+        reader.readAsText(file);
+    }
+
+    function downloadJsonData() {
+        if(!appData) return alert("Veri yok.");
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appData, null, 2));
+        const a = document.createElement('a');
+        a.setAttribute("href", dataStr);
+        a.setAttribute("download", "turnuva_verisi.json");
+        document.body.appendChild(a); a.click(); a.remove();
+    }
+
+    function login() {
+        const email = document.getElementById('email').value;
+        const pass = document.getElementById('password').value;
+        auth.signInWithEmailAndPassword(email, pass).catch(e => alert(e.message));
+    }
+
+    window.updateScore = function(index, field, value) {
+        if(!isAdmin) return;
+        appData.matches[index][field] = value === '' ? null : parseInt(value);
+    }
+
+    window.toggleHukmen = function(index) {
+        if(!isAdmin) return;
+        appData.matches[index].hukmen = !appData.matches[index].hukmen;
+        renderFixture(); 
+    }
+
+    window.saveDataToFirebase = function() {
+        if(!isAdmin) return;
+        calculateStandings(); 
+        db.ref('turnuva').update(appData).then(() => showStatus("Yayınlandı!", "success")).catch(err => alert(err.message));
+    }
+
+    function renderStandings() {
+        const standardBody = document.getElementById('standingsBody');
+        const weightedBody = document.getElementById('weightedStandingsBody');
+        standardBody.innerHTML = ''; weightedBody.innerHTML = '';
+
+        appData.players.forEach((p, index) => {
+            let rowClass = '';
+            if (p.withdrawn) rowClass = 'withdrawn-row';
+            else if (p.skipPlayoff) rowClass = 'skipped-row';
+            else if (index < 8) rowClass = 'top8';
+
+            let actionBtn = '';
+            if(isAdmin && !p.withdrawn) {
+                if(p.skipPlayoff) actionBtn = `<button class="undo-btn" onclick="togglePlayoffSkip('${p.name}')">↩️</button>`;
+                else if(index < 8) actionBtn = `<button class="skip-btn" onclick="togglePlayoffSkip('${p.name}')">🚫</button>`;
+            }
+
+            standardBody.innerHTML += `
+                <tr class="${rowClass}">
+                    <td>${index + 1}</td>
+                    <td style="text-align:left; padding-left:15px; font-weight:600;">
+                        ${p.name} ${p.withdrawn ? '(ÇEKİLDİ)' : ''} ${p.skipPlayoff ? '(PLAY-OFF DIŞI)' : ''} ${actionBtn}
+                    </td>
+                    <td>${p.stats.o}</td>
+                    <td>${p.stats.g}</td>
+                    <td>${p.stats.m}</td>
+                    <td>${p.stats.av}</td>
+                    <td><strong>${p.stats.p}</strong></td>
+                </tr>`;
+        });
+
+        const weightedPlayers = [...appData.players].sort((a, b) => {
+            if(a.withdrawn && !b.withdrawn) return 1; 
+            if(!a.withdrawn && b.withdrawn) return -1;
+            const avgA = a.stats.o > 0 ? a.stats.p / a.stats.o : 0;
+            const avgB = b.stats.o > 0 ? b.stats.p / b.stats.o : 0;
+            if (avgB !== avgA) return avgB - avgA;
+            return b.stats.p - a.stats.p;
+        });
+
+        weightedPlayers.forEach((p, index) => {
+            const avg = p.stats.o > 0 ? (p.stats.p / p.stats.o).toFixed(2) : "0.00";
+            const rowClass = p.withdrawn ? 'withdrawn-row' : '';
+            weightedBody.innerHTML += `<tr class="${rowClass}"><td>${index + 1}</td><td style="text-align:left; padding-left:15px; font-weight:600;">${p.name}</td><td>${p.stats.o}</td><td>${p.stats.p}</td><td style="font-weight:bold; color:var(--accent); background:${p.withdrawn ? '#333' : '#f0f9f4'};">${avg}</td></tr>`;
+        });
+    }
+
+    function switchStandingsView(view) {
+        document.getElementById('standingsStandard').style.display = view === 'standard' ? 'block' : 'none';
+        document.getElementById('standingsWeighted').style.display = view === 'weighted' ? 'block' : 'none';
+        document.getElementById('btnStandingsStandard').classList.toggle('active', view === 'standard');
+        document.getElementById('btnStandingsWeighted').classList.toggle('active', view === 'weighted');
+    }
+
+    function createMatchCardHTML(m, forceLeftPlayer = null) {
+        const p1Obj = appData.players.find(p => p.name === m.p1);
+        const p2Obj = appData.players.find(p => p.name === m.p2);
+        const p1Withdrawn = p1Obj ? p1Obj.withdrawn : false;
+        const p2Withdrawn = p2Obj ? p2Obj.withdrawn : false;
+        const isGameVoid = p1Withdrawn || p2Withdrawn;
+        const disabled = (isAdmin && !isGameVoid) ? '' : 'disabled';
+        let isSwapped = forceLeftPlayer && m.p2 === forceLeftPlayer;
+
+        const pLeftName = isSwapped ? m.p2 : m.p1;
+        const pRightName = isSwapped ? m.p1 : m.p2;
+        
+        let sLeftVal, sRightVal;
+        if (isGameVoid) {
+            const leftIsWithdrawn = isSwapped ? p2Withdrawn : p1Withdrawn;
+            if (p1Withdrawn && p2Withdrawn) { sLeftVal = 0; sRightVal = 0; }
+            else if (leftIsWithdrawn) { sLeftVal = 0; sRightVal = 2; }
+            else { sLeftVal = 2; sRightVal = 0; }
+        } else {
+            sLeftVal = isSwapped ? m.s2 : m.s1;
+            sRightVal = isSwapped ? m.s1 : m.s2;
+        }
+
+        const fieldLeft = isSwapped ? 's2' : 's1';   
+        const fieldRight = isSwapped ? 's1' : 's2';
+        const vLeft = isSwapped ? (m.v2 || 0) : (m.v1 || 0);
+        const vRight = isSwapped ? (m.v1 || 0) : (m.v2 || 0);
+
+        let pLeftStyle = '', pRightStyle = '';
+        if (sLeftVal !== null && sLeftVal !== "" && sRightVal !== null && sRightVal !== "") {
+            const valL = parseInt(sLeftVal), valR = parseInt(sRightVal);
+            if (valL > valR) { pLeftStyle = 'color:var(--accent);'; pRightStyle = 'color:var(--danger);'; } 
+            else if (valR > valL) { pLeftStyle = 'color:var(--danger);'; pRightStyle = 'color:var(--accent);'; }
+        }
+        
+        const total = vLeft + vRight;
+        const pctLeft = total > 0 ? Math.round((vLeft / total) * 100) : 0;
+        const pctRight = total > 0 ? Math.round((vRight / total) * 100) : 0;
+        
+        let hukmenHtml = '', hukmenLabel = '';
+        if (isGameVoid) hukmenLabel = '<span class="hukmen-indicator">(HÜKMEN)</span>';
+        else {
+            hukmenHtml = isAdmin ? `<div class="hukmen-toggle ${m.hukmen ? 'active' : ''}" onclick="toggleHukmen(${m.idx})">H</div>` : '';
+            hukmenLabel = (!isAdmin && m.hukmen) ? '<span class="hukmen-indicator">(HÜKMEN)</span>' : '';
+        }
+
+        return `<div class="match-card">
+                <div class="player-container left"><div class="vote-ratio">%${pctLeft} <span style="font-size:9px; display:block; color:#7f8c8d; font-weight:normal;">(${vLeft}/${total})</span></div><div class="player p1" style="${pLeftStyle}; margin-left:8px;">${pLeftName}</div></div>
+                <div class="scores"><input type="number" ${disabled} value="${sLeftVal !== null ? sLeftVal : ''}" oninput="updateScore(${m.idx}, '${fieldLeft}', this.value)"><span>-</span><input type="number" ${disabled} value="${sRightVal !== null ? sRightVal : ''}" oninput="updateScore(${m.idx}, '${fieldRight}', this.value)">${hukmenHtml}${hukmenLabel}</div>
+                <div class="player-container right"><div class="player p2" style="${pRightStyle}; margin-right:8px;">${pRightName}</div><div class="vote-ratio">%${pctRight} <span style="font-size:9px; display:block; color:#7f8c8d; font-weight:normal;">(${vRight}/${total})</span></div></div></div>`;
+    }
+
+    function renderFixture() {
+        if(document.activeElement.tagName === "INPUT") return;
+        const matchesWithIdx = appData.matches.map((m, index) => ({...m, idx: index}));
+        const dayContainer = document.getElementById('fixtureByDay');
+        dayContainer.innerHTML = '';
+        if (!matchesWithIdx.length) dayContainer.innerHTML = '<p style="text-align:center;">Maç yok.</p>';
+        else {
+            const rounds = {};
+            matchesWithIdx.forEach(m => { if (!rounds[m.round]) rounds[m.round] = []; rounds[m.round].push(m); });
+            for (const [round, matches] of Object.entries(rounds)) {
+                dayContainer.innerHTML += `<div class="day-header">${round}. GÜN</div>`;
+                matches.forEach(m => dayContainer.innerHTML += createMatchCardHTML(m));
+            }
+        }
+
+        const playerContainer = document.getElementById('fixtureByPlayer');
+        playerContainer.innerHTML = '';
+        const sortedPlayers = [...appData.players].sort((a, b) => a.name.localeCompare(b.name));
+        
+        sortedPlayers.forEach((p, index) => {
+            const playerMatches = matchesWithIdx.filter(m => m.p1 === p.name || m.p2 === p.name);
+            if (playerMatches.length > 0) {
+                let withdrawBtn = '';
+                if(isAdmin) {
+                    const btnClass = p.withdrawn ? 'withdraw-btn active' : 'withdraw-btn';
+                    const btnText = p.withdrawn ? 'GERİ AL' : 'HÜKMEN';
+                    withdrawBtn = `<button class="${btnClass}" onclick="togglePlayerWithdrawal('${p.name}', event)">${btnText}</button>`;
+                }
+                playerContainer.innerHTML += `<div class="player-header" onclick="togglePlayerAccordion('matches-${index}', this)"><div style="display:flex; align-items:center;"><span>${p.name}</span><span style="font-size:10px; opacity:0.6; margin-left:8px;">${p.withdrawn ? '(ÇEKİLDİ)' : ''}</span></div><div style="display:flex; align-items:center; gap:5px;">${withdrawBtn}<span style="font-size:11px; opacity:0.8;">${playerMatches.length} Maç</span><span class="arrow">▼</span></div></div><div id="matches-${index}" class="player-matches-container">${playerMatches.sort((a, b) => a.round - b.round).map(m => `<div style="margin-top:-5px;"><div style="text-align:center; font-size:10px; color:#999; margin-bottom:2px; font-weight:bold;">${m.round}. GÜN</div>${createMatchCardHTML(m, p.name)}</div>`).join('')}</div>`;
+            }
+        });
+    }
+
+    window.togglePlayerAccordion = function(id, el) {
+        const content = document.getElementById(id);
+        const isVisible = content.style.display === 'block';
+        content.style.display = isVisible ? 'none' : 'block';
+        el.classList.toggle('active', !isVisible);
+    }
+
+    window.switchFixtureView = function(view) {
+        document.getElementById('fixtureByDay').style.display = view === 'day' ? 'block' : 'none';
+        document.getElementById('fixtureByPlayer').style.display = view === 'player' ? 'block' : 'none';
+        document.getElementById('btnDayView').classList.toggle('active', view === 'day');
+        document.getElementById('btnPlayerView').classList.toggle('active', view === 'player');
+    }
+
+    function renderVoting() {} 
+
+    window.openTab = function(tabName) {
+        document.querySelectorAll('.tab-content').forEach(t => { t.style.display = 'none'; t.classList.remove('active'); });
+        document.querySelectorAll('.tab-link').forEach(t => t.classList.remove('active'));
+        const selected = document.getElementById(tabName);
+        selected.style.display = 'block';
+        setTimeout(() => selected.classList.add('active'), 10);
+        
+        const btns = document.querySelectorAll('.navbar button');
+        const map = { 'puanDurumu':0, 'fikstur':1, 'finaller':2, 'kurallar':3, 'admin':4 };
+        if(map[tabName] !== undefined) btns[map[tabName]].classList.add('active');
+    }
+
+    function showStatus(msg, type) {
+        const bar = document.getElementById('statusBar');
+        bar.innerText = msg;
+        bar.style.background = type === 'success' ? '#27ae60' : (type === 'error' ? '#e74c3c' : '#333');
+        bar.style.display = 'block';
+        setTimeout(() => { bar.style.display = 'none'; }, 3000);
+    }
+</script>
+
+</body>
+</html>
