@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Canlı Masa Tenisi Turnuvası</title>
+    <title>Masa Tenisi Turnuva Yönetim Sistemi</title>
     
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
@@ -13,12 +13,10 @@
         :root { --primary: #2c3e50; --accent: #27ae60; --light: #ecf0f1; --danger: #e74c3c; --vote: #f39c12; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; background: #f0f2f5; color: #333; padding-bottom: 60px; }
         
-        /* Navbar */
         .navbar { background: var(--primary); display: flex; justify-content: space-around; padding: 0; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
         .navbar button { flex: 1; padding: 15px; background: transparent; border: none; color: #bdc3c7; font-size: 11px; font-weight: bold; cursor: pointer; transition: 0.3s; border-bottom: 4px solid transparent; }
         .navbar button.active { color: white; border-bottom: 4px solid var(--accent); background: rgba(255,255,255,0.05); }
 
-        /* Container */
         .container { max-width: 900px; margin: 0 auto; padding: 15px; }
         .tab-content { display: none; animation: fadeIn 0.4s ease; }
         .tab-content.active { display: block; }
@@ -28,379 +26,179 @@
         .sub-tab-btn { flex: 1; padding: 8px; border: 1px solid #ddd; background: #f9f9f9; color: #555; border-radius: 5px; cursor: pointer; font-size: 11px; font-weight: bold; transition: all 0.2s; text-transform: uppercase; }
         .sub-tab-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
 
-        /* Tablo */
-        .table-container { overflow-x: auto; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); background: white; margin-bottom: 20px; }
-        table { width: 100%; border-collapse: collapse; min-width: 350px; }
-        th, td { padding: 12px 8px; text-align: center; border-bottom: 1px solid #eee; font-size: 14px; }
-        th { background: var(--primary); color: white; font-weight: 600; font-size: 12px; letter-spacing: 0.5px; }
-        tr:nth-child(even) { background-color: #f9f9f9; }
-        .top8 { background-color: #e8f5e9 !important; } 
-        .top8 td:first-child { border-left: 4px solid var(--accent); font-weight: bold; color: var(--accent); }
-
-        /* Çekilen Oyuncu */
-        .withdrawn-row { background-color: #333 !important; color: #bdc3c7 !important; }
-        .withdrawn-row td { border-bottom: 1px solid #555; }
+        /* Generic Styles */
+        .card { background: white; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); padding: 15px; margin-bottom: 15px; }
+        .btn { padding: 10px 15px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; color: white; transition: 0.2s; width: 100%; margin-top: 5px;}
+        .btn-primary { background: var(--accent); }
+        .btn-danger { background: var(--danger); }
+        .btn-secondary { background: #34495e; }
+        .btn-warning { background: #f39c12; color: white; }
         
-        /* Play-off Pas Geçen Oyuncu */
+        input, select { width: 100%; padding: 10px; margin: 5px 0 15px 0; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
+
+        /* History Accordion */
+        .history-type-tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; }
+        .history-btn { padding: 8px 15px; background: #ddd; border: none; border-radius: 20px; cursor: pointer; font-weight: bold; color: #555; }
+        .history-btn.active { background: var(--primary); color: white; }
+
+        .accordion-item { border: 1px solid #ddd; border-radius: 5px; margin-bottom: 10px; background: white; overflow: hidden; }
+        .accordion-header { padding: 15px; background: #f9f9f9; cursor: pointer; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+        .accordion-header:hover { background: #f1f1f1; }
+        .accordion-content { display: none; padding: 15px; border-top: 1px solid #ddd; }
+        .accordion-content.open { display: block; }
+
+        /* Tournament Internal Tabs */
+        .inner-navbar { display: flex; border-bottom: 1px solid #ddd; margin-bottom: 15px; }
+        .inner-navbar button { flex: 1; padding: 10px; background: transparent; border: none; cursor: pointer; color: #777; font-weight: 600; border-bottom: 3px solid transparent; }
+        .inner-navbar button.active { color: var(--primary); border-bottom: 3px solid var(--primary); }
+
+        /* Table Styles */
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th, td { padding: 10px; text-align: center; border-bottom: 1px solid #eee; }
+        th { background: #eee; color: #333; }
+        .top8 { background-color: #e8f5e9; }
+        .withdrawn-row { background: #333; color: #ccc; }
         .skipped-row { background-color: #fff5f5; }
         .skipped-row td { color: #e74c3c; text-decoration: line-through; }
         .skipped-row td:first-child { text-decoration: none; border-left: 4px solid #e74c3c; }
-        .skipped-row button { text-decoration: none !important; }
 
-        /* TURNUVA AĞACI (BRACKET) STİLLERİ */
+        /* Match Card */
+        .match-card { display: flex; justify-content: space-between; align-items: center; background: #fafafa; border: 1px solid #eee; padding: 10px; margin-bottom: 8px; border-radius: 6px; }
+        .player-name { font-weight: 600; font-size: 13px; width: 40%; }
+        .score-area { width: 20%; display: flex; justify-content: center; gap: 5px; }
+        .score-input { width: 30px; text-align: center; font-weight: bold; }
+
+        /* Bracket & Podium */
         .bracket-container { display: flex; flex-direction: row; justify-content: space-between; gap: 10px; overflow-x: auto; padding: 20px 0; }
         .round { display: flex; flex-direction: column; justify-content: flex-start; flex: 1; min-width: 200px; }
-        .round-title { text-align: center; font-weight: bold; color: var(--primary); margin-bottom: 15px; text-transform: uppercase; font-size: 12px; border-bottom: 2px solid var(--accent); padding-bottom: 5px; }
-        
-        .bronze-title { text-align: center; font-weight: bold; color: #e67e22; margin: 30px 0 10px 0; text-transform: uppercase; font-size: 12px; border-bottom: 2px solid #e67e22; padding-bottom: 5px; }
-
-        /* KÜRSÜ (PODIUM) STİLLERİ */
-        .podium-container { 
-            margin-top: 30px; background: white; border-radius: 8px; padding: 25px; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; border: 1px solid #eee; 
-            animation: slideDown 0.5s ease;
-        }
-        .podium-header { font-size: 14px; color: #7f8c8d; font-weight: bold; text-transform: uppercase; margin-bottom: 25px; letter-spacing: 1px; }
-        .podium-list { display: flex; flex-direction: column; gap: 20px; align-items: center; }
-        .rank-item { display: flex; align-items: center; gap: 15px; justify-content: center; width: 100%; }
-        
-        /* FOTOĞRAF STİLLERİ */
-        .podium-img {
-            border-radius: 50%; object-fit: cover; border: 3px solid #fff; 
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-            transition: transform 0.3s ease;
-            cursor: zoom-in;
-        }
-        .podium-img:hover { transform: scale(1.1); border-color: var(--primary) !important; }
-
-        .rank-1 { color: #f1c40f; font-size: 28px; font-weight: 800; text-shadow: 0 1px 2px rgba(0,0,0,0.1); }
-        .rank-1 .icon { font-size: 32px; margin-right: 5px;}
-        .rank-1 .podium-img { width: 120px; height: 120px; border-color: #f1c40f; }
-        
-        .rank-2 { color: #7f8c8d; font-size: 22px; font-weight: 700; }
-        .rank-2 .icon { font-size: 26px; margin-right: 5px;}
-        .rank-2 .podium-img { width: 90px; height: 90px; border-color: #bdc3c7; }
-        
-        .rank-3 { color: #d35400; font-size: 18px; font-weight: 600; }
-        .rank-3 .icon { font-size: 22px; margin-right: 5px;}
-        .rank-3 .podium-img { width: 80px; height: 80px; border-color: #e67e22; }
-
-        /* MODAL (TAM EKRAN GÖRÜNTÜLEME) STİLLERİ GÜNCELLENDİ */
-        .modal {
-            display: none; position: fixed; z-index: 3000; 
-            left: 0; top: 0; width: 100%; height: 100%; 
-            background-color: rgba(0,0,0,0.95); /* Daha koyu arka plan */
-            backdrop-filter: blur(5px);
-            display: flex; align-items: center; justify-content: center; /* Ortala */
-        }
-        
-        /* Modal varsayılan olarak gizli olmalı, display:flex JS ile verilecek */
-        #photoModal { display: none; } 
-
-        .modal-content {
-            margin: auto;
-            display: block;
-            max-width: 95%; /* Ekran genişliğinin %95'i */
-            max-height: 95vh; /* Ekran yüksekliğinin %95'i */
-            width: auto; 
-            height: auto;
-            border-radius: 5px; 
-            border: 2px solid white;
-            box-shadow: 0 0 20px rgba(255,255,255,0.2);
-            animation: zoom 0.4s;
-            object-fit: contain; /* Görüntü oranını koru */
-        }
-        
-        .modal-close {
-            position: absolute; top: 20px; right: 30px; 
-            color: #f1f1f1; font-size: 50px; font-weight: bold; 
-            transition: 0.3s; cursor: pointer; z-index: 3001;
-            background: rgba(0,0,0,0.5); width: 60px; height: 60px;
-            line-height: 60px; text-align: center; border-radius: 50%;
-        }
-        .modal-close:hover { background: rgba(255,255,255,0.2); color: white; }
-        
-        @keyframes zoom { from {transform:scale(0.8); opacity:0;} to {transform:scale(1); opacity:1;} }
-
-        /* Diğer Stiller... */
-        .match-box { background: white; border: 1px solid #ddd; border-radius: 6px; padding: 10px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); position: relative; }
-        .match-player { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid #eee; font-size: 13px; }
+        .round-title { text-align: center; font-weight: bold; color: var(--primary); margin-bottom: 10px; border-bottom: 2px solid var(--accent); }
+        .match-box { background: white; border: 1px solid #ddd; padding: 10px; margin-bottom: 20px; border-radius: 6px; }
+        .match-player { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #eee; font-size: 13px; }
         .match-player:last-child { border-bottom: none; }
-        .match-player input { width: 30px; text-align: center; border: 1px solid #ccc; border-radius: 3px; font-weight: bold; }
-        
         .winner { color: var(--accent); font-weight: bold; }
         .loser { color: var(--danger); opacity: 0.5; text-decoration: line-through; }
 
-        .day-header { text-align: center; margin: 25px 0 10px; font-weight: 800; color: var(--primary); text-transform: uppercase; letter-spacing: 1px; font-size: 13px; position: relative; }
-        .day-header::after { content: ''; display: block; width: 40px; height: 3px; background: var(--accent); margin: 5px auto 0; border-radius: 2px; }
-        
-        .player-header { background: var(--primary); color: white; padding: 12px 15px; margin: 10px 0 2px 0; border-radius: 5px; font-weight: bold; text-align: left; font-size: 14px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: background 0.2s; user-select: none; }
-        .player-header:hover { background: #34495e; }
-        .player-header .arrow { transition: transform 0.3s ease; font-size: 10px; }
-        .player-header.active .arrow { transform: rotate(180deg); }
-        
-        .withdraw-btn { background: var(--danger); color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 10px; cursor: pointer; margin-right: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; }
-        .withdraw-btn.active { background: #555; color: #bbb; border: 1px solid #777; }
+        /* Podium */
+        .podium-container { margin-top: 30px; background: white; padding: 20px; border-radius: 8px; text-align: center; border: 1px solid #eee; }
+        .rank-item { display: flex; align-items: center; justify-content: center; gap: 10px; margin: 10px 0; font-weight: bold; }
+        .rank-1 { color: #f1c40f; font-size: 1.4em; }
+        .rank-2 { color: #95a5a6; font-size: 1.2em; }
+        .rank-3 { color: #d35400; font-size: 1em; }
+        .podium-img { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.2); cursor: pointer; }
+        .rank-1 .podium-img { width: 80px; height: 80px; border-color: #f1c40f; }
 
-        .skip-btn { background: #f39c12; color: white; border: none; padding: 2px 6px; border-radius: 4px; font-size: 10px; cursor: pointer; margin-left: 5px; }
-        .undo-btn { background: #7f8c8d; color: white; border: none; padding: 2px 6px; border-radius: 4px; font-size: 10px; cursor: pointer; margin-left: 5px; }
+        /* Modal */
+        .modal { display: none; position: fixed; z-index: 3000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.9); align-items: center; justify-content: center; }
+        .modal-content { max-width: 90%; max-height: 90%; border: 2px solid white; border-radius: 5px; }
+        .modal-close { position: absolute; top: 20px; right: 30px; color: white; font-size: 40px; cursor: pointer; }
 
-        .player-matches-container { display: none; padding-top: 5px; animation: slideDown 0.3s ease; }
-        .match-card { background: white; padding: 12px; margin-bottom: 10px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: space-between; }
-        
-        .player-container { width: 35%; display: flex; align-items: center; justify-content: space-between; }
-        .player-container.left { flex-direction: row; text-align: left; }
-        .player-container.right { flex-direction: row-reverse; text-align: right; }
-        .player { font-weight: 600; font-size: 13px; word-wrap: break-word; line-height: 1.2; transition: color 0.3s; width: 100%; }
-        
-        .scores { display: flex; align-items: center; gap: 5px; justify-content: center; width: auto; min-width: 120px; }
-        .scores input { width: 30px; height: 30px; text-align: center; font-size: 16px; border: 1px solid #ddd; border-radius: 4px; font-weight: bold; background: #f9f9f9; }
-        .scores input:focus { outline: none; border-color: var(--accent); background: white; }
-        .scores input:disabled { background: #eee; color: #333; border: none; }
+        /* Admin helpers */
+        .hidden { display: none; }
+        .participant-row { display: flex; gap: 5px; margin-bottom: 5px; }
 
-        .vote-ratio { font-size: 11px; color: #333; font-weight: bold; background: #f0f2f5; padding: 4px 6px; border-radius: 4px; min-width: 35px; text-align: center; line-height: 1.1; }
-        
-        .vote-btn { background: white; border: 1px solid #ddd; border-radius: 20px; padding: 5px 10px; font-size: 12px; cursor: pointer; color: #555; display: flex; align-items: center; gap: 5px; transition: 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .vote-btn:hover { background: #f9f9f9; border-color: var(--vote); color: var(--vote); }
-        .vote-btn.voted { background: var(--vote); color: white; border-color: var(--vote); pointer-events: none; }
-        
-        .hukmen-toggle { width: 24px; height: 24px; border-radius: 4px; border: 1px solid #ccc; color: #777; font-size: 10px; font-weight: bold; display: flex; align-items: center; justify-content: center; cursor: pointer; margin-left: 8px; user-select: none; background: #fff; transition: all 0.2s; flex-shrink: 0; }
-        .hukmen-toggle:hover { background: #f0f0f0; }
-        .hukmen-toggle.active { background: var(--danger); color: white; border-color: var(--danger); }
-        .hukmen-indicator { font-size: 10px; color: var(--danger); font-weight: bold; margin-left: 5px; }
-
-        .admin-box, .rules-box { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        .admin-box { text-align: center; }
-        .rules-box { text-align: left; line-height: 1.6; color: #444; }
-        .rules-box h3 { color: var(--accent); margin-top: 20px; font-size: 16px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
-        .rules-box ul { margin: 10px 0; padding-left: 20px; }
-        .rules-box li { margin-bottom: 5px; font-size: 14px; }
-
-        .admin-box input, .admin-box select { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
-        .btn { width: 100%; padding: 12px; border: none; border-radius: 6px; font-size: 14px; font-weight: bold; cursor: pointer; transition: 0.2s; margin-top: 5px; text-transform: uppercase; }
-        .btn-primary { background: var(--accent); color: white; }
-        .btn-danger { background: var(--danger); color: white; margin-top: 20px; }
-        .btn-secondary { background: #34495e; color: white; }
-        .btn-success { background: #27ae60; color: white; margin-top: 20px; box-shadow: 0 4px 10px rgba(39, 174, 96, 0.3); }
-        .file-upload { background: #f1f1f1; padding: 15px; border-radius: 6px; margin-top: 15px; border: 2px dashed #ccc; }
-
-        .status-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: #333; color: white; padding: 12px; text-align: center; font-size: 13px; z-index: 2000; display: none; }
-        .loader { border: 4px solid #f3f3f3; border-top: 4px solid var(--accent); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 20px auto; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes slideDown { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
-
-        @media (max-width: 600px) { 
-            .player { font-size: 12px; } 
-            .vote-ratio { font-size: 10px; min-width: 30px; padding: 3px; }
-            .navbar button { font-size: 10px; padding: 12px 5px; }
-            .bracket-container { min-width: 600px; } 
-        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
 <body>
 
 <div class="navbar">
-    <button class="tab-link active" onclick="openTab('puanDurumu')">PUAN DURUMU</button>
-    <button class="tab-link" onclick="openTab('fikstur')">FİKSTÜR</button>
-    <button class="tab-link" onclick="openTab('finaller')">FİNALLER</button>
-    <button class="tab-link" onclick="openTab('kurallar')">KURALLAR</button>
-    <button class="tab-link" onclick="openTab('admin')">YÖNETİCİ</button>
+    <button class="tab-link active" onclick="openMainTab('tabCurrent')">GÜNCEL TURNUVA</button>
+    <button class="tab-link" onclick="openMainTab('tabHistory')">ESKİ TURNUVALAR</button>
+    <button class="tab-link" onclick="openMainTab('tabAdmin')">YÖNETİCİ PANELİ</button>
 </div>
 
 <div class="container">
-    <div id="loading" class="loader"></div>
+    <div id="loading" style="text-align:center; padding:20px;">Veriler Yükleniyor...</div>
 
-    <div id="puanDurumu" class="tab-content" style="display:none;">
-        <div class="sub-navbar">
-            <button class="sub-tab-btn active" id="btnStandingsStandard" onclick="switchStandingsView('standard')">GENEL PUAN</button>
-            <button class="sub-tab-btn" id="btnStandingsWeighted" onclick="switchStandingsView('weighted')">AĞIRLIKLI ORTALAMA</button>
-        </div>
-
-        <div id="standingsStandard">
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th width="10%">#</th>
-                            <th width="40%" style="text-align:left; padding-left:15px;">OYUNCU</th>
-                            <th width="10%">O</th>
-                            <th width="10%">G</th>
-                            <th width="10%">M</th>
-                            <th width="10%">AV</th>
-                            <th width="10%">P</th>
-                        </tr>
-                    </thead>
-                    <tbody id="standingsBody"></tbody>
-                </table>
+    <div id="tabCurrent" class="tab-content active">
+        <div id="currentTournamentArea">
+            <div style="text-align:center; color:#777; margin-top:50px;">
+                <h3>Şu anda aktif bir turnuva yok.</h3>
+                <p>Yönetici panelinden yeni bir turnuva başlatabilirsiniz.</p>
             </div>
-            <p style="text-align:center; color:#7f8c8d; font-size:11px; margin-top:5px;">Sıralama: Puan > Averaj > İsim | G:2 Puan, M:1 Puan, Hükmen: 0 Puan</p>
-        </div>
-
-        <div id="standingsWeighted" style="display:none;">
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th width="10%">#</th>
-                            <th width="40%" style="text-align:left; padding-left:15px;">OYUNCU</th>
-                            <th width="10%">O</th>
-                            <th width="10%">P</th>
-                            <th width="15%" style="background:#27ae60;">ORT</th>
-                        </tr>
-                    </thead>
-                    <tbody id="weightedStandingsBody"></tbody>
-                </table>
-            </div>
-            <p style="text-align:center; color:#7f8c8d; font-size:11px; margin-top:5px;">Sıralama: (Toplam Puan / Oynanan Maç)</p>
-        </div>
-
-        <div id="endLeagueBtnArea" style="text-align:center; margin-top:30px; display:none;">
-            <button class="btn btn-success" onclick="endLeague()">🏆 LİGİ BİTİR VE FİNALLERİ BAŞLAT</button>
-            <p style="font-size:11px; color:#777; margin-top:5px;">Dikkat: Bu işlem ilk 8'i finallere taşır.</p>
         </div>
     </div>
 
-    <div id="fikstur" class="tab-content" style="display:none;">
-        <div class="sub-navbar">
-            <button class="sub-tab-btn active" id="btnDayView" onclick="switchFixtureView('day')">📅 GÜN GÖRÜNÜMÜ</button>
-            <button class="sub-tab-btn" id="btnPlayerView" onclick="switchFixtureView('player')">👤 OYUNCU GÖRÜNÜMÜ</button>
+    <div id="tabHistory" class="tab-content">
+        <div class="history-type-tabs">
+            <button class="history-btn active" onclick="filterHistory('individual')">Bireysel Turnuvalar</button>
+            <button class="history-btn" onclick="filterHistory('doubles')">Çift Turnuvaları</button>
         </div>
-
-        <div id="fixtureByDay"></div>
-        <div id="fixtureByPlayer" style="display:none;"></div>
-
-        <div id="saveBtnArea" style="margin-top:20px; display:none; position:sticky; bottom:20px;">
-            <button class="btn btn-primary" style="box-shadow: 0 4px 10px rgba(0,0,0,0.3);" onclick="saveDataToFirebase()">💾 SKORLARI KAYDET VE YAYINLA</button>
-        </div>
+        <div id="historyList"></div>
     </div>
 
-    <div id="finaller" class="tab-content" style="display:none;">
-        <div style="text-align:center; margin-bottom:10px; color:#555; font-size:13px;">Play-off Eşleşmeleri</div>
-        
-        <div class="bracket-container">
-            <div class="round">
-                <div class="round-title">Çeyrek Final</div>
-                <div id="qf_matches"></div>
-            </div>
-            <div class="round">
-                <div class="round-title">Yarı Final</div>
-                <div id="sf_matches"></div>
-            </div>
-            <div class="round">
-                <div class="round-title">Final</div>
-                <div id="f_matches"></div>
-                </div>
-        </div>
-        
-        <div id="podiumArea"></div>
-
-        <div id="saveFinalsBtnArea" style="margin-top:20px; display:none; position:sticky; bottom:20px; text-align:center;">
-            <button class="btn btn-primary" onclick="saveDataToFirebase()">💾 FİNAL SKORLARINI KAYDET</button>
-        </div>
-    </div>
-
-    <div id="kurallar" class="tab-content" style="display:none;">
-        <div class="rules-box">
-            <h2 style="color:var(--primary); text-align:center; margin-bottom: 20px; border-bottom: 2px solid var(--accent); padding-bottom:10px;">VESTEL MOBILITY <br> MASA TENİSİ TURNUVASI</h2>
-            
-            <h3>1. Genel Kurallar</h3>
-            <ul>
-                <li>Maçlar tekler (1'e 1) oynanır.</li>
-                <li>Maçlar 3 set üzerinden oynanır (2 set kazanan maçı kazanır).</li>
-                <li>Setler 21 sayıda biter.</li>
-                <li>20-20 durumunda fark 2 olana kadar devam edilir.</li>
-            </ul>
-    
-            <h3>2. Servis Kuralları</h3>
-            <ul>
-                <li>Servis açık avuç içinden atılır.</li>
-                <li>Top önce servis atan sahaya, sonra rakip sahaya değmelidir.</li>
-                <li>Fileye değip karşıya geçen servis tekrar edilir (let).</li>
-                <li>Her 5 sayıda bir servis değişir.</li>
-                <li>20-20 sonrası servis her sayıda bir değişir.</li>
-            </ul>
-    
-            <h3>3. Oyun Sırasında</h3>
-            <ul>
-                <li>Top fileye değip karşı sahaya düşerse oyun devam eder.</li>
-                <li>Top arka arkaya iki kez rakete vurulamaz.</li>
-                <li>Top el, kol veya vücudun başka bir yerine değerse sayı rakibe gider.</li>
-                <li>Masaya elle veya vücutla müdahale yasaktır.</li>
-            </ul>
-    
-            <h3>4. Sayı Rakibe Verilir Eğer;</h3>
-            <ul>
-                <li>Top masaya değmeden dışarı giderse.</li>
-                <li>Top fileye takılıp karşıya geçmezse.</li>
-                <li>Top iki kez kendi sahana değerse.</li>
-                <li>Servis kurallara uygun atılmazsa.</li>
-            </ul>
-    
-            <h3>5. Fair Play</h3>
-            <ul>
-                <li>Kararlarda saygı ve dürüstlük esastır.</li>
-                <li>Hakem yoksa oyuncular uzlaşır.</li>
-                <li>Tartışmalarda turnuva sorumlusu karar verir.</li>
-            </ul>
-    
-            <hr style="border:0; border-top:1px solid #eee; margin:20px 0;">
-    
-            <h3 style="color:var(--primary);">Fikstür İşleyişi</h3>
-            <ul>
-                <li>Galibiyet: <strong>2 Puan</strong>, Mağlubiyet: <strong>1 Puan</strong>.</li>
-                <li>Hükmen mağlubiyet durumunda <strong>0 Puan</strong> verilir.</li>
-                <li>Turnuvadan çekilen oyuncu tüm maçlarını hükmen (0-2) kaybetmiş sayılır.</li>
-                <li>Grup maçları sonunda puan cetvelindeki <strong>ilk 8 oyuncu</strong> Play-off oynamaya hak kazanır.</li>
-                <li>Play-off oynamaya hak kazanıp oynayamayacak durumda olan oyuncular yöneticiler tarafından belirtilir ve bir alt sıradaki oyuncu 8. sıraya yükselir.</li>
-            </ul>
-        </div>
-    </div>
-
-    <div id="admin" class="tab-content" style="display:none;">
-        <div id="loginPanel" class="admin-box">
-            <h2 style="color:var(--primary);">Yönetici Girişi</h2>
+    <div id="tabAdmin" class="tab-content">
+        <div id="loginPanel" class="card">
+            <h3>Yönetici Girişi</h3>
             <input type="email" id="email" placeholder="E-Posta">
             <input type="password" id="password" placeholder="Şifre">
             <button class="btn btn-primary" onclick="login()">Giriş Yap</button>
         </div>
 
-        <div id="adminControls" class="admin-box" style="display:none;">
-            <h3 style="color:var(--accent); margin-top:0;">Yönetim Paneli</h3>
+        <div id="adminControls" class="card" style="display:none;">
+            <h3>Yönetim Paneli</h3>
             
+            <div style="display:flex; gap:10px; margin-bottom:20px;">
+                <button class="btn btn-secondary" onclick="showNewTournamentForm()">➕ YENİ TURNUVA BAŞLAT</button>
+                <button class="btn btn-danger" onclick="endCurrentTournament()">🏁 GÜNCEL TURNUVAYI BİTİR</button>
+            </div>
+
+            <div id="newTournamentForm" class="hidden" style="background:#f9f9f9; padding:15px; border-radius:8px; border:1px solid #ddd; margin-bottom:20px;">
+                <h4 style="margin-top:0;">Yeni Turnuva Kurulumu</h4>
+                <label>Turnuva Tipi:</label>
+                <select id="newTourType" onchange="toggleTeamInput()">
+                    <option value="individual">Bireysel Turnuva</option>
+                    <option value="doubles">Çift (Takım) Turnuvası</option>
+                </select>
+                <div id="participantList"></div>
+                <button class="btn btn-secondary" style="width:auto; margin-top:10px;" onclick="addParticipantRow()">+ Katılımcı Ekle</button>
+                <hr>
+                <button class="btn btn-primary" onclick="startNewTournament()">🚀 TURNUVAYI BAŞLAT</button>
+            </div>
+
+            <hr style="border-top:1px dashed #ddd;">
+
             <div class="file-upload">
                 <h4 style="margin:0 0 10px 0; color:#555;">Oyuncu Fotoğrafı Yükle</h4>
-                <select id="photoPlayerSelect">
-                    <option value="">Oyuncu Seçiniz...</option>
-                </select>
-                <input type="file" id="photoInput" accept="image/*" style="width:100%; margin:10px 0;">
+                <select id="photoPlayerSelect"><option value="">Oyuncu Seçiniz...</option></select>
+                <input type="file" id="photoInput" accept="image/*">
                 <button class="btn btn-secondary" onclick="uploadPlayerPhoto()">📷 FOTOĞRAFI KAYDET</button>
             </div>
 
-            <hr style="border:0; border-top:1px dashed #eee; margin:20px 0;">
+            <hr style="border-top:1px dashed #ddd; margin:20px 0;">
 
             <div class="file-upload">
                 <h4 style="margin:0 0 10px 0; color:#555;">Veri Yönetimi</h4>
-                <label style="font-size:12px; font-weight:bold; display:block; text-align:left; margin-bottom:5px;">Veri Yükle (Upload):</label>
-                <input type="file" id="jsonFileInput" accept=".json" style="width:100%; margin-bottom:10px;">
-                <button class="btn btn-secondary" onclick="importFromPythonJson()">📂 YÜKLE VE YAYINLA</button>
-                <hr style="border:0; border-top:1px dashed #eee; margin:15px 0;">
-                <label style="font-size:12px; font-weight:bold; display:block; text-align:left; margin-bottom:5px;">Yedekle (Download):</label>
-                <button class="btn btn-primary" onclick="downloadJsonData()">💾 GÜNCEL VERİYİ İNDİR (JSON)</button>
+                
+                <label style="font-weight:bold; display:block;">1. Güncel Turnuvaya Veri Yükle (Overwrite)</label>
+                <input type="file" id="jsonFileInput" accept=".json">
+                <button class="btn btn-secondary" onclick="importFromPythonJson()">📂 GÜNCEL VERİYİ YÜKLE</button>
+                
+                <div style="margin:15px 0;"></div>
+
+                <label style="font-weight:bold; display:block; color:#d35400;">2. Geçmişe Eski Turnuva Ekle</label>
+                <p style="font-size:11px; color:#777; margin:0;">Elinizdeki eski .json dosyasını "Eski Turnuvalar > Bireysel" altına ekler.</p>
+                <input type="file" id="historyJsonInput" accept=".json">
+                <button class="btn btn-warning" onclick="importLegacyToHistory()">📂 GEÇMİŞE EKLE</button>
+
+                <div style="margin:15px 0;"></div>
+
+                <label style="font-weight:bold; display:block;">3. Yedekle</label>
+                <button class="btn btn-primary" onclick="downloadJsonData()">💾 TÜM VERİYİ İNDİR (JSON)</button>
             </div>
             
-            <hr style="border:0; border-top:1px solid #eee; margin:20px 0;">
-            <button class="btn btn-danger" onclick="firebase.auth().signOut()">Çıkış Yap</button>
+            <hr style="border-top:1px solid #ddd; margin:20px 0;">
+            <button class="btn btn-danger" onclick="logout()">Çıkış Yap</button>
         </div>
     </div>
 </div>
 
+<datalist id="registeredPlayers"></datalist>
 <div id="photoModal" class="modal" onclick="closePhotoModal()">
-    <span class="modal-close" onclick="closePhotoModal()">&times;</span>
+    <span class="modal-close">&times;</span>
     <img class="modal-content" id="modalImg">
 </div>
-
-<div id="statusBar" class="status-bar"></div>
+<div id="statusBar" style="position:fixed; bottom:0; left:0; width:100%; background:#333; color:white; padding:12px; text-align:center; display:none; z-index:4000;"></div>
 
 <script>
     const firebaseConfig = {
@@ -418,162 +216,580 @@
     const db = firebase.database();
     const auth = firebase.auth();
 
-    let appData = { players: [], matches: [], started: false, finals: { started: false, seeds: [], matches: {} } };
+    let dbData = { current: null, history: [], globalPlayers: [] };
     let isAdmin = false;
 
     window.onload = function() {
         auth.onAuthStateChanged(user => {
             isAdmin = !!user;
-            document.getElementById('loginPanel').style.display = isAdmin ? 'none' : 'block';
-            document.getElementById('adminControls').style.display = isAdmin ? 'block' : 'none';
-            document.getElementById('saveBtnArea').style.display = isAdmin ? 'block' : 'none';
-            document.getElementById('saveFinalsBtnArea').style.display = isAdmin ? 'block' : 'none';
-            document.getElementById('endLeagueBtnArea').style.display = isAdmin ? 'block' : 'none';
-            
-            if(isAdmin) {
-                showStatus("Yönetici modundasınız.", "success");
-                populatePlayerSelect();
-            }
-            try { renderFixture(); renderFinals(); } catch(e) { console.error(e); }
+            updateAdminUI();
+            if(dbData.current) renderTournamentView(dbData.current, 'currentTournamentArea', true);
         });
 
-        db.ref('turnuva').on('value', (snapshot) => {
-            const data = snapshot.val();
+        db.ref('turnuva_v2').on('value', (snapshot) => {
             document.getElementById('loading').style.display = 'none';
-            
-            if (data) {
-                appData = data;
-                // Veri güvenliği kontrolleri
-                if(!appData.players) appData.players = [];
-                if(!appData.matches) appData.matches = [];
-                if(!appData.finals) appData.finals = { started: false, seeds: [], matches: {} };
-                
-                try {
-                    calculateStandings();
-                    renderFixture();
-                    renderFinals();
-                    if(isAdmin) populatePlayerSelect();
-                } catch (err) {
-                    console.error("Render hatası:", err);
-                    showStatus("Veri işlenirken hata oluştu.", "error");
-                }
-                
-                if(document.querySelector('.tab-content.active') === null) {
-                    openTab('puanDurumu');
-                }
+            const val = snapshot.val();
+            if (val) {
+                dbData = val;
+                if(!dbData.history) dbData.history = [];
+                if(!dbData.globalPlayers) dbData.globalPlayers = [];
             } else {
-                openTab('puanDurumu');
+                db.ref('turnuva_v2').set(dbData);
             }
+            updateGlobalPlayerList();
+            renderCurrentTournament();
+            renderHistory('individual');
         });
     };
 
-    function isValidScore(val) {
-        return val !== null && val !== "" && !isNaN(val);
+    // --- RENDER LOGIC (GENERIC) ---
+    function renderTournamentView(tData, containerId, isEditable) {
+        const container = document.getElementById(containerId);
+        if(!tData) {
+            container.innerHTML = '<div style="padding:20px; text-align:center;">Veri Yok</div>';
+            return;
+        }
+        const uid = Math.random().toString(36).substr(2, 9);
+
+        // Turnuva Adı ve Tipi
+        let headerTitle = tData.name || "Turnuva";
+        let typeLabel = (tData.type === 'doubles') ? 'Çiftler' : 'Bireysel';
+
+        let html = `
+            <div class="card">
+                <h2 style="color:var(--primary); text-align:center; border-bottom:2px solid var(--accent); padding-bottom:10px;">
+                    ${headerTitle} <span style="font-size:12px; font-weight:normal; color:#777;">(${typeLabel})</span>
+                </h2>
+                
+                <div class="inner-navbar">
+                    <button class="active" onclick="switchInnerTab('${uid}', 'standings')">PUAN DURUMU</button>
+                    <button onclick="switchInnerTab('${uid}', 'fixture')">FİKSTÜR</button>
+                    <button onclick="switchInnerTab('${uid}', 'finals')">FİNALLER</button>
+                    <button onclick="switchInnerTab('${uid}', 'rules')">KURALLAR</button>
+                </div>
+
+                <div id="${uid}-standings" class="inner-content" style="display:block;">
+                    ${generateStandingsHTML(tData)}
+                    ${(isEditable && isAdmin) ? `<div style="text-align:center; margin-top:20px;"><button class="btn btn-success" onclick="endLeague()">🏆 LİGİ BİTİR VE FİNALLERİ BAŞLAT</button></div>` : ''}
+                </div>
+
+                <div id="${uid}-fixture" class="inner-content" style="display:none;">
+                    ${generateFixtureHTML(tData, isEditable, containerId)}
+                </div>
+
+                <div id="${uid}-finals" class="inner-content" style="display:none;">
+                    ${generateFinalsHTML(tData, isEditable, uid)}
+                </div>
+
+                <div id="${uid}-rules" class="inner-content" style="display:none;">
+                    <div style="padding:15px;">
+                        <h4>Kurallar</h4>
+                        <ul><li>Maçlar 3 set.</li><li>Galibiyet 2 puan.</li></ul>
+                    </div>
+                </div>
+            </div>
+        `;
+        container.innerHTML = html;
+        
+        // Eğer finaller varsa render et (Script tarafında dinamik çalışması için)
+        // Geçmiş turnuvalarda inputlar disabled olmalı.
+        if(tData.finals && tData.finals.started) {
+            // Basitlik için HTML string içinde oluşturduk ama dinamik eventler için
+            // renderFinalsLogic benzeri bir yapı gerekebilir.
+            // Şimdilik generateFinalsHTML statik HTML üretiyor.
+        }
     }
 
-    function calculateStandings() {
-        appData.players.forEach(p => p.stats = { p:0, o:0, g:0, m:0, a:0, y:0, av:0 });
-        const withdrawnPlayers = appData.players.filter(p => p.withdrawn).map(p => p.name);
-
-        appData.matches.forEach(m => {
-            let p1 = appData.players.find(pl => pl.name === m.p1);
-            let p2 = appData.players.find(pl => pl.name === m.p2);
-
-            if (!p1 || !p2) return;
-
-            const p1W = withdrawnPlayers.includes(m.p1);
-            const p2W = withdrawnPlayers.includes(m.p2);
-
-            if (p1W && p2W) return;
-            else if (p1W) {
-                p1.stats.o++; p2.stats.o++;
-                p1.stats.y += 2; p2.stats.a += 2;
-                p2.stats.g++; p2.stats.p += 2;
-                p1.stats.m++; p1.stats.p += 0;
-            } else if (p2W) {
-                p1.stats.o++; p2.stats.o++;
-                p2.stats.y += 2; p1.stats.a += 2;
-                p1.stats.g++; p1.stats.p += 2;
-                p2.stats.m++; p2.stats.p += 0;
-            } else {
-                if (isValidScore(m.s1) && isValidScore(m.s2)) {
-                    const s1 = parseInt(m.s1);
-                    const s2 = parseInt(m.s2);
-                    p1.stats.o++; p2.stats.o++;
-                    p1.stats.a += s1; p1.stats.y += s2;
-                    p2.stats.a += s2; p2.stats.y += s1;
-                    if (s1 > s2) { p1.stats.g++; p1.stats.p += 2; p2.stats.m++; p2.stats.p += m.hukmen ? 0 : 1; } 
-                    else if (s2 > s1) { p2.stats.g++; p2.stats.p += 2; p1.stats.m++; p1.stats.p += m.hukmen ? 0 : 1; }
-                }
-            }
-        });
-
-        appData.players.forEach(p => p.stats.av = (p.stats.a || 0) - (p.stats.y || 0));
-        appData.players.sort((a, b) => {
-            if (a.withdrawn && !b.withdrawn) return 1; 
-            if (!a.withdrawn && b.withdrawn) return -1;
-            if (a.skipPlayoff && !b.skipPlayoff) return 1; 
-            if (!a.skipPlayoff && b.skipPlayoff) return -1;
+    function generateStandingsHTML(tData) {
+        let players = [...(tData.players || [])];
+        players.sort((a, b) => {
+            if (a.withdrawn && !b.withdrawn) return 1; if (!a.withdrawn && b.withdrawn) return -1;
+            if (a.skipPlayoff && !b.skipPlayoff) return 1; if (!a.skipPlayoff && b.skipPlayoff) return -1;
             if (b.stats.p !== a.stats.p) return b.stats.p - a.stats.p;
             if (b.stats.av !== a.stats.av) return b.stats.av - a.stats.av;
             return a.name.localeCompare(b.name);
         });
 
-        renderStandings();
+        let rows = players.map((p, i) => {
+            let rowClass = (i < 8 && !p.withdrawn && !p.skipPlayoff) ? 'top8' : '';
+            if(p.withdrawn) rowClass = 'withdrawn-row';
+            if(p.skipPlayoff) rowClass = 'skipped-row';
+            
+            // Sadece güncel turnuvada (dbData.current ile eşleşiyorsa) butonlar görünsün
+            let isCurrent = (dbData.current && dbData.current.id === tData.id);
+            let btns = '';
+            if(isCurrent && isAdmin && !p.withdrawn) {
+               if(p.skipPlayoff) btns = `<button class="undo-btn" onclick="togglePlayoffSkip('${p.name}')">↩️</button>`;
+               else if(i < 8) btns = `<button class="skip-btn" onclick="togglePlayoffSkip('${p.name}')">🚫</button>`;
+            }
+
+            return `<tr class="${rowClass}"><td>${i+1}</td><td style="text-align:left;">${p.name} ${btns}</td>
+            <td>${p.stats.o}</td><td>${p.stats.g}</td><td>${p.stats.m}</td><td>${p.stats.av}</td><td><strong>${p.stats.p}</strong></td></tr>`;
+        }).join('');
+        return `<table><thead><tr><th>#</th><th>İsim</th><th>O</th><th>G</th><th>M</th><th>Av</th><th>P</th></tr></thead><tbody>${rows}</tbody></table>`;
     }
 
-    // --- FOTOĞRAF YÜKLEME ---
-    function populatePlayerSelect() {
-        const select = document.getElementById('photoPlayerSelect');
-        if(!select) return;
-        select.innerHTML = '<option value="">Oyuncu Seçiniz...</option>';
-        [...appData.players].sort((a,b)=>a.name.localeCompare(b.name)).forEach(p => {
-            const option = document.createElement('option');
-            option.value = p.name;
-            option.innerText = p.name;
-            select.appendChild(option);
+    function generateFixtureHTML(tData, isEditable, containerId) {
+        if(!tData.matches || tData.matches.length === 0) return '<p>Fikstür Yok.</p>';
+        let rounds = {};
+        tData.matches.forEach((m, idx) => {
+            if(!rounds[m.round]) rounds[m.round] = [];
+            rounds[m.round].push({...m, idx: idx});
+        });
+
+        let html = '';
+        const context = isEditable ? 'currentTournamentArea' : 'history'; // Context belirle
+
+        for(let r in rounds) {
+            html += `<div class="day-header">${r}. TUR</div>`;
+            rounds[r].forEach(m => {
+                const disabled = (isEditable && isAdmin) ? '' : 'disabled';
+                // Eğer context history ise inputları tamamen disable et
+                const finalDisabled = (context === 'history') ? 'disabled' : disabled;
+                
+                html += `<div class="match-card">
+                    <div class="player-name" style="text-align:right;">${m.p1}</div>
+                    <div class="score-area">
+                        <input type="number" class="score-input" ${finalDisabled} value="${m.s1!=null?m.s1:''}" onchange="updateMatchScore('${context}', ${m.idx}, 's1', this.value)"> - 
+                        <input type="number" class="score-input" ${finalDisabled} value="${m.s2!=null?m.s2:''}" onchange="updateMatchScore('${context}', ${m.idx}, 's2', this.value)">
+                    </div>
+                    <div class="player-name">${m.p2}</div>
+                </div>`;
+            });
+        }
+        return html;
+    }
+
+    function generateFinalsHTML(tData, isEditable, uid) {
+        if(!tData.finals || !tData.finals.started) return '<p style="text-align:center;">Finaller başlamadı.</p>';
+        
+        // Basit Bracket Çizimi (Statik HTML olarak üreteceğiz)
+        // Gerçekten interaktif olması için çok daha fazla JS gerekir, 
+        // burada var olan veriyi görselleştiriyoruz.
+        
+        const seeds = tData.finals.seeds;
+        const matches = tData.finals.matches || {};
+        const disabled = (isEditable && isAdmin) ? '' : 'disabled';
+        const context = isEditable ? 'currentTournamentArea' : 'history';
+
+        // Helper
+        const getWinner = (p1, p2, mId) => {
+            const m = matches[mId] || {};
+            if(m.s1 != null && m.s2 != null) {
+                return (parseInt(m.s1) > parseInt(m.s2)) ? p1 : p2;
+            }
+            return "???";
+        }
+        const getLoser = (p1, p2, mId) => {
+            const m = matches[mId] || {};
+            if(m.s1 != null && m.s2 != null) {
+                return (parseInt(m.s1) > parseInt(m.s2)) ? p2 : p1;
+            }
+            return "???";
+        }
+
+        // Match Card Generator for Finals
+        const mkMatch = (id, p1, p2) => {
+            const m = matches[id] || {s1:'', s2:''};
+            let c1='', c2='';
+            if(m.s1!=='' && m.s2!=='') {
+                if(parseInt(m.s1)>parseInt(m.s2)) { c1='winner'; c2='loser'; }
+                else { c1='loser'; c2='winner'; }
+            }
+            // Not: Geçmiş turnuva için onchange çalışsa bile context 'history' olduğu için update fonksiyonu blocklayacak
+            return `<div class="match-box">
+                <div class="match-player"><span class="${c1}">${p1}</span><input type="number" ${disabled} value="${m.s1}" onchange="updateFinalScore('${context}', '${id}', 's1', this.value)"></div>
+                <div class="match-player"><span class="${c2}">${p2}</span><input type="number" ${disabled} value="${m.s2}" onchange="updateFinalScore('${context}', '${id}', 's2', this.value)"></div>
+            </div>`;
+        };
+
+        // Calculate rounds
+        const qf1 = mkMatch('qf1', seeds[0], seeds[7]);
+        const qf2 = mkMatch('qf2', seeds[3], seeds[4]);
+        const qf3 = mkMatch('qf3', seeds[2], seeds[5]);
+        const qf4 = mkMatch('qf4', seeds[1], seeds[6]);
+
+        const sf1_p1 = getWinner(seeds[0], seeds[7], 'qf1');
+        const sf1_p2 = getWinner(seeds[3], seeds[4], 'qf2');
+        const sf2_p1 = getWinner(seeds[2], seeds[5], 'qf3');
+        const sf2_p2 = getWinner(seeds[1], seeds[6], 'qf4');
+
+        const sf1 = mkMatch('sf1', sf1_p1, sf1_p2);
+        const sf2 = mkMatch('sf2', sf2_p1, sf2_p2);
+
+        const f_p1 = getWinner(sf1_p1, sf1_p2, 'sf1');
+        const f_p2 = getWinner(sf2_p1, sf2_p2, 'sf2');
+        const finalMatch = mkMatch('final', f_p1, f_p2);
+
+        const t_p1 = getLoser(sf1_p1, sf1_p2, 'sf1');
+        const t_p2 = getLoser(sf2_p1, sf2_p2, 'sf2');
+        const thirdMatch = mkMatch('3rdPlace', t_p1, t_p2);
+
+        // Podium Logic
+        const w = getWinner(f_p1, f_p2, 'final');
+        const l = getLoser(f_p1, f_p2, 'final');
+        const t = getWinner(t_p1, t_p2, '3rdPlace');
+        
+        let podiumHTML = '';
+        if(w!=="???" && l!=="???" && t!=="???") {
+            const getImg = (name) => {
+                const p = tData.players.find(x => x.name === name);
+                return (p && p.photo) ? `<img src="${p.photo}" class="podium-img" onclick="openPhotoModal(this.src)">` : '';
+            }
+            podiumHTML = `<div class="podium-container">
+                <div class="podium-header">🏆 TURNUVA SONUCU</div>
+                <div class="rank-item rank-1">${getImg(w)} 🥇 ${w}</div>
+                <div class="rank-item rank-2">${getImg(l)} 🥈 ${l}</div>
+                <div class="rank-item rank-3">${getImg(t)} 🥉 ${t}</div>
+            </div>`;
+        }
+
+        return `
+        <div class="bracket-container">
+            <div class="round"><div class="round-title">Çeyrek</div>${qf1}${qf2}${qf3}${qf4}</div>
+            <div class="round"><div class="round-title">Yarı</div>${sf1}${sf2}</div>
+            <div class="round"><div class="round-title">Final</div>${finalMatch}<div class="bronze-title">3.Lük</div>${thirdMatch}</div>
+        </div>
+        ${podiumHTML}`;
+    }
+
+    // --- IMPORT LEGACY (OLD JSON TO HISTORY) ---
+    function importLegacyToHistory() {
+        const fileInput = document.getElementById('historyJsonInput');
+        if(fileInput.files.length === 0) return alert("Dosya seçiniz.");
+        
+        const file = fileInput.files[0];
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const json = JSON.parse(e.target.result);
+                // Veriyi normalize et
+                // Eski Python yapısı: {oyuncular:[], maclar:[]} -> {players:[], matches:[]}
+                let cleanData = { players: [], matches: [], finals: {started:false} };
+                
+                if(json.oyuncular) {
+                    cleanData.players = json.oyuncular.map(name => ({name: name, withdrawn:false, stats:{p:0,o:0,g:0,m:0,av:0}}));
+                } else if(json.players) {
+                    cleanData.players = json.players;
+                }
+
+                if(json.maclar) {
+                    cleanData.matches = json.maclar.map(m => ({round: m.gun, p1:m.p1, p2:m.p2, s1:m.s1, s2:m.s2}));
+                } else if(json.matches) {
+                    cleanData.matches = json.matches;
+                }
+                
+                // Finals varsa al
+                if(json.finals) cleanData.finals = json.finals;
+
+                // Puanları hesapla ki listede düzgün dursun
+                // (Burada local calculateStandings kullanılamaz çünkü referans tData)
+                // Bu yüzden basit bir hesaplama yapıp cleanData'ya işleyelim
+                cleanData.players.forEach(p => p.stats = {p:0,o:0,g:0,m:0,av:0});
+                cleanData.matches.forEach(m => {
+                    if(m.s1!=null && m.s2!=null && m.s1!=="" && m.s2!=="") {
+                        const p1 = cleanData.players.find(p=>p.name===m.p1);
+                        const p2 = cleanData.players.find(p=>p.name===m.p2);
+                        if(p1 && p2) {
+                            let s1=parseInt(m.s1), s2=parseInt(m.s2);
+                            p1.stats.o++; p2.stats.o++;
+                            p1.stats.av+=(s1-s2); p2.stats.av+=(s2-s1);
+                            if(s1>s2) { p1.stats.g++; p1.stats.p+=2; p2.stats.m++; p2.stats.p+=1; }
+                            else { p2.stats.g++; p2.stats.p+=2; p1.stats.m++; p1.stats.p+=1; }
+                        }
+                    }
+                });
+
+                // İsim Sor
+                const tourName = prompt("Bu turnuva için bir isim giriniz (Örn: 2024 Yaz):", "Eski Turnuva");
+                if(!tourName) return;
+
+                const newHistoryItem = {
+                    id: Date.now().toString(),
+                    type: 'individual', // Varsayılan olarak bireysel atıyoruz
+                    name: tourName,
+                    date: new Date().toLocaleDateString(),
+                    data: cleanData
+                };
+
+                // Firebase'e ekle
+                if(!dbData.history) dbData.history = [];
+                dbData.history.push(newHistoryItem);
+                
+                db.ref('turnuva_v2').set(dbData)
+                    .then(() => {
+                        alert("Geçmişe başarıyla eklendi!");
+                        renderHistory('individual');
+                    });
+
+            } catch(err) {
+                alert("Dosya okuma hatası: " + err.message);
+            }
+        };
+        reader.readAsText(file);
+    }
+
+    // --- STANDARD ACTIONS ---
+    function openMainTab(tabId) {
+        document.querySelectorAll('.tab-link').forEach(b=>b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        event.currentTarget.classList.add('active');
+    }
+
+    window.switchInnerTab = function(uid, tabName) {
+        const parent = document.getElementById(uid+'-'+tabName).parentElement;
+        parent.querySelectorAll('.inner-content').forEach(c=>c.style.display='none');
+        document.getElementById(uid+'-'+tabName).style.display='block';
+        
+        const nav = parent.querySelector('.inner-navbar');
+        nav.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
+        event.target.classList.add('active');
+    }
+
+    window.filterHistory = function(type) {
+        renderHistory(type);
+        document.querySelectorAll('.history-btn').forEach(b => b.classList.remove('active'));
+        event.target.classList.add('active');
+    }
+
+    window.toggleAccordion = function(id) {
+        const el = document.getElementById(id);
+        const wasOpen = el.classList.contains('open');
+        document.querySelectorAll('.accordion-content').forEach(c=>c.classList.remove('open'));
+        if(!wasOpen) el.classList.add('open');
+    }
+
+    // Modal
+    window.openPhotoModal = function(src) {
+        document.getElementById('modalImg').src = src;
+        document.getElementById('photoModal').style.display = 'flex';
+    }
+    window.closePhotoModal = function() {
+        document.getElementById('photoModal').style.display = 'none';
+    }
+
+    // Admin & Score Updates
+    function updateAdminUI() {
+        document.getElementById('loginPanel').style.display = isAdmin ? 'none' : 'block';
+        document.getElementById('adminControls').style.display = isAdmin ? 'block' : 'none';
+        if(isAdmin) populatePlayerDatalist();
+    }
+
+    function updateGlobalPlayerList() {
+        const dl = document.getElementById('registeredPlayers');
+        dl.innerHTML = '';
+        if(dbData.globalPlayers) {
+            dbData.globalPlayers.sort().forEach(n => {
+                const opt = document.createElement('option');
+                opt.value = n;
+                dl.appendChild(opt);
+            });
+        }
+    }
+    function populatePlayerDatalist() { updateGlobalPlayerList(); }
+
+    function showNewTournamentForm() {
+        document.getElementById('newTournamentForm').classList.remove('hidden');
+        document.getElementById('participantList').innerHTML = '';
+        addParticipantRow(); addParticipantRow();
+    }
+    function toggleTeamInput() {
+        document.getElementById('participantList').innerHTML = '';
+        addParticipantRow(); addParticipantRow();
+    }
+    function addParticipantRow() {
+        const type = document.getElementById('newTourType').value;
+        const div = document.createElement('div');
+        div.className = 'participant-row';
+        if(type==='individual') div.innerHTML = `<input type="text" class="p-input" list="registeredPlayers" placeholder="Oyuncu Adı">`;
+        else div.innerHTML = `<input type="text" class="t-name" placeholder="Takım Adı" style="width:30%"><input type="text" class="p1-input" list="registeredPlayers" placeholder="P1" style="width:30%"><input type="text" class="p2-input" list="registeredPlayers" placeholder="P2" style="width:30%">`;
+        document.getElementById('participantList').appendChild(div);
+    }
+
+    function startNewTournament() {
+        if(dbData.current) return alert("Aktif turnuva var.");
+        const type = document.getElementById('newTourType').value;
+        const rows = document.querySelectorAll('#participantList .participant-row');
+        let players = [];
+        
+        rows.forEach(r => {
+            if(type==='individual') {
+                const name = r.querySelector('.p-input').value.trim();
+                if(name) players.push({name:name, withdrawn:false, stats:{p:0,o:0,g:0,m:0,av:0}});
+            } else {
+                const t = r.querySelector('.t-name').value.trim();
+                const p1 = r.querySelector('.p1-input').value.trim();
+                const p2 = r.querySelector('.p2-input').value.trim();
+                if(t && p1 && p2) players.push({name:t, members:[p1,p2], withdrawn:false, stats:{p:0,o:0,g:0,m:0,av:0}});
+            }
+        });
+
+        if(players.length < 2) return alert("En az 2 katılımcı gerekli.");
+
+        const count = dbData.history.filter(t => t.type === type).length + 1;
+        const tourName = `${count}. ${type==='individual'?'Bireysel':'Çiftler'} Turnuvası`;
+
+        let matches = [];
+        for(let i=0; i<players.length; i++) {
+            for(let j=i+1; j<players.length; j++) {
+                matches.push({round:1, p1:players[i].name, p2:players[j].name, s1:null, s2:null});
+            }
+        }
+
+        // Global list update
+        let newGlobals = [...dbData.globalPlayers];
+        players.forEach(p => {
+            if(p.members) p.members.forEach(m => {if(!newGlobals.includes(m)) newGlobals.push(m)});
+            else if(!newGlobals.includes(p.name)) newGlobals.push(p.name);
+        });
+
+        dbData.current = {
+            id: Date.now().toString(),
+            name: tourName,
+            type: type,
+            players: players,
+            matches: matches,
+            finals: { started: false }
+        };
+        dbData.globalPlayers = newGlobals;
+
+        db.ref('turnuva_v2').update(dbData).then(()=>{
+            alert("Başlatıldı!");
+            document.getElementById('newTournamentForm').classList.add('hidden');
+            openMainTab('tabCurrent');
         });
     }
 
-    function uploadPlayerPhoto() {
-        const playerName = document.getElementById('photoPlayerSelect').value;
-        const fileInput = document.getElementById('photoInput');
+    function endCurrentTournament() {
+        if(!dbData.current) return alert("Turnuva yok.");
+        if(!confirm("Bitirmek istiyor musunuz?")) return;
         
-        if (!playerName) return alert("Lütfen bir oyuncu seçin.");
-        if (fileInput.files.length === 0) return alert("Lütfen bir dosya seçin.");
+        const archive = {
+            id: dbData.current.id,
+            type: dbData.current.type,
+            name: dbData.current.name,
+            date: new Date().toLocaleDateString(),
+            data: dbData.current
+        };
+        
+        if(!dbData.history) dbData.history = [];
+        dbData.history.push(archive);
+        dbData.current = null;
+        
+        db.ref('turnuva_v2').set(dbData).then(()=>{
+            alert("Arşivlendi.");
+            renderCurrentTournament();
+            renderHistory('individual');
+        });
+    }
 
-        const file = fileInput.files[0];
+    window.updateMatchScore = function(ctx, idx, f, v) {
+        if(!isAdmin || ctx !== 'currentTournamentArea') return;
+        dbData.current.matches[idx][f] = v;
+        calculateStandings(dbData.current);
+        db.ref('turnuva_v2/current').set(dbData.current);
+    }
+
+    window.updateFinalScore = function(ctx, mid, f, v) {
+        if(!isAdmin || ctx !== 'currentTournamentArea') return;
+        if(!dbData.current.finals.matches) dbData.current.finals.matches = {};
+        if(!dbData.current.finals.matches[mid]) dbData.current.finals.matches[mid] = {};
+        dbData.current.finals.matches[mid][f] = v;
+        db.ref('turnuva_v2/current/finals').set(dbData.current.finals);
+        // UI auto updates on value change
+    }
+
+    function calculateStandings(tData) {
+        tData.players.forEach(p => p.stats = {p:0,o:0,g:0,m:0,av:0});
+        const wList = tData.players.filter(p=>p.withdrawn).map(p=>p.name);
+        
+        tData.matches.forEach(m => {
+            const p1 = tData.players.find(p=>p.name===m.p1);
+            const p2 = tData.players.find(p=>p.name===m.p2);
+            if(!p1 || !p2) return;
+
+            const w1 = wList.includes(m.p1);
+            const w2 = wList.includes(m.p2);
+
+            if(w1 && w2) return;
+            else if(w1) { p1.stats.o++; p2.stats.o++; p1.stats.y+=2; p2.stats.a+=2; p2.stats.g++; p2.stats.p+=2; p1.stats.m++; }
+            else if(w2) { p1.stats.o++; p2.stats.o++; p2.stats.y+=2; p1.stats.a+=2; p1.stats.g++; p1.stats.p+=2; p2.stats.m++; }
+            else if(m.s1!=null && m.s2!=null && m.s1!=="" && m.s2!=="") {
+                let s1=parseInt(m.s1), s2=parseInt(m.s2);
+                p1.stats.o++; p2.stats.o++;
+                p1.stats.a+=s1; p1.stats.y+=s2; p2.stats.a+=s2; p2.stats.y+=s1;
+                if(s1>s2) { p1.stats.g++; p1.stats.p+=2; p2.stats.m++; p2.stats.p+=1; }
+                else { p2.stats.g++; p2.stats.p+=2; p1.stats.m++; p1.stats.p+=1; }
+            }
+        });
+        tData.players.forEach(p => p.stats.av = (p.stats.a || 0) - (p.stats.y || 0));
+    }
+
+    window.endLeague = function() {
+        if(!confirm("İlk 8 finallere taşınacak?")) return;
+        // Sıralama zaten calculateStandings ile yapıldı varsayıyoruz, ama garanti olsun diye sortlayalım
+        let sorted = [...dbData.current.players].sort((a,b) => {
+             if (a.withdrawn && !b.withdrawn) return 1; if (!a.withdrawn && b.withdrawn) return -1;
+             if (a.skipPlayoff && !b.skipPlayoff) return 1; if (!a.skipPlayoff && b.skipPlayoff) return -1;
+             if (b.stats.p !== a.stats.p) return b.stats.p - a.stats.p;
+             if (b.stats.av !== a.stats.av) return b.stats.av - a.stats.av;
+             return a.name.localeCompare(b.name);
+        });
+        
+        let seeds = sorted.slice(0,8).map(p=>p.name);
+        while(seeds.length < 8) seeds.push("BYE");
+        
+        dbData.current.finals = { started: true, seeds: seeds, matches: {} };
+        db.ref('turnuva_v2/current').set(dbData.current);
+        // Tab açma işlemi render sonrası otomatik olmuyor, manuel tetikleyelim
+        setTimeout(()=> document.querySelector(`button[onclick*="finals"]`).click(), 500); 
+    }
+
+    window.togglePlayoffSkip = function(name) {
+        const p = dbData.current.players.find(x=>x.name===name);
+        if(p) {
+            p.skipPlayoff = !p.skipPlayoff;
+            calculateStandings(dbData.current);
+            db.ref('turnuva_v2/current').set(dbData.current);
+        }
+    }
+
+    // Photo Upload (Aynı logic)
+    window.populatePlayerSelect = function() {
+        const sel = document.getElementById('photoPlayerSelect');
+        sel.innerHTML = '<option>Seçiniz...</option>';
+        if(dbData.current) {
+            dbData.current.players.forEach(p => {
+                const opt = document.createElement('option');
+                opt.value = p.name; opt.innerText = p.name;
+                sel.appendChild(opt);
+            });
+        }
+    }
+    
+    window.uploadPlayerPhoto = function() {
+        const name = document.getElementById('photoPlayerSelect').value;
+        const file = document.getElementById('photoInput').files[0];
+        if(!name || !file) return alert("Eksik bilgi.");
+        
         const reader = new FileReader();
-
         reader.onload = function(e) {
             const img = new Image();
             img.onload = function() {
-                const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d');
-                // GÜNCELLENDİ: Daha Yüksek Çözünürlük (1500px)
-                const MAX_WIDTH = 1500;
-                const MAX_HEIGHT = 1500;
-                let width = img.width;
-                let height = img.height;
-
-                if (width > height) {
-                    if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
-                } else {
-                    if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
-                }
+                const cvs = document.createElement('canvas');
+                const ctx = cvs.getContext('2d');
+                const max = 800;
+                let w = img.width, h = img.height;
+                if(w>h){ if(w>max){h*=max/w; w=max}} else { if(h>max){w*=max/h; h=max}}
+                cvs.width=w; cvs.height=h;
+                ctx.drawImage(img,0,0,w,h);
+                const data = cvs.toDataURL('image/jpeg', 0.8);
                 
-                canvas.width = width;
-                canvas.height = height;
-                ctx.drawImage(img, 0, 0, width, height);
-                
-                // Kaliteyi artır (0.9)
-                const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
-                
-                const player = appData.players.find(p => p.name === playerName);
-                if(player) {
-                    player.photo = dataUrl;
-                    saveDataToFirebase();
-                    showStatus(`${playerName} için fotoğraf yüklendi!`, "success");
+                const p = dbData.current.players.find(x=>x.name===name);
+                if(p) {
+                    p.photo = data;
+                    db.ref('turnuva_v2/current').set(dbData.current).then(()=>alert("Yüklendi"));
                 }
             };
             img.src = e.target.result;
@@ -581,390 +797,43 @@
         reader.readAsDataURL(file);
     }
 
-    // --- MODAL (LIGHTBOX) FONKSİYONLARI ---
-    window.openPhotoModal = function(src) {
-        const modal = document.getElementById('photoModal');
-        const modalImg = document.getElementById('modalImg');
-        modal.style.display = "flex"; // flex ile ortalıyoruz
-        modalImg.src = src;
+    // Download/Import JSON Helpers
+    window.downloadJsonData = function() {
+        const s = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dbData,null,2));
+        const a = document.createElement('a'); a.href=s; a.download="turnuva_yedek.json"; document.body.appendChild(a); a.click(); a.remove();
     }
-
-    window.closePhotoModal = function() {
-        document.getElementById('photoModal').style.display = "none";
-    }
-
-    window.togglePlayoffSkip = function(playerName) {
-        if(!isAdmin) return;
-        const player = appData.players.find(p => p.name === playerName);
-        if(player) {
-            player.skipPlayoff = !player.skipPlayoff;
-            calculateStandings();
-            saveDataToFirebase();
-        }
-    }
-
-    function endLeague() {
-        if(!confirm("Ligi bitirip ilk 8 oyuncuyu finallere taşımak istediğinize emin misiniz?")) return;
-        const seeds = appData.players.slice(0, 8).map(p => p.name);
-        while(seeds.length < 8) seeds.push("BYE");
-        appData.finals = { started: true, seeds: seeds, matches: {} };
-        saveDataToFirebase();
-        showStatus("Lig tamamlandı, finaller başladı!", "success");
-        openTab('finaller');
-    }
-
-    function updateFinalScore(matchId, field, value) {
-        if(!isAdmin) return;
-        if(!appData.finals.matches) appData.finals.matches = {};
-        if(!appData.finals.matches[matchId]) appData.finals.matches[matchId] = {};
-        appData.finals.matches[matchId][field] = value;
-        renderFinals(); 
-    }
-
-    function renderFinals() {
-        const qfDiv = document.getElementById('qf_matches');
-        const sfDiv = document.getElementById('sf_matches');
-        const fDiv = document.getElementById('f_matches');
-        const podiumDiv = document.getElementById('podiumArea');
-        
-        qfDiv.innerHTML = ''; sfDiv.innerHTML = ''; fDiv.innerHTML = ''; podiumDiv.innerHTML = '';
-
-        const started = appData.finals && appData.finals.started;
-        const seeds = started ? appData.finals.seeds : ["1. Sıra", "2. Sıra", "3. Sıra", "4. Sıra", "5. Sıra", "6. Sıra", "7. Sıra", "8. Sıra"];
-        const matches = (appData.finals && appData.finals.matches) ? appData.finals.matches : {};
-
-        const getWinner = (p1, p2, mId) => {
-            const m = matches[mId] || {};
-            if(m.s1 != null && m.s2 != null) {
-                if(parseInt(m.s1) > parseInt(m.s2)) return p1;
-                if(parseInt(m.s2) > parseInt(m.s1)) return p2;
-            }
-            return "???";
-        };
-
-        const getLoser = (p1, p2, mId) => {
-            const m = matches[mId] || {};
-            if(m.s1 != null && m.s2 != null) {
-                if(parseInt(m.s1) > parseInt(m.s2)) return p2;
-                if(parseInt(m.s2) > parseInt(m.s1)) return p1;
-            }
-            return "???";
-        };
-
-        const qfPairs = [
-            { id: 'qf1', p1Idx: 0, p2Idx: 7 },
-            { id: 'qf2', p1Idx: 3, p2Idx: 4 },
-            { id: 'qf3', p1Idx: 2, p2Idx: 5 },
-            { id: 'qf4', p1Idx: 1, p2Idx: 6 }
-        ];
-
-        qfPairs.forEach(pair => {
-            qfDiv.innerHTML += createFinalMatchHTML(pair.id, seeds[pair.p1Idx], seeds[pair.p2Idx], matches[pair.id]);
-        });
-
-        const sf1_p1 = getWinner(seeds[0], seeds[7], 'qf1');
-        const sf1_p2 = getWinner(seeds[3], seeds[4], 'qf2');
-        const sf2_p1 = getWinner(seeds[2], seeds[5], 'qf3');
-        const sf2_p2 = getWinner(seeds[1], seeds[6], 'qf4');
-
-        sfDiv.innerHTML += createFinalMatchHTML('sf1', sf1_p1, sf1_p2, matches['sf1']);
-        sfDiv.innerHTML += createFinalMatchHTML('sf2', sf2_p1, sf2_p2, matches['sf2']);
-
-        const f_p1 = getWinner(sf1_p1, sf1_p2, 'sf1');
-        const f_p2 = getWinner(sf2_p1, sf2_p2, 'sf2');
-        
-        fDiv.innerHTML += createFinalMatchHTML('final', f_p1, f_p2, matches['final']);
-
-        const t_p1 = getLoser(sf1_p1, sf1_p2, 'sf1');
-        const t_p2 = getLoser(sf2_p1, sf2_p2, 'sf2');
-        
-        fDiv.innerHTML += '<div class="bronze-title">3. Lük Maçı</div>';
-        fDiv.innerHTML += createFinalMatchHTML('3rdPlace', t_p1, t_p2, matches['3rdPlace']);
-
-        // --- PODIUM ---
-        const first = getWinner(f_p1, f_p2, 'final');
-        const second = getLoser(f_p1, f_p2, 'final');
-        const third = getWinner(t_p1, t_p2, '3rdPlace');
-
-        if(first !== "???" && second !== "???" && third !== "???") {
-            const getPhotoHtml = (name) => {
-                const p = appData.players.find(x => x.name === name);
-                // Fotoğrafı tıklandığında büyütmek için onclick ekledik
-                return (p && p.photo) ? `<img src="${p.photo}" class="podium-img" onclick="openPhotoModal(this.src)">` : '';
-            };
-
-            podiumDiv.innerHTML = `
-                <div class="podium-container">
-                    <div class="podium-header">🏆 TURNUVA SONUCU</div>
-                    <div class="podium-list">
-                        <div class="rank-item rank-1">${getPhotoHtml(first)}<span class="icon">🏆</span> ${first}</div>
-                        <div class="rank-item rank-2">${getPhotoHtml(second)}<span class="icon">🥈</span> ${second}</div>
-                        <div class="rank-item rank-3">${getPhotoHtml(third)}<span class="icon">🥉</span> ${third}</div>
-                    </div>
-                </div>
-            `;
-        }
-    }
-
-    function createFinalMatchHTML(id, p1, p2, scoreData) {
-        const s1 = scoreData ? scoreData.s1 : '';
-        const s2 = scoreData ? scoreData.s2 : '';
-        const disabled = isAdmin ? '' : 'disabled';
-
-        let p1Class = '', p2Class = '';
-        if (s1 !== '' && s2 !== '') {
-            if (parseInt(s1) > parseInt(s2)) { p1Class = 'winner'; p2Class = 'loser'; }
-            else if (parseInt(s2) > parseInt(s1)) { p1Class = 'loser'; p2Class = 'winner'; }
-        }
-
-        return `
-            <div class="match-box">
-                <div class="match-player">
-                    <span class="${p1Class}">${p1}</span>
-                    <input type="number" ${disabled} value="${s1}" oninput="updateFinalScore('${id}', 's1', this.value)">
-                </div>
-                <div class="match-player">
-                    <span class="${p2Class}">${p2}</span>
-                    <input type="number" ${disabled} value="${s2}" oninput="updateFinalScore('${id}', 's2', this.value)">
-                </div>
-            </div>
-        `;
-    }
-
-    function togglePlayerWithdrawal(playerName, event) {
-        event.stopPropagation();
-        if(!isAdmin) return;
-        const player = appData.players.find(p => p.name === playerName);
-        if(player) {
-            player.withdrawn = !player.withdrawn;
-            calculateStandings();
-            renderFixture();
-            saveDataToFirebase();
-        }
-    }
-
-    function importFromPythonJson() {
-        const fileInput = document.getElementById('jsonFileInput');
-        const file = fileInput.files[0];
-        if (!file) return alert("Dosya seçiniz.");
-        const reader = new FileReader();
-        reader.onload = function(e) {
+    
+    window.importFromPythonJson = function() {
+        const f = document.getElementById('jsonFileInput').files[0];
+        if(!f) return alert("Dosya yok.");
+        const r = new FileReader();
+        r.onload = function(e) {
             try {
-                const pyData = JSON.parse(e.target.result);
-                if(!confirm("Veriler silinecek. Onaylıyor musunuz?")) return;
-                const newPlayers = pyData.oyuncular.map(name => ({ name: name, withdrawn: false, skipPlayoff: false, stats: { p:0, o:0, g:0, m:0, a:0, y:0, av:0 } }));
-                const newMatches = pyData.maclar.map(m => ({ round: m.gun, p1: m.p1, p2: m.p2, s1: isValidScore(m.s1) ? parseInt(m.s1) : null, s2: isValidScore(m.s2) ? parseInt(m.s2) : null, hukmen: m.hukmen || false, v1: 0, v2: 0 }));
-                appData = { players: newPlayers, matches: newMatches, started: true, finals: { started: false, seeds: [], matches: {} } };
-                calculateStandings();
-                db.ref('turnuva').set(appData).then(() => { alert("Yüklendi!"); openTab('puanDurumu'); }).catch(err => alert("Hata: " + err.message));
-            } catch (error) { alert("Dosya hatası."); }
+                const j = JSON.parse(e.target.result);
+                // Basit map
+                const ps = (j.oyuncular || j.players).map(n => ({name:n.name||n, withdrawn:false, stats:{p:0,o:0,g:0,m:0,av:0}}));
+                const ms = (j.maclar || j.matches).map(m => ({round:m.gun||m.round, p1:m.p1, p2:m.p2, s1:m.s1, s2:m.s2}));
+                dbData.current = { id:Date.now().toString(), name:"İçe Aktarılan", type:'individual', players:ps, matches:ms, finals:{started:false}};
+                calculateStandings(dbData.current);
+                db.ref('turnuva_v2').update(dbData).then(()=>alert("Yüklendi"));
+            } catch(x){alert("Hata");}
         };
-        reader.readAsText(file);
-    }
-
-    function downloadJsonData() {
-        if(!appData) return alert("Veri yok.");
-        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appData, null, 2));
-        const a = document.createElement('a');
-        a.setAttribute("href", dataStr);
-        a.setAttribute("download", "turnuva_verisi.json");
-        document.body.appendChild(a); a.click(); a.remove();
+        r.readAsText(f);
     }
 
     function login() {
-        const email = document.getElementById('email').value;
-        const pass = document.getElementById('password').value;
-        auth.signInWithEmailAndPassword(email, pass).catch(e => alert(e.message));
+        const e = document.getElementById('email').value;
+        const p = document.getElementById('password').value;
+        auth.signInWithEmailAndPassword(e, p).catch(err => alert(err.message));
     }
-
-    window.updateScore = function(index, field, value) {
-        if(!isAdmin) return;
-        appData.matches[index][field] = value === '' ? null : parseInt(value);
+    
+    function logout() {
+        auth.signOut();
     }
-
-    window.toggleHukmen = function(index) {
-        if(!isAdmin) return;
-        appData.matches[index].hukmen = !appData.matches[index].hukmen;
-        renderFixture(); 
-    }
-
-    window.saveDataToFirebase = function() {
-        if(!isAdmin) return;
-        calculateStandings(); 
-        db.ref('turnuva').update(appData).then(() => showStatus("Yayınlandı!", "success")).catch(err => alert(err.message));
-    }
-
-    function renderStandings() {
-        const standardBody = document.getElementById('standingsBody');
-        const weightedBody = document.getElementById('weightedStandingsBody');
-        standardBody.innerHTML = ''; weightedBody.innerHTML = '';
-
-        appData.players.forEach((p, index) => {
-            let rowClass = '';
-            if (p.withdrawn) rowClass = 'withdrawn-row';
-            else if (p.skipPlayoff) rowClass = 'skipped-row';
-            else if (index < 8) rowClass = 'top8';
-
-            let actionBtn = '';
-            if(isAdmin && !p.withdrawn) {
-                if(p.skipPlayoff) actionBtn = `<button class="undo-btn" onclick="togglePlayoffSkip('${p.name}')">↩️</button>`;
-                else if(index < 8) actionBtn = `<button class="skip-btn" onclick="togglePlayoffSkip('${p.name}')">🚫</button>`;
-            }
-
-            standardBody.innerHTML += `
-                <tr class="${rowClass}">
-                    <td>${index + 1}</td>
-                    <td style="text-align:left; padding-left:15px; font-weight:600;">
-                        ${p.name} ${p.withdrawn ? '(ÇEKİLDİ)' : ''} ${p.skipPlayoff ? '(PLAY-OFF DIŞI)' : ''} ${actionBtn}
-                    </td>
-                    <td>${p.stats.o}</td>
-                    <td>${p.stats.g}</td>
-                    <td>${p.stats.m}</td>
-                    <td>${p.stats.av}</td>
-                    <td><strong>${p.stats.p}</strong></td>
-                </tr>`;
-        });
-
-        const weightedPlayers = [...appData.players].sort((a, b) => {
-            if(a.withdrawn && !b.withdrawn) return 1; 
-            if(!a.withdrawn && b.withdrawn) return -1;
-            const avgA = a.stats.o > 0 ? a.stats.p / a.stats.o : 0;
-            const avgB = b.stats.o > 0 ? b.stats.p / b.stats.o : 0;
-            if (avgB !== avgA) return avgB - avgA;
-            return b.stats.p - a.stats.p;
-        });
-
-        weightedPlayers.forEach((p, index) => {
-            const avg = p.stats.o > 0 ? (p.stats.p / p.stats.o).toFixed(2) : "0.00";
-            const rowClass = p.withdrawn ? 'withdrawn-row' : '';
-            weightedBody.innerHTML += `<tr class="${rowClass}"><td>${index + 1}</td><td style="text-align:left; padding-left:15px; font-weight:600;">${p.name}</td><td>${p.stats.o}</td><td>${p.stats.p}</td><td style="font-weight:bold; color:var(--accent); background:${p.withdrawn ? '#333' : '#f0f9f4'};">${avg}</td></tr>`;
-        });
-    }
-
-    function switchStandingsView(view) {
-        document.getElementById('standingsStandard').style.display = view === 'standard' ? 'block' : 'none';
-        document.getElementById('standingsWeighted').style.display = view === 'weighted' ? 'block' : 'none';
-        document.getElementById('btnStandingsStandard').classList.toggle('active', view === 'standard');
-        document.getElementById('btnStandingsWeighted').classList.toggle('active', view === 'weighted');
-    }
-
-    function createMatchCardHTML(m, forceLeftPlayer = null) {
-        const p1Obj = appData.players.find(p => p.name === m.p1);
-        const p2Obj = appData.players.find(p => p.name === m.p2);
-        const p1Withdrawn = p1Obj ? p1Obj.withdrawn : false;
-        const p2Withdrawn = p2Obj ? p2Obj.withdrawn : false;
-        const isGameVoid = p1Withdrawn || p2Withdrawn;
-        const disabled = (isAdmin && !isGameVoid) ? '' : 'disabled';
-        let isSwapped = forceLeftPlayer && m.p2 === forceLeftPlayer;
-
-        const pLeftName = isSwapped ? m.p2 : m.p1;
-        const pRightName = isSwapped ? m.p1 : m.p2;
-        
-        let sLeftVal, sRightVal;
-        if (isGameVoid) {
-            const leftIsWithdrawn = isSwapped ? p2Withdrawn : p1Withdrawn;
-            if (p1Withdrawn && p2Withdrawn) { sLeftVal = 0; sRightVal = 0; }
-            else if (leftIsWithdrawn) { sLeftVal = 0; sRightVal = 2; }
-            else { sLeftVal = 2; sRightVal = 0; }
-        } else {
-            sLeftVal = isSwapped ? m.s2 : m.s1;
-            sRightVal = isSwapped ? m.s1 : m.s2;
-        }
-
-        const fieldLeft = isSwapped ? 's2' : 's1';   
-        const fieldRight = isSwapped ? 's1' : 's2';
-        const vLeft = isSwapped ? (m.v2 || 0) : (m.v1 || 0);
-        const vRight = isSwapped ? (m.v1 || 0) : (m.v2 || 0);
-
-        let pLeftStyle = '', pRightStyle = '';
-        if (sLeftVal !== null && sLeftVal !== "" && sRightVal !== null && sRightVal !== "") {
-            const valL = parseInt(sLeftVal), valR = parseInt(sRightVal);
-            if (valL > valR) { pLeftStyle = 'color:var(--accent);'; pRightStyle = 'color:var(--danger);'; } 
-            else if (valR > valL) { pLeftStyle = 'color:var(--danger);'; pRightStyle = 'color:var(--accent);'; }
-        }
-        
-        const total = vLeft + vRight;
-        const pctLeft = total > 0 ? Math.round((vLeft / total) * 100) : 0;
-        const pctRight = total > 0 ? Math.round((vRight / total) * 100) : 0;
-        
-        let hukmenHtml = '', hukmenLabel = '';
-        if (isGameVoid) hukmenLabel = '<span class="hukmen-indicator">(HÜKMEN)</span>';
-        else {
-            hukmenHtml = isAdmin ? `<div class="hukmen-toggle ${m.hukmen ? 'active' : ''}" onclick="toggleHukmen(${m.idx})">H</div>` : '';
-            hukmenLabel = (!isAdmin && m.hukmen) ? '<span class="hukmen-indicator">(HÜKMEN)</span>' : '';
-        }
-
-        return `<div class="match-card">
-                <div class="player-container left"><div class="vote-ratio">%${pctLeft} <span style="font-size:9px; display:block; color:#7f8c8d; font-weight:normal;">(${vLeft}/${total})</span></div><div class="player p1" style="${pLeftStyle}; margin-left:8px;">${pLeftName}</div></div>
-                <div class="scores"><input type="number" ${disabled} value="${sLeftVal !== null ? sLeftVal : ''}" oninput="updateScore(${m.idx}, '${fieldLeft}', this.value)"><span>-</span><input type="number" ${disabled} value="${sRightVal !== null ? sRightVal : ''}" oninput="updateScore(${m.idx}, '${fieldRight}', this.value)">${hukmenHtml}${hukmenLabel}</div>
-                <div class="player-container right"><div class="player p2" style="${pRightStyle}; margin-right:8px;">${pRightName}</div><div class="vote-ratio">%${pctRight} <span style="font-size:9px; display:block; color:#7f8c8d; font-weight:normal;">(${vRight}/${total})</span></div></div></div>`;
-    }
-
-    function renderFixture() {
-        if(document.activeElement.tagName === "INPUT") return;
-        const matchesWithIdx = appData.matches.map((m, index) => ({...m, idx: index}));
-        const dayContainer = document.getElementById('fixtureByDay');
-        dayContainer.innerHTML = '';
-        if (!matchesWithIdx.length) dayContainer.innerHTML = '<p style="text-align:center;">Maç yok.</p>';
-        else {
-            const rounds = {};
-            matchesWithIdx.forEach(m => { if (!rounds[m.round]) rounds[m.round] = []; rounds[m.round].push(m); });
-            for (const [round, matches] of Object.entries(rounds)) {
-                dayContainer.innerHTML += `<div class="day-header">${round}. GÜN</div>`;
-                matches.forEach(m => dayContainer.innerHTML += createMatchCardHTML(m));
-            }
-        }
-
-        const playerContainer = document.getElementById('fixtureByPlayer');
-        playerContainer.innerHTML = '';
-        const sortedPlayers = [...appData.players].sort((a, b) => a.name.localeCompare(b.name));
-        
-        sortedPlayers.forEach((p, index) => {
-            const playerMatches = matchesWithIdx.filter(m => m.p1 === p.name || m.p2 === p.name);
-            if (playerMatches.length > 0) {
-                let withdrawBtn = '';
-                if(isAdmin) {
-                    const btnClass = p.withdrawn ? 'withdraw-btn active' : 'withdraw-btn';
-                    const btnText = p.withdrawn ? 'GERİ AL' : 'HÜKMEN';
-                    withdrawBtn = `<button class="${btnClass}" onclick="togglePlayerWithdrawal('${p.name}', event)">${btnText}</button>`;
-                }
-                playerContainer.innerHTML += `<div class="player-header" onclick="togglePlayerAccordion('matches-${index}', this)"><div style="display:flex; align-items:center;"><span>${p.name}</span><span style="font-size:10px; opacity:0.6; margin-left:8px;">${p.withdrawn ? '(ÇEKİLDİ)' : ''}</span></div><div style="display:flex; align-items:center; gap:5px;">${withdrawBtn}<span style="font-size:11px; opacity:0.8;">${playerMatches.length} Maç</span><span class="arrow">▼</span></div></div><div id="matches-${index}" class="player-matches-container">${playerMatches.sort((a, b) => a.round - b.round).map(m => `<div style="margin-top:-5px;"><div style="text-align:center; font-size:10px; color:#999; margin-bottom:2px; font-weight:bold;">${m.round}. GÜN</div>${createMatchCardHTML(m, p.name)}</div>`).join('')}</div>`;
-            }
-        });
-    }
-
-    window.togglePlayerAccordion = function(id, el) {
-        const content = document.getElementById(id);
-        const isVisible = content.style.display === 'block';
-        content.style.display = isVisible ? 'none' : 'block';
-        el.classList.toggle('active', !isVisible);
-    }
-
-    window.switchFixtureView = function(view) {
-        document.getElementById('fixtureByDay').style.display = view === 'day' ? 'block' : 'none';
-        document.getElementById('fixtureByPlayer').style.display = view === 'player' ? 'block' : 'none';
-        document.getElementById('btnDayView').classList.toggle('active', view === 'day');
-        document.getElementById('btnPlayerView').classList.toggle('active', view === 'player');
-    }
-
-    function renderVoting() {} 
-
-    window.openTab = function(tabName) {
-        document.querySelectorAll('.tab-content').forEach(t => { t.style.display = 'none'; t.classList.remove('active'); });
-        document.querySelectorAll('.tab-link').forEach(t => t.classList.remove('active'));
-        const selected = document.getElementById(tabName);
-        selected.style.display = 'block';
-        setTimeout(() => selected.classList.add('active'), 10);
-        
-        const btns = document.querySelectorAll('.navbar button');
-        const map = { 'puanDurumu':0, 'fikstur':1, 'finaller':2, 'kurallar':3, 'admin':4 };
-        if(map[tabName] !== undefined) btns[map[tabName]].classList.add('active');
-    }
-
+    
     function showStatus(msg, type) {
         const bar = document.getElementById('statusBar');
         bar.innerText = msg;
-        bar.style.background = type === 'success' ? '#27ae60' : (type === 'error' ? '#e74c3c' : '#333');
         bar.style.display = 'block';
         setTimeout(() => { bar.style.display = 'none'; }, 3000);
     }
