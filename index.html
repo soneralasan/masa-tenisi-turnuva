@@ -78,6 +78,7 @@
         
         .withdraw-btn { background: var(--danger); color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 10px; cursor: pointer; margin-right: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; }
         .withdraw-btn.active { background: #555; color: #bbb; border: 1px solid #777; }
+
         .skip-btn { background: #f39c12; color: white; border: none; padding: 2px 6px; border-radius: 4px; font-size: 10px; cursor: pointer; margin-left: 5px; }
         .undo-btn { background: #7f8c8d; color: white; border: none; padding: 2px 6px; border-radius: 4px; font-size: 10px; cursor: pointer; margin-left: 5px; }
 
@@ -150,8 +151,8 @@
 
     <div id="tabHistory" class="tab-content">
         <div class="history-type-tabs">
-            <button class="history-btn active" onclick="filterHistory('individual')">Bireysel Turnuvalar</button>
-            <button class="history-btn" onclick="filterHistory('doubles')">Çift Turnuvaları</button>
+            <button class="history-btn active" onclick="filterHistory('individual', this)">Bireysel Turnuvalar</button>
+            <button class="history-btn" onclick="filterHistory('doubles', this)">Çift Turnuvaları</button>
         </div>
         <div id="historyList"></div>
     </div>
@@ -248,18 +249,26 @@
     let dbData = { current: null, history: [], globalPlayers: [] };
     let isAdmin = false;
 
+    // --- AUTH & INIT ---
     window.onload = function() {
         auth.onAuthStateChanged(user => {
             isAdmin = !!user;
+            
+            // UI'ı anında güncelle (Login/Panel geçişi)
             updateAdminUI();
+            
+            // Eğer admin değilse ve admin tabındaysa login ekranını zorla
             if (!isAdmin && document.getElementById('tabAdmin').classList.contains('active')) {
                 document.getElementById('loginPanel').style.display = 'block';
                 document.getElementById('adminControls').style.display = 'none';
             }
+
             if(isAdmin) {
                 showStatus("Yönetici girişi yapıldı.", "success");
                 populatePlayerSelect();
             }
+            
+            // Hata olsa bile arayüzü çiz
             try { 
                 if(dbData.current) renderTournamentView(dbData.current, 'currentTournamentArea', true);
             } catch(e) { console.error(e); }
@@ -280,7 +289,16 @@
             try {
                 updateGlobalPlayerList();
                 renderCurrentTournament();
-                renderHistory('individual'); // Varsayılan açılış
+                
+                // History butonunun aktiflik durumuna göre render yap
+                const activeBtn = document.querySelector('.history-btn.active');
+                if(activeBtn) {
+                    const type = activeBtn.innerText.includes('Bireysel') ? 'individual' : 'doubles';
+                    renderHistory(type);
+                } else {
+                    renderHistory('individual');
+                }
+                
                 if(isAdmin) populatePlayerSelect();
             } catch (err) {
                 console.error("Render hatası:", err);
@@ -288,6 +306,7 @@
         });
     };
 
+    // --- GENEL FONKSİYONLAR ---
     function parseScore(val) {
         if (val === null || val === "" || val === undefined) return null;
         const parsed = parseInt(val);
@@ -298,7 +317,7 @@
         if(!tData) return;
         tData.players.forEach(p => p.stats = {p:0,o:0,g:0,m:0,av:0});
         const wList = tData.players.filter(p=>p.withdrawn).map(p=>p.name);
-        
+
         tData.matches.forEach(m => {
             const p1 = tData.players.find(p=>p.name===m.p1);
             const p2 = tData.players.find(p=>p.name===m.p2);
@@ -321,13 +340,18 @@
         tData.players.forEach(p => p.stats.av = (p.stats.a || 0) - (p.stats.y || 0));
     }
 
-    // --- NAVIGATION ---
+    // --- NAVIGATION (GÜNCELLENDİ: HATA DÜZELTİLDİ) ---
     window.openMainTab = function(tabId, btnElement) {
         document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
         document.querySelectorAll('.tab-link').forEach(b => b.classList.remove('active'));
+        
         document.getElementById(tabId).classList.add('active');
-        if (btnElement) btnElement.classList.add('active');
-        else if (event && event.target) event.target.classList.add('active');
+        
+        if (btnElement) {
+            btnElement.classList.add('active');
+        } else if (event && event.target && event.target.classList.contains('tab-link')) {
+            event.target.classList.add('active');
+        }
     }
 
     window.switchInnerTab = function(uid, tabName) {
@@ -336,13 +360,19 @@
         document.getElementById(uid+'-'+tabName).style.display='block';
         const nav = parent.querySelector('.inner-navbar');
         nav.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
-        event.target.classList.add('active');
+        if(event && event.target) event.target.classList.add('active');
     }
 
-    window.filterHistory = function(type) {
+    window.filterHistory = function(type, btnElement) {
         renderHistory(type);
         document.querySelectorAll('.history-btn').forEach(b => b.classList.remove('active'));
-        event.target.classList.add('active');
+        
+        // btnElement parametresini kullan, yoksa event.target'a bak
+        if(btnElement) {
+            btnElement.classList.add('active');
+        } else if (event && event.target && event.target.classList.contains('history-btn')) {
+            event.target.classList.add('active');
+        }
     }
 
     function renderHistory(type) {
@@ -356,12 +386,10 @@
         }
 
         // Listeyi tersten (en yeni en üstte) göster
-        // Not: Gerçek index'i bulmak için orijinal array'i kullanacağız
         dbData.history.forEach((t, realIdx) => {
             if(t.type !== type) return;
 
             const itemId = `hist-${realIdx}`;
-            // İsim düzeltmesi: Eğer t.data.name yoksa t.name'i kullan
             const tournamentData = t.data || t; 
             tournamentData.name = t.name; 
             tournamentData.type = t.type;
@@ -395,7 +423,6 @@
         db.ref('turnuva_v2/history').set(dbData.history)
           .then(() => {
               alert("Kayıt silindi.");
-              // Render otomatik tetiklenecek (on value)
           });
     }
 
@@ -420,7 +447,7 @@
         if (isAdmin) { loginPanel.style.display = 'none'; adminControls.style.display = 'block'; }
         else { loginPanel.style.display = 'block'; adminControls.style.display = 'none'; }
         renderCurrentTournament();
-        // Geçmiş listesini yenile (silme butonları için)
+        // Geçmiş listesini yenile
         const activeTypeBtn = document.querySelector('.history-btn.active');
         const type = activeTypeBtn ? (activeTypeBtn.innerText.includes('Bireysel') ? 'individual' : 'doubles') : 'individual';
         renderHistory(type);
@@ -491,6 +518,7 @@
         db.ref('turnuva_v2').set(dbData).then(()=>{ alert("Arşivlendi."); renderCurrentTournament(); renderHistory('individual'); });
     }
 
+    // Update Scores & Logic
     window.updateMatchScore = function(ctx, idx, f, v) { if(!isAdmin || ctx !== 'currentTournamentArea') return; dbData.current.matches[idx][f] = v; calculateStandings(dbData.current); db.ref('turnuva_v2/current').set(dbData.current); }
     window.updateFinalScore = function(ctx, mid, f, v) { if(!isAdmin || ctx !== 'currentTournamentArea') return; if(!dbData.current.finals.matches) dbData.current.finals.matches = {}; if(!dbData.current.finals.matches[mid]) dbData.current.finals.matches[mid] = {}; dbData.current.finals.matches[mid][f] = v; db.ref('turnuva_v2/current/finals').set(dbData.current.finals); }
     window.endLeague = function() { if(!confirm("Finaller başlasın mı?")) return; let sorted = [...dbData.current.players].sort((a,b) => { if (a.withdrawn && !b.withdrawn) return 1; if (!a.withdrawn && b.withdrawn) return -1; if (a.skipPlayoff && !b.skipPlayoff) return 1; if (!a.skipPlayoff && b.skipPlayoff) return -1; if (b.stats.p !== a.stats.p) return b.stats.p - a.stats.p; if (b.stats.av !== a.stats.av) return b.stats.av - a.stats.av; return a.name.localeCompare(b.name); }); let seeds = sorted.slice(0,8).map(p=>p.name); while(seeds.length < 8) seeds.push("BYE"); dbData.current.finals = { started: true, seeds: seeds, matches: {} }; db.ref('turnuva_v2/current').set(dbData.current); setTimeout(()=> document.querySelector(`button[onclick*="finals"]`).click(), 500); }
@@ -505,10 +533,10 @@
     function logout() { auth.signOut(); }
     function showStatus(msg, type) { const bar = document.getElementById('statusBar'); bar.innerText = msg; bar.style.display = 'block'; setTimeout(() => { bar.style.display = 'none'; }, 3000); }
 
-    // --- IMPORT LEGACY (FIXED) ---
+    // --- IMPORT LEGACY (FIXED: BUTTON PARAMETER) ---
     window.importLegacyToHistory = function() {
         const fileInput = document.getElementById('historyJsonInput');
-        if(fileInput.files.length === 0) return alert("Dosya seçiniz.");
+        if(fileInput.files.length === 0) return alert("Lütfen bir JSON dosyası seçin.");
         
         const file = fileInput.files[0];
         const reader = new FileReader();
@@ -519,7 +547,7 @@
                 const tourName = prompt("Turnuva İsmi (Örn: 2024 Yaz):");
                 if(!tourName) return;
 
-                const isIndividual = confirm(`"${tourName}" turnuvası BİREYSEL mi?\n\n- TAMAM: Bireysel\n- İPTAL: Çiftler`);
+                const isIndividual = confirm(`"${tourName}" turnuvası BİREYSEL mi?\n\n- TAMAM: Bireysel Turnuva\n- İPTAL: Çiftler Turnuvası`);
                 const selectedType = isIndividual ? 'individual' : 'doubles';
 
                 let cleanData = { players: [], matches: [], finals: {started:false} };
@@ -529,9 +557,8 @@
                 if(rawPlayers.length > 0) {
                     cleanData.players = rawPlayers.map(p => {
                         const pName = (typeof p === 'string') ? p : p.name;
-                        // photo alanını koru
-                        const photo = (typeof p === 'object' && p.photo) ? p.photo : null;
                         const stats = (typeof p === 'object' && p.stats) ? p.stats : {p:0,o:0,g:0,m:0,av:0};
+                        const photo = (typeof p === 'object' && p.photo) ? p.photo : null;
                         return { name: pName, withdrawn: p.withdrawn||false, skipPlayoff: p.skipPlayoff||false, stats: stats, photo: photo };
                     });
                 }
@@ -550,12 +577,10 @@
                 // Finalleri al
                 if(json.finals) {
                     cleanData.finals = json.finals;
-                    // Eğer seeds eksikse doldur
                     if(!cleanData.finals.seeds) cleanData.finals.seeds = [];
                     while(cleanData.finals.seeds.length < 8) cleanData.finals.seeds.push("BYE");
                 }
 
-                // İSMİ VE TİPİ VERİNİN İÇİNE DE GÖMÜYORUZ (ÖNEMLİ DÜZELTME)
                 cleanData.name = tourName;
                 cleanData.type = selectedType;
 
@@ -572,10 +597,14 @@
                 
                 db.ref('turnuva_v2').set(dbData)
                     .then(() => {
-                        alert("Eklendi! Lütfen 'undefined' yazan hatalı kayıtları siliniz.");
-                        // Yönlendirme
+                        alert("Geçmiş turnuva başarıyla eklendi!");
                         openMainTab('tabHistory', document.querySelectorAll('.navbar .tab-link')[1]);
-                        filterHistory(selectedType);
+                        
+                        // BUTONU MANUEL BULUP GÖNDERİYORUZ (HATA DÜZELTME)
+                        const btnIdx = selectedType === 'individual' ? 0 : 1;
+                        const targetBtn = document.querySelectorAll('.history-btn')[btnIdx];
+                        
+                        filterHistory(selectedType, targetBtn);
                     })
                     .catch(err => alert("Hata: " + err.message));
 
@@ -592,7 +621,6 @@
         if(!tData) { container.innerHTML = '<div style="padding:20px; text-align:center;">Veri Yok</div>'; return; }
         const uid = Math.random().toString(36).substr(2, 9);
         
-        // Eğer data içinde isim yoksa, container'dan geleni kullanmaya çalış
         let headerTitle = tData.name || "Turnuva";
 
         let html = `
@@ -616,7 +644,6 @@
         container.innerHTML = html;
     }
 
-    // (Standings, Fixture functions remain same as previous block)
     function generateStandingsHTML(tData, isEditable) {
         let players = [...(tData.players || [])];
         players.sort((a, b) => {
@@ -675,7 +702,6 @@
         const disabled = (isEditable && isAdmin) ? '' : 'disabled';
         const context = isEditable ? 'currentTournamentArea' : 'history';
 
-        // Check Seeds Length
         if(seeds.length < 8) return '<p style="text-align:center; color:red;">Veri Hatası: Final eşleşme listesi eksik.</p>';
 
         const getWinner = (p1, p2, mId) => {
@@ -694,7 +720,9 @@
             if(m.s1!=='' && m.s2!=='') {
                 if(parseInt(m.s1)>parseInt(m.s2)) { c1='winner'; c2='loser'; } else { c1='loser'; c2='winner'; }
             }
-            return `<div class="match-box"><div class="match-player"><span class="${c1}">${p1}</span><input type="number" ${disabled} value="${m.s1}" onchange="updateFinalScore('${context}', '${id}', 's1', this.value)"></div><div class="match-player"><span class="${c2}">${p2}</span><input type="number" ${disabled} value="${m.s2}" onchange="updateFinalScore('${context}', '${id}', 's2', this.value)"></div></div>`;
+            // Geçmişte güncelleme yapılamaz, disabled zorla
+            const finalDisabled = (context === 'history') ? 'disabled' : disabled;
+            return `<div class="match-box"><div class="match-player"><span class="${c1}">${p1}</span><input type="number" ${finalDisabled} value="${m.s1}" onchange="updateFinalScore('${context}', '${id}', 's1', this.value)"></div><div class="match-player"><span class="${c2}">${p2}</span><input type="number" ${finalDisabled} value="${m.s2}" onchange="updateFinalScore('${context}', '${id}', 's2', this.value)"></div></div>`;
         };
 
         const qf1=mkMatch('qf1',seeds[0],seeds[7]); const qf2=mkMatch('qf2',seeds[3],seeds[4]); 
