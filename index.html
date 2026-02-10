@@ -31,7 +31,7 @@
         th { background: var(--primary); color: white; font-weight: 600; font-size: 12px; letter-spacing: 0.5px; }
         tr:nth-child(even) { background-color: #f9f9f9; }
         
-        /* YENİ RENKLENDİRME STİLLERİ */
+        /* RENKLENDİRME VE GÖRSEL STİLLERİ */
         .rank-1-row { background-color: #27ae60 !important; color: white !important; }
         .rank-1-row td { color: white !important; border-color: rgba(255,255,255,0.2) !important; }
         .rank-1-row .edit-name-btn { color: white !important; opacity: 0.9; }
@@ -49,6 +49,11 @@
         .skipped-row td { color: #e74c3c; text-decoration: line-through; }
         .skipped-row td:first-child { text-decoration: none; border-left: 4px solid #e74c3c; }
         .skipped-row button { text-decoration: none !important; }
+        
+        /* GÖRSEL THUMBNAIL STİLİ */
+        .player-thumb { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin: 0 5px; cursor: pointer; vertical-align: middle; transition: transform 0.2s; }
+        .player-thumb:hover { transform: scale(1.5); z-index: 10; }
+        .rank-1-row .player-thumb, .rank-2-row .player-thumb { border-color: rgba(255,255,255,0.5); }
 
         .match-box { background: white; border: 1px solid #ddd; border-radius: 6px; padding: 10px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); position: relative; }
         .match-player { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid #eee; font-size: 13px; }
@@ -65,10 +70,13 @@
         .edit-name-btn { background: transparent; border: none; cursor: pointer; font-size: 14px; margin-left: 5px; color: #7f8c8d; transition: color 0.2s; }
         .edit-name-btn:hover { color: var(--primary); transform: scale(1.1); }
 
-        .match-card { background: white; padding: 12px; margin-bottom: 10px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: space-between; }
+        .match-card { background: white; padding: 8px 12px; margin-bottom: 10px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .match-side { flex: 1; display: flex; align-items: center; font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .match-side.left { justify-content: flex-end; text-align: right; }
+        .match-side.right { justify-content: flex-start; text-align: left; }
         
-        .score-area { display: flex; align-items: center; gap: 5px; }
-        .score-input { width: 40px; height: 30px; text-align: center; font-size: 16px; border: 1px solid #ddd; border-radius: 4px; font-weight: bold; background: #f9f9f9; }
+        .score-area { display: flex; align-items: center; gap: 5px; flex-shrink: 0; }
+        .score-input { width: 35px; height: 30px; text-align: center; font-size: 16px; border: 1px solid #ddd; border-radius: 4px; font-weight: bold; background: #f9f9f9; }
         .score-input:focus { outline: none; border-color: var(--accent); background: white; }
         .score-input:disabled { background: #eee; color: #333; border: none; }
 
@@ -111,6 +119,11 @@
         @media (max-width: 600px) { 
             .player { font-size: 12px; } 
             .navbar button { font-size: 10px; padding: 12px 5px; }
+            .match-card { flex-wrap: wrap; justify-content: center; padding: 10px; }
+            .match-side { flex: 100%; justify-content: center !important; margin-bottom: 5px; }
+            .match-side.left { order: 1; }
+            .score-area { order: 2; margin: 5px 0; }
+            .match-side.right { order: 3; }
         }
     </style>
 </head>
@@ -707,8 +720,14 @@
             if(p.members && p.members.length > 0) {
                 displayName += ` <span style="font-size:0.85em; color:#666;">(${p.members.join(' & ')})</span>`;
             }
+            
+            // PHOTO ADDED HERE
+            let imgTag = '';
+            if(p.photo) {
+                imgTag = `<img src="${p.photo}" class="player-thumb" onclick="openPhotoModal('${p.photo}')">`;
+            }
 
-            return `<tr class="${rowClass}"><td>${i+1}</td><td style="text-align:left;">${displayName} ${editBtn} ${btns}</td><td>${p.stats.o}</td><td>${p.stats.g}</td><td>${p.stats.m}</td><td>${p.stats.av}</td><td><strong>${p.stats.p}</strong></td></tr>`;
+            return `<tr class="${rowClass}"><td>${i+1}</td><td style="text-align:left; display:flex; align-items:center;">${imgTag} ${displayName} ${editBtn} ${btns}</td><td>${p.stats.o}</td><td>${p.stats.g}</td><td>${p.stats.m}</td><td>${p.stats.av}</td><td><strong>${p.stats.p}</strong></td></tr>`;
         }).join('');
         
         return `<table><thead><tr><th>#</th><th>İsim</th><th>O</th><th>G</th><th>M</th><th>Av</th><th>P</th></tr></thead><tbody>${rows}</tbody></table>`;
@@ -722,6 +741,11 @@
             rounds[m.round].push({...m, idx: idx});
         });
 
+        const getPhoto = (name) => {
+            const p = tData.players.find(x => x.name === name);
+            return (p && p.photo) ? `<img src="${p.photo}" class="player-thumb" onclick="openPhotoModal('${p.photo}')">` : '';
+        }
+
         let html = '';
         const context = isEditable ? 'currentTournamentArea' : 'history';
         for(let r in rounds) {
@@ -729,10 +753,20 @@
             rounds[r].forEach(m => {
                 const disabled = (isEditable && isAdmin) ? '' : 'disabled';
                 const finalDisabled = (context === 'history') ? 'disabled' : disabled;
+                
+                // NEW STRUCTURE FOR IMAGE ALIGNMENT
                 html += `<div class="match-card">
-                    <div class="player-name" style="text-align:right;">${m.p1}</div>
-                    <div class="score-area"><input type="number" class="score-input" ${finalDisabled} value="${m.s1!=null?m.s1:''}" onchange="updateMatchScore('${context}', ${m.idx}, 's1', this.value)"> - <input type="number" class="score-input" ${finalDisabled} value="${m.s2!=null?m.s2:''}" onchange="updateMatchScore('${context}', ${m.idx}, 's2', this.value)"></div>
-                    <div class="player-name">${m.p2}</div>
+                    <div class="match-side left">
+                        ${m.p1} ${getPhoto(m.p1)}
+                    </div>
+                    <div class="score-area">
+                        <input type="number" class="score-input" ${finalDisabled} value="${m.s1!=null?m.s1:''}" onchange="updateMatchScore('${context}', ${m.idx}, 's1', this.value)">
+                        -
+                        <input type="number" class="score-input" ${finalDisabled} value="${m.s2!=null?m.s2:''}" onchange="updateMatchScore('${context}', ${m.idx}, 's2', this.value)">
+                    </div>
+                    <div class="match-side right">
+                        ${getPhoto(m.p2)} ${m.p2}
+                    </div>
                 </div>`;
             });
         }
