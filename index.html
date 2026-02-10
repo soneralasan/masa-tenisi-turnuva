@@ -294,7 +294,7 @@
         });
     };
 
-    // --- HELPER FUNCTIONS ---
+    // --- GENEL FONKSİYONLAR ---
     function parseScore(val) {
         if (val === null || val === "" || val === undefined) return null;
         const parsed = parseInt(val);
@@ -332,9 +332,14 @@
     window.openMainTab = function(tabId, btnElement) {
         document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
         document.querySelectorAll('.tab-link').forEach(b => b.classList.remove('active'));
+        
         document.getElementById(tabId).classList.add('active');
-        if (btnElement) btnElement.classList.add('active');
-        else if (event && event.target && event.target.classList.contains('tab-link')) event.target.classList.add('active');
+        
+        if (btnElement) {
+            btnElement.classList.add('active');
+        } else if (event && event.target && event.target.classList.contains('tab-link')) {
+            event.target.classList.add('active');
+        }
     }
 
     window.switchInnerTab = function(uid, tabName) {
@@ -349,8 +354,12 @@
     window.filterHistory = function(type, btnElement) {
         renderHistory(type);
         document.querySelectorAll('.history-btn').forEach(b => b.classList.remove('active'));
-        if(btnElement) btnElement.classList.add('active');
-        else if (event && event.target && event.target.classList.contains('history-btn')) event.target.classList.add('active');
+        
+        if(btnElement) {
+            btnElement.classList.add('active');
+        } else if (event && event.target && event.target.classList.contains('history-btn')) {
+            event.target.classList.add('active');
+        }
     }
 
     function renderHistory(type) {
@@ -367,10 +376,8 @@
             if(t.type !== type) return;
 
             const itemId = `hist-${realIdx}`;
-            // İsim düzeltmesi: Verinin içindeki ismi veya dış kabuktaki ismi kullan
             const tournamentData = t.data || t; 
-            // Eğer isimsizse dış kabuktaki ismi ata
-            if(!tournamentData.name) tournamentData.name = t.name;
+            tournamentData.name = t.name; 
             tournamentData.type = t.type;
             
             let deleteBtn = isAdmin ? `<button class="delete-hist-btn" onclick="deleteHistoryItem(${realIdx}, event)">🗑️ Sil</button>` : '';
@@ -378,22 +385,28 @@
             const html = `
                 <div class="accordion-item">
                     <div class="accordion-header" onclick="toggleAccordion('${itemId}')">
-                        <span>${deleteBtn} ${t.name || 'İsimsiz'} <small>(${t.date || '-'})</small></span>
+                        <span>${deleteBtn} ${t.name} <small>(${t.date || '-'})</small></span>
                         <span>▼</span>
                     </div>
                     <div id="${itemId}" class="accordion-content"></div>
                 </div>
             `;
             container.insertAdjacentHTML('afterbegin', html);
+            
             setTimeout(() => { renderTournamentView(tournamentData, itemId, false); }, 0);
         });
     }
     
+    // --- DELETE & CLEAR ---
     window.deleteHistoryItem = function(index, event) {
         event.stopPropagation();
         if(!confirm("Bu turnuva kaydını silmek istediğinize emin misiniz?")) return;
+        
         dbData.history.splice(index, 1);
-        db.ref('turnuva_v2/history').set(dbData.history).then(() => { alert("Kayıt silindi."); });
+        db.ref('turnuva_v2/history').set(dbData.history)
+          .then(() => {
+              alert("Kayıt silindi.");
+          });
     }
 
     window.clearAllHistory = function() {
@@ -413,7 +426,9 @@
         document.getElementById('modalImg').src = src;
         document.getElementById('photoModal').style.display = 'flex';
     }
-    window.closePhotoModal = function() { document.getElementById('photoModal').style.display = 'none'; }
+    window.closePhotoModal = function() {
+        document.getElementById('photoModal').style.display = 'none';
+    }
 
     function updateAdminUI() {
         const loginPanel = document.getElementById('loginPanel');
@@ -450,11 +465,13 @@
         document.getElementById('participantList').appendChild(div);
     }
 
+    // --- START NEW TOURNAMENT (FIXED FOR DOUBLES) ---
     function startNewTournament() {
         if(dbData.current) return alert("Aktif turnuva var.");
         const type = document.getElementById('newTourType').value;
         const rows = document.querySelectorAll('#participantList .participant-row');
         let players = [];
+        
         rows.forEach(r => {
             if(type==='individual') {
                 const name = r.querySelector('.p-input').value.trim();
@@ -463,22 +480,46 @@
                 const t = r.querySelector('.t-name').value.trim();
                 const p1 = r.querySelector('.p1-input').value.trim();
                 const p2 = r.querySelector('.p2-input').value.trim();
+                // Çiftler için takım adı ana isimdir.
                 if(t && p1 && p2) players.push({name:t, members:[p1,p2], withdrawn:false, skipPlayoff:false, stats:{p:0,o:0,g:0,m:0,av:0}});
             }
         });
-        if(players.length < 2) return alert("En az 2 katılımcı gerekli.");
+
+        if(players.length < 2) return alert("En az 2 katılımcı/takım gerekli.");
+
         const count = dbData.history.filter(t => t.type === type).length + 1;
         const tourName = `${count}. ${type==='individual'?'Bireysel':'Çiftler'} Turnuvası`;
+
         let matches = [];
-        for(let i=0; i<players.length; i++) { for(let j=i+1; j<players.length; j++) { matches.push({round:1, p1:players[i].name, p2:players[j].name, s1:null, s2:null}); } }
+        // Round Robin Fixture Logic
+        // players[i].name will be the Team Name for doubles
+        for(let i=0; i<players.length; i++) {
+            for(let j=i+1; j<players.length; j++) {
+                matches.push({round:1, p1:players[i].name, p2:players[j].name, s1:null, s2:null});
+            }
+        }
+
         let newGlobals = [...dbData.globalPlayers];
         players.forEach(p => {
             if(p.members) p.members.forEach(m => {if(!newGlobals.includes(m)) newGlobals.push(m)});
             else if(!newGlobals.includes(p.name)) newGlobals.push(p.name);
         });
-        dbData.current = { id: Date.now().toString(), name: tourName, type: type, players: players, matches: matches, finals: { started: false } };
+
+        dbData.current = {
+            id: Date.now().toString(),
+            name: tourName,
+            type: type,
+            players: players,
+            matches: matches,
+            finals: { started: false, seeds:[], matches:{} }
+        };
         dbData.globalPlayers = newGlobals;
-        db.ref('turnuva_v2').update(dbData).then(()=>{ alert("Başlatıldı!"); document.getElementById('newTournamentForm').classList.add('hidden'); openMainTab('tabCurrent', document.querySelectorAll('.navbar .tab-link')[0]); });
+
+        db.ref('turnuva_v2').update(dbData).then(()=>{
+            alert("Başlatıldı!");
+            document.getElementById('newTournamentForm').classList.add('hidden');
+            openMainTab('tabCurrent', document.querySelectorAll('.navbar .tab-link')[0]);
+        });
     }
 
     function endCurrentTournament() {
@@ -491,6 +532,7 @@
         db.ref('turnuva_v2').set(dbData).then(()=>{ alert("Arşivlendi."); renderCurrentTournament(); renderHistory('individual'); });
     }
 
+    // Update Scores & Logic
     window.updateMatchScore = function(ctx, idx, f, v) { if(!isAdmin || ctx !== 'currentTournamentArea') return; dbData.current.matches[idx][f] = v; calculateStandings(dbData.current); db.ref('turnuva_v2/current').set(dbData.current); }
     window.updateFinalScore = function(ctx, mid, f, v) { if(!isAdmin || ctx !== 'currentTournamentArea') return; if(!dbData.current.finals.matches) dbData.current.finals.matches = {}; if(!dbData.current.finals.matches[mid]) dbData.current.finals.matches[mid] = {}; dbData.current.finals.matches[mid][f] = v; db.ref('turnuva_v2/current/finals').set(dbData.current.finals); }
     window.endLeague = function() { if(!confirm("Finaller başlasın mı?")) return; let sorted = [...dbData.current.players].sort((a,b) => { if (a.withdrawn && !b.withdrawn) return 1; if (!a.withdrawn && b.withdrawn) return -1; if (a.skipPlayoff && !b.skipPlayoff) return 1; if (!a.skipPlayoff && b.skipPlayoff) return -1; if (b.stats.p !== a.stats.p) return b.stats.p - a.stats.p; if (b.stats.av !== a.stats.av) return b.stats.av - a.stats.av; return a.name.localeCompare(b.name); }); let seeds = sorted.slice(0,8).map(p=>p.name); while(seeds.length < 8) seeds.push("BYE"); dbData.current.finals = { started: true, seeds: seeds, matches: {} }; db.ref('turnuva_v2/current').set(dbData.current); setTimeout(()=> document.querySelector(`button[onclick*="finals"]`).click(), 500); }
@@ -505,23 +547,107 @@
     function logout() { auth.signOut(); }
     function showStatus(msg, type) { const bar = document.getElementById('statusBar'); bar.innerText = msg; bar.style.display = 'block'; setTimeout(() => { bar.style.display = 'none'; }, 3000); }
 
-    // --- RENDERERS ---
+    // --- IMPORT LEGACY ---
+    window.importLegacyToHistory = function() {
+        const fileInput = document.getElementById('historyJsonInput');
+        if(fileInput.files.length === 0) return alert("Lütfen bir JSON dosyası seçin.");
+        
+        const file = fileInput.files[0];
+        const reader = new FileReader();
+        
+        reader.onload = function(e) {
+            try {
+                const json = JSON.parse(e.target.result);
+                const tourName = prompt("Turnuva İsmi (Örn: 2024 Yaz):");
+                if(!tourName) return;
+
+                const isIndividual = confirm(`"${tourName}" turnuvası BİREYSEL mi?\n\n- TAMAM: Bireysel Turnuva\n- İPTAL: Çiftler Turnuvası`);
+                const selectedType = isIndividual ? 'individual' : 'doubles';
+
+                let cleanData = { players: [], matches: [], finals: {started:false} };
+                
+                // Oyuncular
+                let rawPlayers = json.oyuncular || json.players || [];
+                if(rawPlayers.length > 0) {
+                    cleanData.players = rawPlayers.map(p => {
+                        const pName = (typeof p === 'string') ? p : p.name;
+                        const stats = (typeof p === 'object' && p.stats) ? p.stats : {p:0,o:0,g:0,m:0,av:0};
+                        const photo = (typeof p === 'object' && p.photo) ? p.photo : null;
+                        return { name: pName, withdrawn: p.withdrawn||false, skipPlayoff: p.skipPlayoff||false, stats: stats, photo: photo };
+                    });
+                }
+
+                // Maçlar
+                let rawMatches = json.maclar || json.matches || [];
+                if(rawMatches.length > 0) {
+                    cleanData.matches = rawMatches.map(m => ({
+                        round: m.gun || m.round || 1, 
+                        p1: m.p1, p2: m.p2, 
+                        s1: parseScore(m.s1), s2: parseScore(m.s2),
+                        hukmen: m.hukmen || false, v1: m.v1 || 0, v2: m.v2 || 0
+                    }));
+                }
+                
+                // Finalleri al
+                if(json.finals) {
+                    cleanData.finals = json.finals;
+                    if(!cleanData.finals.seeds) cleanData.finals.seeds = [];
+                    while(cleanData.finals.seeds.length < 8) cleanData.finals.seeds.push("BYE");
+                }
+
+                cleanData.name = tourName;
+                cleanData.type = selectedType;
+
+                const newHistoryItem = {
+                    id: Date.now().toString(),
+                    type: selectedType,
+                    name: tourName,
+                    date: new Date().toLocaleDateString(),
+                    data: cleanData
+                };
+
+                if(!dbData.history) dbData.history = [];
+                dbData.history.push(newHistoryItem);
+                
+                db.ref('turnuva_v2').set(dbData)
+                    .then(() => {
+                        alert("Geçmiş turnuva başarıyla eklendi!");
+                        openMainTab('tabHistory', document.querySelectorAll('.navbar .tab-link')[1]);
+                        
+                        const btnIdx = selectedType === 'individual' ? 0 : 1;
+                        const targetBtn = document.querySelectorAll('.history-btn')[btnIdx];
+                        filterHistory(selectedType, targetBtn);
+                    })
+                    .catch(err => alert("Hata: " + err.message));
+
+            } catch(err) {
+                alert("Dosya okuma hatası: " + err.message);
+            }
+        };
+        reader.readAsText(file);
+    }
+
+    // --- RENDER GENERIC (FIXED FOR DOUBLES) ---
     function renderTournamentView(tData, containerId, isEditable) {
         const container = document.getElementById(containerId);
         if(!tData) { container.innerHTML = '<div style="padding:20px; text-align:center;">Veri Yok</div>'; return; }
         const uid = Math.random().toString(36).substr(2, 9);
+        
         let headerTitle = tData.name || "Turnuva";
+
         let html = `
             <div class="card">
                 <h2 style="color:var(--primary); text-align:center; border-bottom:2px solid var(--accent); padding-bottom:10px;">
                     ${headerTitle} <span style="font-size:12px; font-weight:normal; color:#777;">(${tData.type === 'doubles' ? 'Çiftler' : 'Bireysel'})</span>
                 </h2>
+                
                 <div class="inner-navbar">
                     <button class="active" onclick="switchInnerTab('${uid}', 'standings')">PUAN DURUMU</button>
                     <button onclick="switchInnerTab('${uid}', 'fixture')">FİKSTÜR</button>
                     <button onclick="switchInnerTab('${uid}', 'finals')">FİNALLER</button>
                     <button onclick="switchInnerTab('${uid}', 'rules')">KURALLAR</button>
                 </div>
+
                 <div id="${uid}-standings" class="inner-content" style="display:block;">${generateStandingsHTML(tData, isEditable)}</div>
                 <div id="${uid}-fixture" class="inner-content" style="display:none;">${generateFixtureHTML(tData, isEditable, containerId)}</div>
                 <div id="${uid}-finals" class="inner-content" style="display:none;">${generateFinalsHTML(tData, isEditable, uid)}</div>
@@ -588,7 +714,6 @@
         return html;
     }
 
-    // --- FINALS LOGIC (FIXED) ---
     function generateFinalsHTML(tData, isEditable, uid) {
         if(!tData.finals || !tData.finals.started) return '<p style="text-align:center;">Finaller başlamadı.</p>';
         const seeds = tData.finals.seeds || [];
@@ -596,7 +721,7 @@
         const disabled = (isEditable && isAdmin) ? '' : 'disabled';
         const context = isEditable ? 'currentTournamentArea' : 'history';
 
-        if(seeds.length < 8) return '<p style="text-align:center; color:red;">Final verisi eksik.</p>';
+        if(seeds.length < 8) return '<p style="text-align:center; color:red;">Veri Hatası: Final eşleşme listesi eksik.</p>';
 
         const getWinner = (p1, p2, mId) => {
             const m = matches[mId] || {};
@@ -611,7 +736,7 @@
         const mkMatch = (id, p1, p2) => {
             const m = matches[id] || {s1:'', s2:''};
             let c1='', c2='';
-            if(m.s1!=='' && m.s2!=='' && m.s1!=undefined && m.s2!=undefined) {
+            if(m.s1!=='' && m.s2!=='') {
                 if(parseInt(m.s1)>parseInt(m.s2)) { c1='winner'; c2='loser'; } else { c1='loser'; c2='winner'; }
             }
             const finalDisabled = (context === 'history') ? 'disabled' : disabled;
@@ -639,67 +764,6 @@
         }
 
         return `<div class="bracket-container"><div class="round"><div class="round-title">Çeyrek</div>${qf1}${qf2}${qf3}${qf4}</div><div class="round"><div class="round-title">Yarı</div>${sf1}${sf2}</div><div class="round"><div class="round-title">Final</div>${finalMatch}<div class="bronze-title">3.Lük</div>${thirdMatch}</div></div>${podiumHTML}`;
-    }
-
-    // --- IMPORT LEGACY ---
-    window.importLegacyToHistory = function() {
-        const fileInput = document.getElementById('historyJsonInput');
-        if(fileInput.files.length === 0) return alert("Dosya seçiniz.");
-        const file = fileInput.files[0];
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            try {
-                const json = JSON.parse(e.target.result);
-                const tourName = prompt("Turnuva İsmi (Örn: 2024 Yaz):");
-                if(!tourName) return;
-                const isIndividual = confirm(`"${tourName}" turnuvası BİREYSEL mi?\n\n- TAMAM: Bireysel\n- İPTAL: Çiftler`);
-                const selectedType = isIndividual ? 'individual' : 'doubles';
-
-                let cleanData = { players: [], matches: [], finals: {started:false} };
-                let rawPlayers = json.oyuncular || json.players || [];
-                if(rawPlayers.length > 0) {
-                    cleanData.players = rawPlayers.map(p => {
-                        const pName = (typeof p === 'string') ? p : p.name;
-                        const stats = (typeof p === 'object' && p.stats) ? p.stats : {p:0,o:0,g:0,m:0,av:0};
-                        const photo = (typeof p === 'object' && p.photo) ? p.photo : null;
-                        return { name: pName, withdrawn: p.withdrawn||false, skipPlayoff: p.skipPlayoff||false, stats: stats, photo: photo };
-                    });
-                }
-                let rawMatches = json.maclar || json.matches || [];
-                if(rawMatches.length > 0) {
-                    cleanData.matches = rawMatches.map(m => ({
-                        round: m.gun || m.round || 1, p1: m.p1, p2: m.p2, 
-                        s1: parseScore(m.s1), s2: parseScore(m.s2),
-                        hukmen: m.hukmen || false, v1: m.v1 || 0, v2: m.v2 || 0
-                    }));
-                }
-                if(json.finals) {
-                    cleanData.finals = json.finals;
-                    if(!cleanData.finals.seeds) cleanData.finals.seeds = [];
-                    while(cleanData.finals.seeds.length < 8) cleanData.finals.seeds.push("BYE");
-                }
-
-                // İsim ve Tipi Veri İçine Göm
-                cleanData.name = tourName;
-                cleanData.type = selectedType;
-
-                const newHistoryItem = { id: Date.now().toString(), type: selectedType, name: tourName, date: new Date().toLocaleDateString(), data: cleanData };
-                
-                if(!dbData.history) dbData.history = [];
-                dbData.history.push(newHistoryItem);
-                
-                db.ref('turnuva_v2').set(dbData).then(() => {
-                    alert("Eklendi!");
-                    // Yönlendirme
-                    openMainTab('tabHistory', document.querySelectorAll('.navbar .tab-link')[1]);
-                    // Buton elementini bulup yolla
-                    const btnIdx = selectedType === 'individual' ? 0 : 1;
-                    const targetBtn = document.querySelectorAll('.history-btn')[btnIdx];
-                    filterHistory(selectedType, targetBtn);
-                }).catch(err => alert("Hata: " + err.message));
-            } catch(err) { alert("Okuma hatası: " + err.message); }
-        };
-        reader.readAsText(file);
     }
 
 </script>
