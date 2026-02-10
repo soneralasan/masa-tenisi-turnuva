@@ -21,82 +21,132 @@
         .tab-content { display: none; animation: fadeIn 0.4s ease; }
         .tab-content.active { display: block; }
 
-        .inner-navbar { display: flex; border-bottom: 1px solid #ddd; margin-bottom: 15px; }
-        .inner-navbar button { flex: 1; padding: 10px; background: transparent; border: none; cursor: pointer; color: #777; font-weight: 600; border-bottom: 3px solid transparent; }
-        .inner-navbar button.active { color: var(--primary); border-bottom: 3px solid var(--primary); }
+        .sub-navbar { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; background: #fff; padding: 10px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .sub-tab-btn { flex: 1; padding: 8px; border: 1px solid #ddd; background: #f9f9f9; color: #555; border-radius: 5px; cursor: pointer; font-size: 11px; font-weight: bold; transition: all 0.2s; text-transform: uppercase; }
+        .sub-tab-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
 
-        /* Generic Styles */
-        .card { background: white; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); padding: 15px; margin-bottom: 15px; }
-        .btn { padding: 10px 15px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; color: white; transition: 0.2s; width: 100%; margin-top: 5px;}
-        .btn-primary { background: var(--accent); }
-        .btn-danger { background: var(--danger); }
-        .btn-secondary { background: #34495e; }
-        .btn-warning { background: #f39c12; color: white; }
-        .btn-success { background: #27ae60; color: white; margin-top: 20px; box-shadow: 0 4px 10px rgba(39, 174, 96, 0.3); }
-        
-        input, select { width: 100%; padding: 10px; margin: 5px 0 15px 0; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
-
-        /* Tables & Lists */
-        table { width: 100%; border-collapse: collapse; font-size: 13px; }
-        th, td { padding: 10px; text-align: center; border-bottom: 1px solid #eee; }
-        th { background: #eee; color: #333; }
-        .top8 { background-color: #e8f5e9; }
+        .table-container { overflow-x: auto; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); background: white; margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; min-width: 350px; }
+        th, td { padding: 12px 8px; text-align: center; border-bottom: 1px solid #eee; font-size: 14px; }
+        th { background: var(--primary); color: white; font-weight: 600; font-size: 12px; letter-spacing: 0.5px; }
+        tr:nth-child(even) { background-color: #f9f9f9; }
+        .top8 { background-color: #e8f5e9 !important; } 
+        .top8 td:first-child { border-left: 4px solid var(--accent); font-weight: bold; color: var(--accent); }
         .withdrawn-row { background-color: #333 !important; color: #bdc3c7 !important; }
-        .skipped-row { background-color: #fff5f5; color: #e74c3c; text-decoration: line-through; }
+        .withdrawn-row td { border-bottom: 1px solid #555; }
+        .skipped-row { background-color: #fff5f5; }
+        .skipped-row td { color: #e74c3c; text-decoration: line-through; }
         .skipped-row td:first-child { text-decoration: none; border-left: 4px solid #e74c3c; }
+        .skipped-row button { text-decoration: none !important; }
 
-        /* Match Cards */
-        .match-card { display: flex; justify-content: space-between; align-items: center; background: #fafafa; border: 1px solid #eee; padding: 10px; margin-bottom: 8px; border-radius: 6px; }
-        .player-name { font-weight: 600; font-size: 13px; width: 40%; }
-        .score-area { width: 20%; display: flex; justify-content: center; gap: 5px; }
-        .score-input { width: 30px; text-align: center; font-weight: bold; }
-
-        /* History Accordion */
-        .history-type-tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; }
-        .history-btn { padding: 8px 15px; background: #ddd; border: none; border-radius: 20px; cursor: pointer; font-weight: bold; color: #555; transition: 0.3s; }
-        .history-btn.active { background: var(--primary); color: white; }
-        .accordion-item { border: 1px solid #ddd; border-radius: 5px; margin-bottom: 10px; background: white; overflow: hidden; }
-        .accordion-header { padding: 15px; background: #f9f9f9; cursor: pointer; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
-        .accordion-content { display: none; padding: 15px; border-top: 1px solid #ddd; }
-        .accordion-content.open { display: block; }
-        .delete-hist-btn { font-size: 12px; color: #e74c3c; cursor: pointer; padding: 5px 10px; border: 1px solid #e74c3c; border-radius: 4px; margin-right: 10px; background: white; }
-
-        /* Bracket & Podium */
         .bracket-container { display: flex; flex-direction: row; justify-content: space-between; gap: 10px; overflow-x: auto; padding: 20px 0; }
         .round { display: flex; flex-direction: column; justify-content: flex-start; flex: 1; min-width: 200px; }
-        .round-title { text-align: center; font-weight: bold; color: var(--primary); margin-bottom: 15px; border-bottom: 2px solid var(--accent); padding-bottom: 5px; }
-        .match-box { background: white; border: 1px solid #ddd; border-radius: 6px; padding: 10px; margin-bottom: 20px; position: relative; }
-        .match-player { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #eee; font-size: 13px; }
-        .match-player input { width: 30px; text-align: center; border: 1px solid #ccc; border-radius: 3px; font-weight: bold; }
-        .winner { color: var(--accent); font-weight: bold; }
-        .loser { color: var(--danger); opacity: 0.5; text-decoration: line-through; }
-        .bronze-title { text-align: center; font-weight: bold; color: #e67e22; margin: 30px 0 10px 0; border-bottom: 2px solid #e67e22; padding-bottom: 5px; }
+        .round-title { text-align: center; font-weight: bold; color: var(--primary); margin-bottom: 15px; text-transform: uppercase; font-size: 12px; border-bottom: 2px solid var(--accent); padding-bottom: 5px; }
+        .bronze-title { text-align: center; font-weight: bold; color: #e67e22; margin: 30px 0 10px 0; text-transform: uppercase; font-size: 12px; border-bottom: 2px solid #e67e22; padding-bottom: 5px; }
 
         .podium-container { margin-top: 30px; background: white; border-radius: 8px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; border: 1px solid #eee; animation: slideDown 0.5s ease; }
-        .podium-header { font-size: 14px; color: #7f8c8d; font-weight: bold; text-transform: uppercase; margin-bottom: 25px; }
+        .podium-header { font-size: 14px; color: #7f8c8d; font-weight: bold; text-transform: uppercase; margin-bottom: 25px; letter-spacing: 1px; }
         .podium-list { display: flex; flex-direction: column; gap: 20px; align-items: center; }
         .rank-item { display: flex; align-items: center; gap: 15px; justify-content: center; width: 100%; }
         .podium-img { border-radius: 50%; object-fit: cover; border: 3px solid #fff; box-shadow: 0 4px 8px rgba(0,0,0,0.2); transition: transform 0.3s ease; cursor: zoom-in; }
         .podium-img:hover { transform: scale(1.1); border-color: var(--primary) !important; }
-        .rank-1 { color: #f1c40f; font-size: 28px; font-weight: 800; } .rank-1 .podium-img { width: 120px; height: 120px; border-color: #f1c40f; }
-        .rank-2 { color: #7f8c8d; font-size: 22px; font-weight: 700; } .rank-2 .podium-img { width: 90px; height: 90px; border-color: #bdc3c7; }
-        .rank-3 { color: #d35400; font-size: 18px; font-weight: 600; } .rank-3 .podium-img { width: 80px; height: 80px; border-color: #e67e22; }
+        .rank-1 { color: #f1c40f; font-size: 28px; font-weight: 800; text-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+        .rank-1 .icon { font-size: 32px; margin-right: 5px;}
+        .rank-1 .podium-img { width: 120px; height: 120px; border-color: #f1c40f; }
+        .rank-2 { color: #7f8c8d; font-size: 22px; font-weight: 700; }
+        .rank-2 .icon { font-size: 26px; margin-right: 5px;}
+        .rank-2 .podium-img { width: 90px; height: 90px; border-color: #bdc3c7; }
+        .rank-3 { color: #d35400; font-size: 18px; font-weight: 600; }
+        .rank-3 .icon { font-size: 22px; margin-right: 5px;}
+        .rank-3 .podium-img { width: 80px; height: 80px; border-color: #e67e22; }
+
+        .match-box { background: white; border: 1px solid #ddd; border-radius: 6px; padding: 10px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); position: relative; }
+        .match-player { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid #eee; font-size: 13px; }
+        .match-player:last-child { border-bottom: none; }
+        .match-player input { width: 30px; text-align: center; border: 1px solid #ccc; border-radius: 3px; font-weight: bold; }
+        
+        .winner { color: var(--accent); font-weight: bold; }
+        .loser { color: var(--danger); opacity: 0.5; text-decoration: line-through; }
+
+        .day-header { text-align: center; margin: 25px 0 10px; font-weight: 800; color: var(--primary); text-transform: uppercase; letter-spacing: 1px; font-size: 13px; position: relative; }
+        .day-header::after { content: ''; display: block; width: 40px; height: 3px; background: var(--accent); margin: 5px auto 0; border-radius: 2px; }
+        
+        .player-header { background: var(--primary); color: white; padding: 12px 15px; margin: 10px 0 2px 0; border-radius: 5px; font-weight: bold; text-align: left; font-size: 14px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: background 0.2s; user-select: none; }
+        .player-header:hover { background: #34495e; }
+        .player-header .arrow { transition: transform 0.3s ease; font-size: 10px; }
+        .player-header.active .arrow { transform: rotate(180deg); }
+        
+        .withdraw-btn { background: var(--danger); color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 10px; cursor: pointer; margin-right: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; }
+        .withdraw-btn.active { background: #555; color: #bbb; border: 1px solid #777; }
+        .skip-btn { background: #f39c12; color: white; border: none; padding: 2px 6px; border-radius: 4px; font-size: 10px; cursor: pointer; margin-left: 5px; }
+        .undo-btn { background: #7f8c8d; color: white; border: none; padding: 2px 6px; border-radius: 4px; font-size: 10px; cursor: pointer; margin-left: 5px; }
+
+        .player-matches-container { display: none; padding-top: 5px; animation: slideDown 0.3s ease; }
+        .match-card { background: white; padding: 12px; margin-bottom: 10px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: space-between; }
+        
+        .player-container { width: 35%; display: flex; align-items: center; justify-content: space-between; }
+        .player-container.left { flex-direction: row; text-align: left; }
+        .player-container.right { flex-direction: row-reverse; text-align: right; }
+        .player { font-weight: 600; font-size: 13px; word-wrap: break-word; line-height: 1.2; transition: color 0.3s; width: 100%; }
+        
+        .scores { display: flex; align-items: center; gap: 5px; justify-content: center; width: auto; min-width: 120px; }
+        .scores input { width: 30px; height: 30px; text-align: center; font-size: 16px; border: 1px solid #ddd; border-radius: 4px; font-weight: bold; background: #f9f9f9; }
+        .scores input:focus { outline: none; border-color: var(--accent); background: white; }
+        .scores input:disabled { background: #eee; color: #333; border: none; }
+
+        .vote-ratio { font-size: 11px; color: #333; font-weight: bold; background: #f0f2f5; padding: 4px 6px; border-radius: 4px; min-width: 35px; text-align: center; line-height: 1.1; }
+        
+        .vote-btn { background: white; border: 1px solid #ddd; border-radius: 20px; padding: 5px 10px; font-size: 12px; cursor: pointer; color: #555; display: flex; align-items: center; gap: 5px; transition: 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .vote-btn:hover { background: #f9f9f9; border-color: var(--vote); color: var(--vote); }
+        .vote-btn.voted { background: var(--vote); color: white; border-color: var(--vote); pointer-events: none; }
+        
+        .hukmen-toggle { width: 24px; height: 24px; border-radius: 4px; border: 1px solid #ccc; color: #777; font-size: 10px; font-weight: bold; display: flex; align-items: center; justify-content: center; cursor: pointer; margin-left: 8px; user-select: none; background: #fff; transition: all 0.2s; flex-shrink: 0; }
+        .hukmen-toggle:hover { background: #f0f0f0; }
+        .hukmen-toggle.active { background: var(--danger); color: white; border-color: var(--danger); }
+        .hukmen-indicator { font-size: 10px; color: var(--danger); font-weight: bold; margin-left: 5px; }
+
+        .admin-box, .rules-box { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .admin-box { text-align: center; }
+        .rules-box { text-align: left; line-height: 1.6; color: #444; }
+        .rules-box h3 { color: var(--accent); margin-top: 20px; font-size: 16px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+        .rules-box ul { margin: 10px 0; padding-left: 20px; }
+        .rules-box li { margin-bottom: 5px; font-size: 14px; }
+
+        .admin-box input, .admin-box select { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
+        .btn { width: 100%; padding: 12px; border: none; border-radius: 6px; font-size: 14px; font-weight: bold; cursor: pointer; transition: 0.2s; margin-top: 5px; text-transform: uppercase; }
+        .btn-primary { background: var(--accent); color: white; }
+        .btn-danger { background: var(--danger); color: white; margin-top: 20px; }
+        .btn-secondary { background: #34495e; color: white; }
+        .btn-warning { background: #f39c12; color: white; }
+        .btn-success { background: #27ae60; color: white; margin-top: 20px; box-shadow: 0 4px 10px rgba(39, 174, 96, 0.3); }
+        .file-upload { background: #f1f1f1; padding: 15px; border-radius: 6px; margin-top: 15px; border: 2px dashed #ccc; }
+
+        .status-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: #333; color: white; padding: 12px; text-align: center; font-size: 13px; z-index: 2000; display: none; }
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid var(--accent); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 20px auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
 
         /* Modal */
-        .modal { display: none; position: fixed; z-index: 3000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.95); align-items: center; justify-content: center; }
+        .modal { display: none; position: fixed; z-index: 3000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.95); backdrop-filter: blur(5px); display: flex; align-items: center; justify-content: center; }
         #photoModal { display: none; } 
-        .modal-content { max-width: 95%; max-height: 95vh; border-radius: 5px; border: 2px solid white; box-shadow: 0 0 20px rgba(255,255,255,0.2); animation: zoom 0.4s; object-fit: contain; }
-        .modal-close { position: absolute; top: 20px; right: 30px; color: #f1f1f1; font-size: 50px; font-weight: bold; cursor: pointer; z-index: 3001; }
-        
-        .hidden { display: none; }
-        .participant-row { display: flex; gap: 5px; margin-bottom: 5px; }
-        .file-upload { background: #f1f1f1; padding: 15px; border-radius: 6px; margin-top: 15px; border: 2px dashed #ccc; }
-        .admin-btns { display: flex; gap: 5px; } .admin-btns button { font-size: 10px; padding: 2px 5px; border-radius: 3px; cursor: pointer; border: none; }
-        .undo-btn { background: #7f8c8d; color: white; } .skip-btn { background: #f39c12; color: white; }
-
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes slideDown { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+        .modal-content { margin: auto; display: block; max-width: 95%; max-height: 95vh; width: auto; height: auto; border-radius: 5px; border: 2px solid white; box-shadow: 0 0 20px rgba(255,255,255,0.2); animation: zoom 0.4s; object-fit: contain; }
+        .modal-close { position: absolute; top: 20px; right: 30px; color: #f1f1f1; font-size: 50px; font-weight: bold; transition: 0.3s; cursor: pointer; z-index: 3001; background: rgba(0,0,0,0.5); width: 60px; height: 60px; line-height: 60px; text-align: center; border-radius: 50%; }
+        .modal-close:hover { background: rgba(255,255,255,0.2); color: white; }
         @keyframes zoom { from {transform:scale(0.8); opacity:0;} to {transform:scale(1); opacity:1;} }
+
+        /* Admin Helpers */
+        .hidden { display: none; }
+        .participant-row { display: flex; gap: 5px; margin-bottom: 5px; align-items: center; }
+        .delete-hist-btn { font-size: 12px; color: #e74c3c; cursor: pointer; padding: 5px 10px; border: 1px solid #e74c3c; border-radius: 4px; margin-right: 10px; background: white; }
+        .delete-hist-btn:hover { background: #e74c3c; color: white; }
+
+        @media (max-width: 600px) { 
+            .player { font-size: 12px; } 
+            .vote-ratio { font-size: 10px; min-width: 30px; padding: 3px; }
+            .navbar button { font-size: 10px; padding: 12px 5px; }
+            .bracket-container { min-width: 600px; } 
+        }
     </style>
 </head>
 <body>
@@ -108,11 +158,14 @@
 </div>
 
 <div class="container">
-    <div id="loading" class="loader" style="margin:20px auto;"></div>
+    <div id="loading" class="loader"></div>
 
     <div id="tabCurrent" class="tab-content active">
         <div id="currentTournamentArea">
-            <div style="text-align:center; color:#777; margin-top:50px;"><h3>Aktif turnuva yok.</h3></div>
+            <div style="text-align:center; color:#777; margin-top:50px;">
+                <h3>Şu anda aktif bir turnuva yok.</h3>
+                <p>Yönetici panelinden yeni bir turnuva başlatabilirsiniz.</p>
+            </div>
         </div>
     </div>
 
@@ -134,6 +187,7 @@
 
         <div id="adminControls" class="card" style="display:none;">
             <h3>Yönetim Paneli</h3>
+            
             <div style="display:flex; gap:10px; margin-bottom:20px;">
                 <button class="btn btn-secondary" onclick="showNewTournamentForm()">➕ YENİ TURNUVA BAŞLAT</button>
                 <button class="btn btn-danger" onclick="endCurrentTournament()">🏁 GÜNCEL TURNUVAYI BİTİR</button>
@@ -146,8 +200,10 @@
                     <option value="individual">Bireysel Turnuva</option>
                     <option value="doubles">Çift (Takım) Turnuvası</option>
                 </select>
+                
                 <div id="participantList"></div>
-                <button class="btn btn-secondary" style="width:auto; margin-top:10px;" onclick="addParticipantRow()">+ Ekle</button>
+                
+                <button class="btn btn-secondary" style="width:auto; margin-top:10px;" onclick="addParticipantRow()">+ Katılımcı Ekle</button>
                 <hr>
                 <button class="btn btn-primary" onclick="startNewTournament()">🚀 TURNUVAYI BAŞLAT</button>
             </div>
@@ -165,19 +221,23 @@
 
             <div class="file-upload">
                 <h4 style="margin:0 0 10px 0; color:#555;">Veri Yönetimi</h4>
-                <label style="font-weight:bold; display:block;">1. Güncel Turnuvaya Veri Yükle</label>
+                
+                <label style="font-weight:bold; display:block;">1. Güncel Turnuvaya Veri Yükle (Overwrite)</label>
                 <input type="file" id="jsonFileInput" accept=".json">
                 <button class="btn btn-secondary" onclick="importFromPythonJson()">📂 GÜNCEL VERİYİ YÜKLE</button>
                 
                 <div style="margin:15px 0;"></div>
+
                 <label style="font-weight:bold; display:block; color:#d35400;">2. Geçmişe Eski Turnuva Ekle</label>
+                <p style="font-size:11px; color:#777; margin:0;">Elinizdeki eski .json dosyasını "Eski Turnuvalar" altına ekler.</p>
                 <input type="file" id="historyJsonInput" accept=".json">
                 <button class="btn btn-warning" onclick="importLegacyToHistory()">📂 GEÇMİŞE EKLE</button>
 
                 <div style="margin:15px 0;"></div>
+
                 <label style="font-weight:bold; display:block;">3. Yedekle / Temizle</label>
-                <button class="btn btn-primary" onclick="downloadJsonData()">💾 YEDEK İNDİR</button>
-                <button class="btn btn-danger" style="margin-top:10px;" onclick="clearAllHistory()">🗑️ GEÇMİŞİ TEMİZLE</button>
+                <button class="btn btn-primary" onclick="downloadJsonData()">💾 TÜM VERİYİ İNDİR (JSON)</button>
+                <button class="btn btn-danger" style="margin-top:10px;" onclick="clearAllHistory()">🗑️ TÜM GEÇMİŞİ TEMİZLE (SIFIRLA)</button>
             </div>
             
             <hr style="border-top:1px solid #eee; margin:20px 0;">
@@ -190,7 +250,9 @@
     <span class="modal-close">&times;</span>
     <img class="modal-content" id="modalImg">
 </div>
-<div id="statusBar" style="position:fixed; bottom:0; left:0; width:100%; background:#333; color:white; padding:12px; text-align:center; display:none; z-index:4000;"></div>
+
+<div id="statusBar" class="status-bar"></div>
+<datalist id="registeredPlayers"></datalist>
 
 <script>
     const firebaseConfig = {
@@ -211,18 +273,22 @@
     let dbData = { current: null, history: [], globalPlayers: [] };
     let isAdmin = false;
 
+    // --- AUTH & INIT ---
     window.onload = function() {
         auth.onAuthStateChanged(user => {
             isAdmin = !!user;
             updateAdminUI();
+            if (!isAdmin && document.getElementById('tabAdmin').classList.contains('active')) {
+                document.getElementById('loginPanel').style.display = 'block';
+                document.getElementById('adminControls').style.display = 'none';
+            }
             if(isAdmin) {
                 showStatus("Yönetici girişi yapıldı.", "success");
                 populatePlayerSelect();
             }
-            // Hata korumalı render
             try { 
                 if(dbData.current) renderTournamentView(dbData.current, 'currentTournamentArea', true);
-            } catch(e) {}
+            } catch(e) { console.error(e); }
         });
 
         db.ref('turnuva_v2').on('value', (snapshot) => {
@@ -257,7 +323,7 @@
         });
     };
 
-    // --- HELPERS ---
+    // --- HELPER FUNCTIONS ---
     function parseScore(val) {
         if (val === null || val === "" || val === undefined) return null;
         const parsed = parseInt(val);
@@ -326,9 +392,12 @@
             return;
         }
 
+        // Listeyi tersten (en yeni en üstte) göster
         dbData.history.forEach((t, realIdx) => {
             if(t.type !== type) return;
+
             const itemId = `hist-${realIdx}`;
+            // İsim düzeltmesi: Verinin içindeki ismi veya dış kabuktaki ismi kullan
             const tournamentData = t.data || t; 
             if(!tournamentData.name) tournamentData.name = t.name;
             tournamentData.type = t.type; // Tip bilgisini garantiye al
@@ -344,22 +413,29 @@
                     <div id="${itemId}" class="accordion-content"></div>
                 </div>
             `;
+            // insertAdjacentHTML ile başa ekle (reverse effect)
             container.insertAdjacentHTML('afterbegin', html);
+            
             setTimeout(() => { renderTournamentView(tournamentData, itemId, false); }, 0);
         });
     }
     
+    // --- DELETE & CLEAR ---
     window.deleteHistoryItem = function(index, event) {
         event.stopPropagation();
-        if(!confirm("Silmek istediğinize emin misiniz?")) return;
+        if(!confirm("Bu turnuva kaydını silmek istediğinize emin misiniz?")) return;
+        
         dbData.history.splice(index, 1);
-        db.ref('turnuva_v2/history').set(dbData.history).then(() => { alert("Silindi."); });
+        db.ref('turnuva_v2/history').set(dbData.history)
+          .then(() => {
+              alert("Kayıt silindi.");
+          });
     }
 
     window.clearAllHistory = function() {
-        if(!confirm("DİKKAT: Tüm geçmiş silinecek!")) return;
+        if(!confirm("DİKKAT: Tüm geçmiş turnuva kayıtları silinecek! Onaylıyor musunuz?")) return;
         dbData.history = [];
-        db.ref('turnuva_v2/history').set(dbData.history).then(() => { alert("Temizlendi."); renderHistory('individual'); });
+        db.ref('turnuva_v2/history').set(dbData.history).then(() => { alert("Tüm geçmiş temizlendi."); renderHistory('individual'); });
     }
 
     window.toggleAccordion = function(id) {
@@ -369,27 +445,266 @@
         if(!isOpen) el.classList.add('open');
     }
 
-    // --- RENDERERS ---
+    window.openPhotoModal = function(src) {
+        document.getElementById('modalImg').src = src;
+        document.getElementById('photoModal').style.display = 'flex';
+    }
+    window.closePhotoModal = function() {
+        document.getElementById('photoModal').style.display = 'none';
+    }
+
+    function updateAdminUI() {
+        const loginPanel = document.getElementById('loginPanel');
+        const adminControls = document.getElementById('adminControls');
+        if (isAdmin) { loginPanel.style.display = 'none'; adminControls.style.display = 'block'; }
+        else { loginPanel.style.display = 'block'; adminControls.style.display = 'none'; }
+        renderCurrentTournament();
+        const activeTypeBtn = document.querySelector('.history-btn.active');
+        const type = activeTypeBtn ? (activeTypeBtn.innerText.includes('Bireysel') ? 'individual' : 'doubles') : 'individual';
+        renderHistory(type);
+    }
+
+    function updateGlobalPlayerList() {
+        const dl = document.getElementById('registeredPlayers');
+        dl.innerHTML = '';
+        if(dbData.globalPlayers) {
+            dbData.globalPlayers.sort().forEach(n => {
+                const opt = document.createElement('option');
+                opt.value = n;
+                dl.appendChild(opt);
+            });
+        }
+    }
+    function populatePlayerDatalist() { updateGlobalPlayerList(); }
+
+    window.showNewTournamentForm = function() { 
+        document.getElementById('newTournamentForm').classList.remove('hidden'); 
+        document.getElementById('participantList').innerHTML = ''; 
+        window.addParticipantRow(); 
+        window.addParticipantRow(); 
+    }
+    window.toggleTeamInput = function() { 
+        document.getElementById('participantList').innerHTML = ''; 
+        window.addParticipantRow(); 
+        window.addParticipantRow(); 
+    }
+    
+    // GÜNCELLENMİŞ VE GÜÇLENDİRİLMİŞ SATIR EKLEME FONKSİYONU
+    window.addParticipantRow = function() {
+        const typeEl = document.getElementById('newTourType');
+        const container = document.getElementById('participantList');
+        
+        if(!typeEl || !container) return; // Güvenlik kontrolü
+
+        const type = typeEl.value;
+        const div = document.createElement('div');
+        div.className = 'participant-row';
+        
+        if(type === 'individual') {
+            div.innerHTML = `<input type="text" class="p-input" list="registeredPlayers" placeholder="Oyuncu Adı" style="flex:1;">
+                             <button class="btn btn-danger" onclick="this.parentElement.remove()" style="width:auto; padding:5px 10px;">X</button>`;
+        } else {
+            div.innerHTML = `
+                <input type="text" class="t-name" placeholder="Takım Adı" style="width:30%">
+                <input type="text" class="p1-input" list="registeredPlayers" placeholder="Oyuncu 1" style="width:30%">
+                <input type="text" class="p2-input" list="registeredPlayers" placeholder="Oyuncu 2" style="width:30%">
+                <button class="btn btn-danger" onclick="this.parentElement.remove()" style="width:auto; padding:5px 10px;">X</button>
+            `;
+        }
+        container.appendChild(div);
+    }
+
+    window.startNewTournament = function() {
+        if(dbData.current) return alert("Aktif turnuva var.");
+        const type = document.getElementById('newTourType').value;
+        const rows = document.querySelectorAll('#participantList .participant-row');
+        let players = [];
+        
+        rows.forEach(r => {
+            if(type==='individual') {
+                const nameInp = r.querySelector('.p-input');
+                const name = nameInp ? nameInp.value.trim() : '';
+                if(name) players.push({name:name, withdrawn:false, skipPlayoff:false, stats:{p:0,o:0,g:0,m:0,av:0}});
+            } else {
+                const tInp = r.querySelector('.t-name');
+                const p1Inp = r.querySelector('.p1-input');
+                const p2Inp = r.querySelector('.p2-input');
+                
+                const t = tInp ? tInp.value.trim() : '';
+                const p1 = p1Inp ? p1Inp.value.trim() : '';
+                const p2 = p2Inp ? p2Inp.value.trim() : '';
+                
+                // Çiftler için takım adı ana isimdir.
+                if(t && p1 && p2) players.push({name:t, members:[p1,p2], withdrawn:false, skipPlayoff:false, stats:{p:0,o:0,g:0,m:0,av:0}});
+            }
+        });
+
+        if(players.length < 2) return alert("En az 2 katılımcı/takım gerekli.");
+
+        // İsimlendirme Sayacı (Hata korumalı)
+        const histArray = Array.isArray(dbData.history) ? dbData.history : [];
+        const count = histArray.filter(t => t.type === type).length + 1;
+        const tourName = `${count}. ${type==='individual'?'Bireysel':'Çiftler'} Turnuvası`;
+
+        let matches = [];
+        for(let i=0; i<players.length; i++) {
+            for(let j=i+1; j<players.length; j++) {
+                matches.push({round:1, p1:players[i].name, p2:players[j].name, s1:null, s2:null});
+            }
+        }
+
+        let newGlobals = [...dbData.globalPlayers];
+        players.forEach(p => {
+            if(p.members) p.members.forEach(m => {if(!newGlobals.includes(m)) newGlobals.push(m)});
+            else if(!newGlobals.includes(p.name)) newGlobals.push(p.name);
+        });
+
+        dbData.current = {
+            id: Date.now().toString(),
+            name: tourName,
+            type: type,
+            players: players,
+            matches: matches,
+            finals: { started: false, seeds:[], matches:{} }
+        };
+        dbData.globalPlayers = newGlobals;
+
+        db.ref('turnuva_v2').update(dbData).then(()=>{
+            alert("Başlatıldı!");
+            document.getElementById('newTournamentForm').classList.add('hidden');
+            openMainTab('tabCurrent', document.querySelectorAll('.navbar .tab-link')[0]);
+        });
+    }
+
+    function endCurrentTournament() {
+        if(!dbData.current) return alert("Turnuva yok.");
+        if(!confirm("Arşivlensin mi?")) return;
+        const archive = { id: dbData.current.id, type: dbData.current.type, name: dbData.current.name, date: new Date().toLocaleDateString(), data: dbData.current };
+        if(!dbData.history) dbData.history = [];
+        dbData.history.push(archive);
+        dbData.current = null;
+        db.ref('turnuva_v2').set(dbData).then(()=>{ alert("Arşivlendi."); renderCurrentTournament(); renderHistory('individual'); });
+    }
+
+    // Update Scores & Logic
+    window.updateMatchScore = function(ctx, idx, f, v) { if(!isAdmin || ctx !== 'currentTournamentArea') return; dbData.current.matches[idx][f] = v; calculateStandings(dbData.current); db.ref('turnuva_v2/current').set(dbData.current); }
+    window.updateFinalScore = function(ctx, mid, f, v) { if(!isAdmin || ctx !== 'currentTournamentArea') return; if(!dbData.current.finals.matches) dbData.current.finals.matches = {}; if(!dbData.current.finals.matches[mid]) dbData.current.finals.matches[mid] = {}; dbData.current.finals.matches[mid][f] = v; db.ref('turnuva_v2/current/finals').set(dbData.current.finals); }
+    window.endLeague = function() { if(!confirm("Finaller başlasın mı?")) return; let sorted = [...dbData.current.players].sort((a,b) => { if (a.withdrawn && !b.withdrawn) return 1; if (!a.withdrawn && b.withdrawn) return -1; if (a.skipPlayoff && !b.skipPlayoff) return 1; if (!a.skipPlayoff && b.skipPlayoff) return -1; if (b.stats.p !== a.stats.p) return b.stats.p - a.stats.p; if (b.stats.av !== a.stats.av) return b.stats.av - a.stats.av; return a.name.localeCompare(b.name); }); let seeds = sorted.slice(0,8).map(p=>p.name); while(seeds.length < 8) seeds.push("BYE"); dbData.current.finals = { started: true, seeds: seeds, matches: {} }; db.ref('turnuva_v2/current').set(dbData.current); setTimeout(()=> document.querySelector(`button[onclick*="finals"]`).click(), 500); }
+    window.togglePlayoffSkip = function(name) { const p = dbData.current.players.find(x=>x.name===name); if(p) { p.skipPlayoff = !p.skipPlayoff; calculateStandings(dbData.current); db.ref('turnuva_v2/current').set(dbData.current); } }
+    window.populatePlayerSelect = function() { const sel = document.getElementById('photoPlayerSelect'); sel.innerHTML = '<option>Seçiniz...</option>'; if(dbData.current) { dbData.current.players.forEach(p => { const opt = document.createElement('option'); opt.value = p.name; opt.innerText = p.name; sel.appendChild(opt); }); } }
+    window.uploadPlayerPhoto = function() { const name = document.getElementById('photoPlayerSelect').value; const file = document.getElementById('photoInput').files[0]; if(!name || !file) return alert("Eksik bilgi."); const reader = new FileReader(); reader.onload = function(e) { const img = new Image(); img.onload = function() { const cvs = document.createElement('canvas'); const ctx = cvs.getContext('2d'); const max = 1500; let w = img.width, h = img.height; if(w>h){ if(w>max){h*=max/w; w=max}} else { if(h>max){w*=max/h; h=max}} cvs.width=w; cvs.height=h; ctx.drawImage(img,0,0,w,h); const data = cvs.toDataURL('image/jpeg', 0.9); const p = dbData.current.players.find(x=>x.name===name); if(p) { p.photo = data; db.ref('turnuva_v2/current').set(dbData.current).then(()=>alert("Yüklendi")); } }; img.src = e.target.result; }; reader.readAsDataURL(file); }
+    window.downloadJsonData = function() { const s = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dbData,null,2)); const a = document.createElement('a'); a.href=s; a.download="turnuva_yedek.json"; document.body.appendChild(a); a.click(); a.remove(); }
+    window.importFromPythonJson = function() { const f = document.getElementById('jsonFileInput').files[0]; if(!f) return alert("Dosya yok."); const r = new FileReader(); r.onload = function(e) { try { const j = JSON.parse(e.target.result); const ps = (j.oyuncular || j.players).map(n => ({name:n.name||n, withdrawn:false, skipPlayoff:false, stats:{p:0,o:0,g:0,m:0,av:0}})); const ms = (j.maclar || j.matches).map(m => ({round:m.gun||m.round, p1:m.p1, p2:m.p2, s1:parseScore(m.s1), s2:parseScore(m.s2)})); dbData.current = { id:Date.now().toString(), name:"İçe Aktarılan", type:'individual', players:ps, matches:ms, finals:{started:false}}; calculateStandings(dbData.current); db.ref('turnuva_v2').update(dbData).then(()=>alert("Yüklendi")); } catch(x){alert("Hata: "+x.message);} }; r.readAsText(f); }
+    window.openPhotoModal = function(src) { document.getElementById('modalImg').src = src; document.getElementById('photoModal').style.display = 'flex'; }
+    window.closePhotoModal = function() { document.getElementById('photoModal').style.display = 'none'; }
+    function login() { const e = document.getElementById('email').value; const p = document.getElementById('password').value; auth.signInWithEmailAndPassword(e, p).catch(err => alert(err.message)); }
+    function logout() { auth.signOut(); }
+    function showStatus(msg, type) { const bar = document.getElementById('statusBar'); bar.innerText = msg; bar.style.display = 'block'; setTimeout(() => { bar.style.display = 'none'; }, 3000); }
+
+    // --- IMPORT LEGACY (FIXED: BUTTON PARAMETER) ---
+    window.importLegacyToHistory = function() {
+        const fileInput = document.getElementById('historyJsonInput');
+        if(fileInput.files.length === 0) return alert("Lütfen bir JSON dosyası seçin.");
+        
+        const file = fileInput.files[0];
+        const reader = new FileReader();
+        
+        reader.onload = function(e) {
+            try {
+                const json = JSON.parse(e.target.result);
+                const tourName = prompt("Turnuva İsmi (Örn: 2024 Yaz):");
+                if(!tourName) return;
+
+                const isIndividual = confirm(`"${tourName}" turnuvası BİREYSEL mi?\n\n- TAMAM: Bireysel Turnuva\n- İPTAL: Çiftler Turnuvası`);
+                const selectedType = isIndividual ? 'individual' : 'doubles';
+
+                let cleanData = { players: [], matches: [], finals: {started:false} };
+                
+                // Oyuncu verisini normalize et
+                let rawPlayers = json.oyuncular || json.players || [];
+                if(rawPlayers.length > 0) {
+                    cleanData.players = rawPlayers.map(p => {
+                        const pName = (typeof p === 'string') ? p : p.name;
+                        const stats = (typeof p === 'object' && p.stats) ? p.stats : {p:0,o:0,g:0,m:0,av:0};
+                        const photo = (typeof p === 'object' && p.photo) ? p.photo : null;
+                        return { name: pName, withdrawn: p.withdrawn||false, skipPlayoff: p.skipPlayoff||false, stats: stats, photo: photo };
+                    });
+                }
+
+                // Maç verisini normalize et
+                let rawMatches = json.maclar || json.matches || [];
+                if(rawMatches.length > 0) {
+                    cleanData.matches = rawMatches.map(m => ({
+                        round: m.gun || m.round || 1, 
+                        p1: m.p1, p2: m.p2, 
+                        s1: parseScore(m.s1), s2: parseScore(m.s2),
+                        hukmen: m.hukmen || false, v1: m.v1 || 0, v2: m.v2 || 0
+                    }));
+                }
+                
+                // Finalleri al
+                if(json.finals) {
+                    cleanData.finals = json.finals;
+                    if(!cleanData.finals.seeds) cleanData.finals.seeds = [];
+                    while(cleanData.finals.seeds.length < 8) cleanData.finals.seeds.push("BYE");
+                }
+
+                // İSMİ VE TİPİ VERİNİN İÇİNE DE GÖMÜYORUZ (ÖNEMLİ DÜZELTME)
+                cleanData.name = tourName;
+                cleanData.type = selectedType;
+
+                const newHistoryItem = {
+                    id: Date.now().toString(),
+                    type: selectedType,
+                    name: tourName,
+                    date: new Date().toLocaleDateString(),
+                    data: cleanData
+                };
+
+                if(!dbData.history) dbData.history = [];
+                dbData.history.push(newHistoryItem);
+                
+                db.ref('turnuva_v2').set(dbData)
+                    .then(() => {
+                        alert("Geçmiş turnuva başarıyla eklendi!");
+                        openMainTab('tabHistory', document.querySelectorAll('.navbar .tab-link')[1]);
+                        
+                        // BUTONU MANUEL BULUP GÖNDERİYORUZ (HATA DÜZELTME)
+                        const btnIdx = selectedType === 'individual' ? 0 : 1;
+                        const targetBtn = document.querySelectorAll('.history-btn')[btnIdx];
+                        
+                        filterHistory(selectedType, targetBtn);
+                    })
+                    .catch(err => alert("Hata: " + err.message));
+
+            } catch(err) {
+                alert("Dosya okuma hatası: " + err.message);
+            }
+        };
+        reader.readAsText(file);
+    }
+
+    // --- RENDER GENERIC (FIXED FOR DOUBLES) ---
     function renderTournamentView(tData, containerId, isEditable) {
         const container = document.getElementById(containerId);
         if(!tData) { container.innerHTML = '<div style="padding:20px; text-align:center;">Veri Yok</div>'; return; }
         const uid = Math.random().toString(36).substr(2, 9);
-        let headerTitle = tData.name || "Turnuva";
         
-        // Çiftlerse farklı etiket
-        let typeLabel = (tData.type === 'doubles') ? 'Çiftler' : 'Bireysel';
+        let headerTitle = tData.name || "Turnuva";
 
         let html = `
             <div class="card">
                 <h2 style="color:var(--primary); text-align:center; border-bottom:2px solid var(--accent); padding-bottom:10px;">
-                    ${headerTitle} <span style="font-size:12px; font-weight:normal; color:#777;">(${typeLabel})</span>
+                    ${headerTitle} <span style="font-size:12px; font-weight:normal; color:#777;">(${tData.type === 'doubles' ? 'Çiftler' : 'Bireysel'})</span>
                 </h2>
+                
                 <div class="inner-navbar">
                     <button class="active" onclick="switchInnerTab('${uid}', 'standings')">PUAN DURUMU</button>
                     <button onclick="switchInnerTab('${uid}', 'fixture')">FİKSTÜR</button>
                     <button onclick="switchInnerTab('${uid}', 'finals')">FİNALLER</button>
                     <button onclick="switchInnerTab('${uid}', 'rules')">KURALLAR</button>
                 </div>
+
                 <div id="${uid}-standings" class="inner-content" style="display:block;">${generateStandingsHTML(tData, isEditable)}</div>
                 <div id="${uid}-fixture" class="inner-content" style="display:none;">${generateFixtureHTML(tData, isEditable, containerId)}</div>
                 <div id="${uid}-finals" class="inner-content" style="display:none;">${generateFinalsHTML(tData, isEditable, uid)}</div>
@@ -414,15 +729,17 @@
             if(p.skipPlayoff) rowClass = 'skipped-row';
             let btns = '';
             if(isEditable && isAdmin && !p.withdrawn) {
-               if(p.skipPlayoff) btns = `<button class="undo-btn admin-btns" onclick="togglePlayoffSkip('${p.name}')">↩️</button>`;
-               else if(i < 8) btns = `<button class="skip-btn admin-btns" onclick="togglePlayoffSkip('${p.name}')">🚫</button>`;
+               if(p.skipPlayoff) btns = `<button class="undo-btn" onclick="togglePlayoffSkip('${p.name}')">↩️</button>`;
+               else if(i < 8) btns = `<button class="skip-btn" onclick="togglePlayoffSkip('${p.name}')">🚫</button>`;
             }
             
-            // Çiftler için isim formatı: Takım Adı (Oyuncu 1 & Oyuncu 2)
-            let display = p.name;
-            if(p.members && p.members.length > 0) display += ` <small style="color:#666; font-size:0.8em;">(${p.members.join(' & ')})</small>`;
+            // Çiftler için oyuncu isimlerini de göster
+            let displayName = p.name;
+            if(p.members && p.members.length > 0) {
+                displayName += ` <span style="font-size:0.85em; color:#666;">(${p.members.join(' & ')})</span>`;
+            }
 
-            return `<tr class="${rowClass}"><td>${i+1}</td><td style="text-align:left;">${display} ${btns}</td><td>${p.stats.o}</td><td>${p.stats.g}</td><td>${p.stats.m}</td><td>${p.stats.av}</td><td><strong>${p.stats.p}</strong></td></tr>`;
+            return `<tr class="${rowClass}"><td>${i+1}</td><td style="text-align:left;">${displayName} ${btns}</td><td>${p.stats.o}</td><td>${p.stats.g}</td><td>${p.stats.m}</td><td>${p.stats.av}</td><td><strong>${p.stats.p}</strong></td></tr>`;
         }).join('');
         
         let endBtn = (isEditable && isAdmin) ? `<div style="text-align:center; margin-top:20px;"><button class="btn btn-success" onclick="endLeague()">🏆 LİGİ BİTİR VE FİNALLERİ BAŞLAT</button></div>` : '';
@@ -476,9 +793,10 @@
         const mkMatch = (id, p1, p2) => {
             const m = matches[id] || {s1:'', s2:''};
             let c1='', c2='';
-            if(m.s1!=='' && m.s2!=='' && m.s1!=undefined && m.s2!=undefined) {
+            if(m.s1!=='' && m.s2!=='') {
                 if(parseInt(m.s1)>parseInt(m.s2)) { c1='winner'; c2='loser'; } else { c1='loser'; c2='winner'; }
             }
+            // Geçmişte güncelleme yapılamaz, disabled zorla
             const finalDisabled = (context === 'history') ? 'disabled' : disabled;
             return `<div class="match-box"><div class="match-player"><span class="${c1}">${p1}</span><input type="number" ${finalDisabled} value="${m.s1}" onchange="updateFinalScore('${context}', '${id}', 's1', this.value)"></div><div class="match-player"><span class="${c2}">${p2}</span><input type="number" ${finalDisabled} value="${m.s2}" onchange="updateFinalScore('${context}', '${id}', 's2', this.value)"></div></div>`;
         };
@@ -506,157 +824,6 @@
         return `<div class="bracket-container"><div class="round"><div class="round-title">Çeyrek</div>${qf1}${qf2}${qf3}${qf4}</div><div class="round"><div class="round-title">Yarı</div>${sf1}${sf2}</div><div class="round"><div class="round-title">Final</div>${finalMatch}<div class="bronze-title">3.Lük</div>${thirdMatch}</div></div>${podiumHTML}`;
     }
 
-    // --- NEW TOURNAMENT LOGIC ---
-    function startNewTournament() {
-        if(dbData.current) return alert("Aktif turnuva var.");
-        const type = document.getElementById('newTourType').value;
-        const rows = document.querySelectorAll('#participantList .participant-row');
-        let players = [];
-        
-        rows.forEach(r => {
-            if(type==='individual') {
-                const name = r.querySelector('.p-input').value.trim();
-                if(name) players.push({name:name, withdrawn:false, skipPlayoff:false, stats:{p:0,o:0,g:0,m:0,av:0}});
-            } else {
-                const t = r.querySelector('.t-name').value.trim();
-                const p1 = r.querySelector('.p1-input').value.trim();
-                const p2 = r.querySelector('.p2-input').value.trim();
-                if(t && p1 && p2) players.push({name:t, members:[p1,p2], withdrawn:false, skipPlayoff:false, stats:{p:0,o:0,g:0,m:0,av:0}});
-            }
-        });
-
-        if(players.length < 2) return alert("En az 2 katılımcı gerekli.");
-
-        // İsimlendirme Sayacı
-        const count = (Array.isArray(dbData.history) ? dbData.history : []).filter(t => t.type === type).length + 1;
-        const tourName = `${count}. ${type==='individual'?'Bireysel':'Çiftler'} Turnuvası`;
-
-        let matches = [];
-        for(let i=0; i<players.length; i++) {
-            for(let j=i+1; j<players.length; j++) {
-                matches.push({round:1, p1:players[i].name, p2:players[j].name, s1:null, s2:null});
-            }
-        }
-
-        dbData.current = {
-            id: Date.now().toString(),
-            name: tourName,
-            type: type,
-            players: players,
-            matches: matches,
-            finals: { started: false, seeds:[], matches:{} }
-        };
-
-        db.ref('turnuva_v2').set(dbData).then(()=>{
-            alert("Başlatıldı!");
-            document.getElementById('newTournamentForm').classList.add('hidden');
-            openMainTab('tabCurrent', document.querySelectorAll('.navbar .tab-link')[0]);
-        });
-    }
-
-    // --- IMPORT LEGACY ---
-    window.importLegacyToHistory = function() {
-        const fileInput = document.getElementById('historyJsonInput');
-        if(fileInput.files.length === 0) return alert("Dosya seçiniz.");
-        const file = fileInput.files[0];
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            try {
-                const json = JSON.parse(e.target.result);
-                const tourName = prompt("Turnuva İsmi (Örn: 2024 Yaz):");
-                if(!tourName) return;
-                const isIndividual = confirm(`"${tourName}" turnuvası BİREYSEL mi?\n\n- TAMAM: Bireysel\n- İPTAL: Çiftler`);
-                const selectedType = isIndividual ? 'individual' : 'doubles';
-
-                let cleanData = { players: [], matches: [], finals: {started:false} };
-                let rawPlayers = json.oyuncular || json.players || [];
-                if(rawPlayers.length > 0) {
-                    cleanData.players = rawPlayers.map(p => {
-                        const pName = (typeof p === 'string') ? p : p.name;
-                        const stats = (typeof p === 'object' && p.stats) ? p.stats : {p:0,o:0,g:0,m:0,av:0};
-                        const photo = (typeof p === 'object' && p.photo) ? p.photo : null;
-                        return { name: pName, withdrawn: p.withdrawn||false, skipPlayoff: p.skipPlayoff||false, stats: stats, photo: photo };
-                    });
-                }
-                let rawMatches = json.maclar || json.matches || [];
-                if(rawMatches.length > 0) {
-                    cleanData.matches = rawMatches.map(m => ({
-                        round: m.gun || m.round || 1, p1: m.p1, p2: m.p2, 
-                        s1: parseScore(m.s1), s2: parseScore(m.s2),
-                        hukmen: m.hukmen || false, v1: m.v1 || 0, v2: m.v2 || 0
-                    }));
-                }
-                if(json.finals) {
-                    cleanData.finals = json.finals;
-                    if(!cleanData.finals.seeds) cleanData.finals.seeds = [];
-                    while(cleanData.finals.seeds.length < 8) cleanData.finals.seeds.push("BYE");
-                }
-
-                cleanData.name = tourName;
-                cleanData.type = selectedType;
-
-                const newHistoryItem = { id: Date.now().toString(), type: selectedType, name: tourName, date: new Date().toLocaleDateString(), data: cleanData };
-                
-                if(!dbData.history) dbData.history = [];
-                dbData.history.push(newHistoryItem);
-                
-                db.ref('turnuva_v2').set(dbData).then(() => {
-                    alert("Eklendi!");
-                    openMainTab('tabHistory', document.querySelectorAll('.navbar .tab-link')[1]);
-                    const btnIdx = selectedType === 'individual' ? 0 : 1;
-                    const targetBtn = document.querySelectorAll('.history-btn')[btnIdx];
-                    filterHistory(selectedType, targetBtn);
-                }).catch(err => alert("Hata: " + err.message));
-            } catch(err) { alert("Okuma hatası: " + err.message); }
-        };
-        reader.readAsText(file);
-    }
-
-    // --- OTHER HELPERS ---
-    window.openPhotoModal = function(src) { document.getElementById('modalImg').src = src; document.getElementById('photoModal').style.display = 'flex'; }
-    window.closePhotoModal = function() { document.getElementById('photoModal').style.display = 'none'; }
-    function login() { const e = document.getElementById('email').value; const p = document.getElementById('password').value; auth.signInWithEmailAndPassword(e, p).catch(err => alert(err.message)); }
-    function logout() { auth.signOut(); }
-    function showStatus(msg, type) { const bar = document.getElementById('statusBar'); bar.innerText = msg; bar.style.display = 'block'; setTimeout(() => { bar.style.display = 'none'; }, 3000); }
-    function updateAdminUI() {
-        const loginPanel = document.getElementById('loginPanel');
-        const adminControls = document.getElementById('adminControls');
-        if (isAdmin) { loginPanel.style.display = 'none'; adminControls.style.display = 'block'; }
-        else { loginPanel.style.display = 'block'; adminControls.style.display = 'none'; }
-        renderCurrentTournament();
-    }
-    window.populatePlayerSelect = function() { 
-        const sel = document.getElementById('photoPlayerSelect'); sel.innerHTML = '<option>Seçiniz...</option>'; 
-        if(dbData.current && dbData.current.players) { 
-            dbData.current.players.forEach(p => { const opt = document.createElement('option'); opt.value = p.name; opt.innerText = p.name; sel.appendChild(opt); }); 
-        } 
-    }
-    window.uploadPlayerPhoto = function() { 
-        const name = document.getElementById('photoPlayerSelect').value; 
-        const file = document.getElementById('photoInput').files[0]; 
-        if(!name || !file) return alert("Eksik bilgi."); 
-        const reader = new FileReader(); 
-        reader.onload = function(e) { 
-            const img = new Image(); 
-            img.onload = function() { 
-                const cvs = document.createElement('canvas'); const ctx = cvs.getContext('2d'); 
-                const max = 1500; let w = img.width, h = img.height; 
-                if(w>h){ if(w>max){h*=max/w; w=max}} else { if(h>max){w*=max/h; h=max}} 
-                cvs.width=w; cvs.height=h; ctx.drawImage(img,0,0,w,h); 
-                const data = cvs.toDataURL('image/jpeg', 0.9); 
-                const p = dbData.current.players.find(x=>x.name===name); 
-                if(p) { p.photo = data; db.ref('turnuva_v2/current').set(dbData.current).then(()=>alert("Yüklendi")); } 
-            }; img.src = e.target.result; 
-        }; reader.readAsDataURL(file); 
-    }
-    window.downloadJsonData = function() { const s = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dbData,null,2)); const a = document.createElement('a'); a.href=s; a.download="turnuva_yedek.json"; document.body.appendChild(a); a.click(); a.remove(); }
-    window.importFromPythonJson = function() { const f = document.getElementById('jsonFileInput').files[0]; if(!f) return alert("Dosya yok."); const r = new FileReader(); r.onload = function(e) { try { const j = JSON.parse(e.target.result); const ps = (j.oyuncular || j.players).map(n => ({name:n.name||n, withdrawn:false, skipPlayoff:false, stats:{p:0,o:0,g:0,m:0,av:0}})); const ms = (j.maclar || j.matches).map(m => ({round:m.gun||m.round, p1:m.p1, p2:m.p2, s1:parseScore(m.s1), s2:parseScore(m.s2)})); dbData.current = { id:Date.now().toString(), name:"İçe Aktarılan", type:'individual', players:ps, matches:ms, finals:{started:false}}; calculateStandings(dbData.current); db.ref('turnuva_v2').update(dbData).then(()=>alert("Yüklendi")); } catch(x){alert("Hata: "+x.message);} }; r.readAsText(f); }
-    window.togglePlayoffSkip = function(name) { const p = dbData.current.players.find(x=>x.name===name); if(p) { p.skipPlayoff = !p.skipPlayoff; calculateStandings(dbData.current); db.ref('turnuva_v2/current').set(dbData.current); } }
-    window.toggleHukmen = function(index) { return; } // Not used anymore directly
-    window.saveDataToFirebase = function() { calculateStandings(dbData.current); db.ref('turnuva_v2/current').set(dbData.current); }
-    function updateGlobalPlayerList() { /* Placeholder */ }
-    function showNewTournamentForm() { document.getElementById('newTournamentForm').classList.remove('hidden'); document.getElementById('participantList').innerHTML = ''; addParticipantRow(); addParticipantRow(); }
-    function toggleTeamInput() { document.getElementById('participantList').innerHTML = ''; addParticipantRow(); addParticipantRow(); }
 </script>
 
 </body>
