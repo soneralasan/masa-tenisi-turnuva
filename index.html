@@ -39,71 +39,25 @@
         .skipped-row td:first-child { text-decoration: none; border-left: 4px solid #e74c3c; }
         .skipped-row button { text-decoration: none !important; }
 
-        .bracket-container { display: flex; flex-direction: row; justify-content: space-between; gap: 10px; overflow-x: auto; padding: 20px 0; }
-        .round { display: flex; flex-direction: column; justify-content: flex-start; flex: 1; min-width: 200px; }
-        .round-title { text-align: center; font-weight: bold; color: var(--primary); margin-bottom: 15px; text-transform: uppercase; font-size: 12px; border-bottom: 2px solid var(--accent); padding-bottom: 5px; }
-        .bronze-title { text-align: center; font-weight: bold; color: #e67e22; margin: 30px 0 10px 0; text-transform: uppercase; font-size: 12px; border-bottom: 2px solid #e67e22; padding-bottom: 5px; }
-
-        .podium-container { margin-top: 30px; background: white; border-radius: 8px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; border: 1px solid #eee; animation: slideDown 0.5s ease; }
-        .podium-header { font-size: 14px; color: #7f8c8d; font-weight: bold; text-transform: uppercase; margin-bottom: 25px; letter-spacing: 1px; }
-        .podium-list { display: flex; flex-direction: column; gap: 20px; align-items: center; }
-        .rank-item { display: flex; align-items: center; gap: 15px; justify-content: center; width: 100%; }
-        .podium-img { border-radius: 50%; object-fit: cover; border: 3px solid #fff; box-shadow: 0 4px 8px rgba(0,0,0,0.2); transition: transform 0.3s ease; cursor: zoom-in; }
-        .podium-img:hover { transform: scale(1.1); border-color: var(--primary) !important; }
-        .rank-1 { color: #f1c40f; font-size: 28px; font-weight: 800; text-shadow: 0 1px 2px rgba(0,0,0,0.1); }
-        .rank-1 .icon { font-size: 32px; margin-right: 5px;}
-        .rank-1 .podium-img { width: 120px; height: 120px; border-color: #f1c40f; }
-        .rank-2 { color: #7f8c8d; font-size: 22px; font-weight: 700; }
-        .rank-2 .icon { font-size: 26px; margin-right: 5px;}
-        .rank-2 .podium-img { width: 90px; height: 90px; border-color: #bdc3c7; }
-        .rank-3 { color: #d35400; font-size: 18px; font-weight: 600; }
-        .rank-3 .icon { font-size: 22px; margin-right: 5px;}
-        .rank-3 .podium-img { width: 80px; height: 80px; border-color: #e67e22; }
-
         .match-box { background: white; border: 1px solid #ddd; border-radius: 6px; padding: 10px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); position: relative; }
         .match-player { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid #eee; font-size: 13px; }
         .match-player:last-child { border-bottom: none; }
         .match-player input { width: 30px; text-align: center; border: 1px solid #ccc; border-radius: 3px; font-weight: bold; }
         
-        .winner { color: var(--accent); font-weight: bold; }
-        .loser { color: var(--danger); opacity: 0.5; text-decoration: line-through; }
-
         .day-header { text-align: center; margin: 25px 0 10px; font-weight: 800; color: var(--primary); text-transform: uppercase; letter-spacing: 1px; font-size: 13px; position: relative; }
         .day-header::after { content: ''; display: block; width: 40px; height: 3px; background: var(--accent); margin: 5px auto 0; border-radius: 2px; }
-        
-        .player-header { background: var(--primary); color: white; padding: 12px 15px; margin: 10px 0 2px 0; border-radius: 5px; font-weight: bold; text-align: left; font-size: 14px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: background 0.2s; user-select: none; }
-        .player-header:hover { background: #34495e; }
-        .player-header .arrow { transition: transform 0.3s ease; font-size: 10px; }
-        .player-header.active .arrow { transform: rotate(180deg); }
         
         .withdraw-btn { background: var(--danger); color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 10px; cursor: pointer; margin-right: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; }
         .withdraw-btn.active { background: #555; color: #bbb; border: 1px solid #777; }
         .skip-btn { background: #f39c12; color: white; border: none; padding: 2px 6px; border-radius: 4px; font-size: 10px; cursor: pointer; margin-left: 5px; }
         .undo-btn { background: #7f8c8d; color: white; border: none; padding: 2px 6px; border-radius: 4px; font-size: 10px; cursor: pointer; margin-left: 5px; }
 
-        .player-matches-container { display: none; padding-top: 5px; animation: slideDown 0.3s ease; }
         .match-card { background: white; padding: 12px; margin-bottom: 10px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: space-between; }
         
-        .player-container { width: 35%; display: flex; align-items: center; justify-content: space-between; }
-        .player-container.left { flex-direction: row; text-align: left; }
-        .player-container.right { flex-direction: row-reverse; text-align: right; }
-        .player { font-weight: 600; font-size: 13px; word-wrap: break-word; line-height: 1.2; transition: color 0.3s; width: 100%; }
-        
-        .scores { display: flex; align-items: center; gap: 5px; justify-content: center; width: auto; min-width: 120px; }
-        .scores input { width: 30px; height: 30px; text-align: center; font-size: 16px; border: 1px solid #ddd; border-radius: 4px; font-weight: bold; background: #f9f9f9; }
-        .scores input:focus { outline: none; border-color: var(--accent); background: white; }
-        .scores input:disabled { background: #eee; color: #333; border: none; }
-
-        .vote-ratio { font-size: 11px; color: #333; font-weight: bold; background: #f0f2f5; padding: 4px 6px; border-radius: 4px; min-width: 35px; text-align: center; line-height: 1.1; }
-        
-        .vote-btn { background: white; border: 1px solid #ddd; border-radius: 20px; padding: 5px 10px; font-size: 12px; cursor: pointer; color: #555; display: flex; align-items: center; gap: 5px; transition: 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .vote-btn:hover { background: #f9f9f9; border-color: var(--vote); color: var(--vote); }
-        .vote-btn.voted { background: var(--vote); color: white; border-color: var(--vote); pointer-events: none; }
-        
-        .hukmen-toggle { width: 24px; height: 24px; border-radius: 4px; border: 1px solid #ccc; color: #777; font-size: 10px; font-weight: bold; display: flex; align-items: center; justify-content: center; cursor: pointer; margin-left: 8px; user-select: none; background: #fff; transition: all 0.2s; flex-shrink: 0; }
-        .hukmen-toggle:hover { background: #f0f0f0; }
-        .hukmen-toggle.active { background: var(--danger); color: white; border-color: var(--danger); }
-        .hukmen-indicator { font-size: 10px; color: var(--danger); font-weight: bold; margin-left: 5px; }
+        .score-area { display: flex; align-items: center; gap: 5px; }
+        .score-input { width: 40px; height: 30px; text-align: center; font-size: 16px; border: 1px solid #ddd; border-radius: 4px; font-weight: bold; background: #f9f9f9; }
+        .score-input:focus { outline: none; border-color: var(--accent); background: white; }
+        .score-input:disabled { background: #eee; color: #333; border: none; }
 
         .admin-box, .rules-box { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         .admin-box { text-align: center; }
@@ -143,9 +97,7 @@
 
         @media (max-width: 600px) { 
             .player { font-size: 12px; } 
-            .vote-ratio { font-size: 10px; min-width: 30px; padding: 3px; }
             .navbar button { font-size: 10px; padding: 12px 5px; }
-            .bracket-container { min-width: 600px; } 
         }
     </style>
 </head>
@@ -297,12 +249,10 @@
             
             if (val) {
                 dbData = val;
-                // Veri Yapısını Garantiye Al (Array Kontrolü)
                 if(!dbData.history) dbData.history = [];
                 else if(typeof dbData.history === 'object' && !Array.isArray(dbData.history)) {
                     dbData.history = Object.values(dbData.history);
                 }
-                
                 if(!dbData.globalPlayers) dbData.globalPlayers = [];
             } else {
                 db.ref('turnuva_v2').set(dbData);
@@ -311,11 +261,9 @@
             try {
                 updateGlobalPlayerList();
                 renderCurrentTournament();
-                
                 const activeBtn = document.querySelector('.history-btn.active');
                 const type = activeBtn ? (activeBtn.innerText.includes('Bireysel') ? 'individual' : 'doubles') : 'individual';
                 renderHistory(type);
-                
                 if(isAdmin) populatePlayerSelect();
             } catch (err) {
                 console.error("Render hatası:", err);
@@ -392,15 +340,12 @@
             return;
         }
 
-        // Listeyi tersten (en yeni en üstte) göster
         dbData.history.forEach((t, realIdx) => {
             if(t.type !== type) return;
-
             const itemId = `hist-${realIdx}`;
-            // İsim düzeltmesi: Verinin içindeki ismi veya dış kabuktaki ismi kullan
             const tournamentData = t.data || t; 
             if(!tournamentData.name) tournamentData.name = t.name;
-            tournamentData.type = t.type; // Tip bilgisini garantiye al
+            tournamentData.type = t.type;
             
             let deleteBtn = isAdmin ? `<button class="delete-hist-btn" onclick="deleteHistoryItem(${realIdx}, event)">🗑️ Sil</button>` : '';
 
@@ -413,9 +358,7 @@
                     <div id="${itemId}" class="accordion-content"></div>
                 </div>
             `;
-            // insertAdjacentHTML ile başa ekle (reverse effect)
             container.insertAdjacentHTML('afterbegin', html);
-            
             setTimeout(() => { renderTournamentView(tournamentData, itemId, false); }, 0);
         });
     }
@@ -424,12 +367,8 @@
     window.deleteHistoryItem = function(index, event) {
         event.stopPropagation();
         if(!confirm("Bu turnuva kaydını silmek istediğinize emin misiniz?")) return;
-        
         dbData.history.splice(index, 1);
-        db.ref('turnuva_v2/history').set(dbData.history)
-          .then(() => {
-              alert("Kayıt silindi.");
-          });
+        db.ref('turnuva_v2/history').set(dbData.history).then(() => { alert("Kayıt silindi."); });
     }
 
     window.clearAllHistory = function() {
@@ -489,12 +428,10 @@
         window.addParticipantRow(); 
     }
     
-    // GÜNCELLENMİŞ VE GÜÇLENDİRİLMİŞ SATIR EKLEME FONKSİYONU
     window.addParticipantRow = function() {
         const typeEl = document.getElementById('newTourType');
         const container = document.getElementById('participantList');
-        
-        if(!typeEl || !container) return; // Güvenlik kontrolü
+        if(!typeEl || !container) return; 
 
         const type = typeEl.value;
         const div = document.createElement('div');
@@ -529,19 +466,12 @@
                 const tInp = r.querySelector('.t-name');
                 const p1Inp = r.querySelector('.p1-input');
                 const p2Inp = r.querySelector('.p2-input');
-                
-                const t = tInp ? tInp.value.trim() : '';
-                const p1 = p1Inp ? p1Inp.value.trim() : '';
-                const p2 = p2Inp ? p2Inp.value.trim() : '';
-                
-                // Çiftler için takım adı ana isimdir.
                 if(t && p1 && p2) players.push({name:t, members:[p1,p2], withdrawn:false, skipPlayoff:false, stats:{p:0,o:0,g:0,m:0,av:0}});
             }
         });
 
         if(players.length < 2) return alert("En az 2 katılımcı/takım gerekli.");
 
-        // İsimlendirme Sayacı (Hata korumalı)
         const histArray = Array.isArray(dbData.history) ? dbData.history : [];
         const count = histArray.filter(t => t.type === type).length + 1;
         const tourName = `${count}. ${type==='individual'?'Bireysel':'Çiftler'} Turnuvası`;
@@ -549,7 +479,10 @@
         let matches = [];
         for(let i=0; i<players.length; i++) {
             for(let j=i+1; j<players.length; j++) {
+                // 1. Maç
                 matches.push({round:1, p1:players[i].name, p2:players[j].name, s1:null, s2:null});
+                // 2. Maç (Rövanş)
+                matches.push({round:2, p1:players[j].name, p2:players[i].name, s1:null, s2:null});
             }
         }
 
@@ -588,8 +521,6 @@
 
     // Update Scores & Logic
     window.updateMatchScore = function(ctx, idx, f, v) { if(!isAdmin || ctx !== 'currentTournamentArea') return; dbData.current.matches[idx][f] = v; calculateStandings(dbData.current); db.ref('turnuva_v2/current').set(dbData.current); }
-    window.updateFinalScore = function(ctx, mid, f, v) { if(!isAdmin || ctx !== 'currentTournamentArea') return; if(!dbData.current.finals.matches) dbData.current.finals.matches = {}; if(!dbData.current.finals.matches[mid]) dbData.current.finals.matches[mid] = {}; dbData.current.finals.matches[mid][f] = v; db.ref('turnuva_v2/current/finals').set(dbData.current.finals); }
-    window.endLeague = function() { if(!confirm("Finaller başlasın mı?")) return; let sorted = [...dbData.current.players].sort((a,b) => { if (a.withdrawn && !b.withdrawn) return 1; if (!a.withdrawn && b.withdrawn) return -1; if (a.skipPlayoff && !b.skipPlayoff) return 1; if (!a.skipPlayoff && b.skipPlayoff) return -1; if (b.stats.p !== a.stats.p) return b.stats.p - a.stats.p; if (b.stats.av !== a.stats.av) return b.stats.av - a.stats.av; return a.name.localeCompare(b.name); }); let seeds = sorted.slice(0,8).map(p=>p.name); while(seeds.length < 8) seeds.push("BYE"); dbData.current.finals = { started: true, seeds: seeds, matches: {} }; db.ref('turnuva_v2/current').set(dbData.current); setTimeout(()=> document.querySelector(`button[onclick*="finals"]`).click(), 500); }
     window.togglePlayoffSkip = function(name) { const p = dbData.current.players.find(x=>x.name===name); if(p) { p.skipPlayoff = !p.skipPlayoff; calculateStandings(dbData.current); db.ref('turnuva_v2/current').set(dbData.current); } }
     window.populatePlayerSelect = function() { const sel = document.getElementById('photoPlayerSelect'); sel.innerHTML = '<option>Seçiniz...</option>'; if(dbData.current) { dbData.current.players.forEach(p => { const opt = document.createElement('option'); opt.value = p.name; opt.innerText = p.name; sel.appendChild(opt); }); } }
     window.uploadPlayerPhoto = function() { const name = document.getElementById('photoPlayerSelect').value; const file = document.getElementById('photoInput').files[0]; if(!name || !file) return alert("Eksik bilgi."); const reader = new FileReader(); reader.onload = function(e) { const img = new Image(); img.onload = function() { const cvs = document.createElement('canvas'); const ctx = cvs.getContext('2d'); const max = 1500; let w = img.width, h = img.height; if(w>h){ if(w>max){h*=max/w; w=max}} else { if(h>max){w*=max/h; h=max}} cvs.width=w; cvs.height=h; ctx.drawImage(img,0,0,w,h); const data = cvs.toDataURL('image/jpeg', 0.9); const p = dbData.current.players.find(x=>x.name===name); if(p) { p.photo = data; db.ref('turnuva_v2/current').set(dbData.current).then(()=>alert("Yüklendi")); } }; img.src = e.target.result; }; reader.readAsDataURL(file); }
@@ -601,7 +532,7 @@
     function logout() { auth.signOut(); }
     function showStatus(msg, type) { const bar = document.getElementById('statusBar'); bar.innerText = msg; bar.style.display = 'block'; setTimeout(() => { bar.style.display = 'none'; }, 3000); }
 
-    // --- IMPORT LEGACY (FIXED: BUTTON PARAMETER) ---
+    // --- IMPORT LEGACY ---
     window.importLegacyToHistory = function() {
         const fileInput = document.getElementById('historyJsonInput');
         if(fileInput.files.length === 0) return alert("Lütfen bir JSON dosyası seçin.");
@@ -620,7 +551,6 @@
 
                 let cleanData = { players: [], matches: [], finals: {started:false} };
                 
-                // Oyuncu verisini normalize et
                 let rawPlayers = json.oyuncular || json.players || [];
                 if(rawPlayers.length > 0) {
                     cleanData.players = rawPlayers.map(p => {
@@ -631,7 +561,6 @@
                     });
                 }
 
-                // Maç verisini normalize et
                 let rawMatches = json.maclar || json.matches || [];
                 if(rawMatches.length > 0) {
                     cleanData.matches = rawMatches.map(m => ({
@@ -642,14 +571,6 @@
                     }));
                 }
                 
-                // Finalleri al
-                if(json.finals) {
-                    cleanData.finals = json.finals;
-                    if(!cleanData.finals.seeds) cleanData.finals.seeds = [];
-                    while(cleanData.finals.seeds.length < 8) cleanData.finals.seeds.push("BYE");
-                }
-
-                // İSMİ VE TİPİ VERİNİN İÇİNE DE GÖMÜYORUZ (ÖNEMLİ DÜZELTME)
                 cleanData.name = tourName;
                 cleanData.type = selectedType;
 
@@ -668,11 +589,8 @@
                     .then(() => {
                         alert("Geçmiş turnuva başarıyla eklendi!");
                         openMainTab('tabHistory', document.querySelectorAll('.navbar .tab-link')[1]);
-                        
-                        // BUTONU MANUEL BULUP GÖNDERİYORUZ (HATA DÜZELTME)
                         const btnIdx = selectedType === 'individual' ? 0 : 1;
                         const targetBtn = document.querySelectorAll('.history-btn')[btnIdx];
-                        
                         filterHistory(selectedType, targetBtn);
                     })
                     .catch(err => alert("Hata: " + err.message));
@@ -684,7 +602,7 @@
         reader.readAsText(file);
     }
 
-    // --- RENDER GENERIC (FIXED FOR DOUBLES) ---
+    // --- RENDER GENERIC ---
     function renderTournamentView(tData, containerId, isEditable) {
         const container = document.getElementById(containerId);
         if(!tData) { container.innerHTML = '<div style="padding:20px; text-align:center;">Veri Yok</div>'; return; }
@@ -701,13 +619,11 @@
                 <div class="inner-navbar">
                     <button class="active" onclick="switchInnerTab('${uid}', 'standings')">PUAN DURUMU</button>
                     <button onclick="switchInnerTab('${uid}', 'fixture')">FİKSTÜR</button>
-                    <button onclick="switchInnerTab('${uid}', 'finals')">FİNALLER</button>
                     <button onclick="switchInnerTab('${uid}', 'rules')">KURALLAR</button>
                 </div>
 
                 <div id="${uid}-standings" class="inner-content" style="display:block;">${generateStandingsHTML(tData, isEditable)}</div>
                 <div id="${uid}-fixture" class="inner-content" style="display:none;">${generateFixtureHTML(tData, isEditable, containerId)}</div>
-                <div id="${uid}-finals" class="inner-content" style="display:none;">${generateFinalsHTML(tData, isEditable, uid)}</div>
                 <div id="${uid}-rules" class="inner-content" style="display:none;"><div style="padding:15px;"><h4>Kurallar</h4><ul><li>Maçlar 3 set.</li><li>Galibiyet 2 puan.</li></ul></div></div>
             </div>`;
         container.innerHTML = html;
@@ -733,7 +649,6 @@
                else if(i < 8) btns = `<button class="skip-btn" onclick="togglePlayoffSkip('${p.name}')">🚫</button>`;
             }
             
-            // Çiftler için oyuncu isimlerini de göster
             let displayName = p.name;
             if(p.members && p.members.length > 0) {
                 displayName += ` <span style="font-size:0.85em; color:#666;">(${p.members.join(' & ')})</span>`;
@@ -742,8 +657,7 @@
             return `<tr class="${rowClass}"><td>${i+1}</td><td style="text-align:left;">${displayName} ${btns}</td><td>${p.stats.o}</td><td>${p.stats.g}</td><td>${p.stats.m}</td><td>${p.stats.av}</td><td><strong>${p.stats.p}</strong></td></tr>`;
         }).join('');
         
-        let endBtn = (isEditable && isAdmin) ? `<div style="text-align:center; margin-top:20px;"><button class="btn btn-success" onclick="endLeague()">🏆 LİGİ BİTİR VE FİNALLERİ BAŞLAT</button></div>` : '';
-        return `<table><thead><tr><th>#</th><th>İsim</th><th>O</th><th>G</th><th>M</th><th>Av</th><th>P</th></tr></thead><tbody>${rows}</tbody></table>${endBtn}`;
+        return `<table><thead><tr><th>#</th><th>İsim</th><th>O</th><th>G</th><th>M</th><th>Av</th><th>P</th></tr></thead><tbody>${rows}</tbody></table>`;
     }
 
     function generateFixtureHTML(tData, isEditable, containerId) {
@@ -771,67 +685,11 @@
         return html;
     }
 
-    function generateFinalsHTML(tData, isEditable, uid) {
-        if(!tData.finals || !tData.finals.started) return '<p style="text-align:center;">Finaller başlamadı.</p>';
-        const seeds = tData.finals.seeds || [];
-        const matches = tData.finals.matches || {};
-        const disabled = (isEditable && isAdmin) ? '' : 'disabled';
-        const context = isEditable ? 'currentTournamentArea' : 'history';
-
-        if(seeds.length < 8) return '<p style="text-align:center; color:red;">Veri Hatası: Final eşleşme listesi eksik.</p>';
-
-        const getWinner = (p1, p2, mId) => {
-            const m = matches[mId] || {};
-            if(m.s1 != null && m.s2 != null) return (parseInt(m.s1) > parseInt(m.s2)) ? p1 : p2;
-            return "???";
-        }
-        const getLoser = (p1, p2, mId) => {
-            const m = matches[mId] || {};
-            if(m.s1 != null && m.s2 != null) return (parseInt(m.s1) > parseInt(m.s2)) ? p2 : p1;
-            return "???";
-        }
-        const mkMatch = (id, p1, p2) => {
-            const m = matches[id] || {s1:'', s2:''};
-            let c1='', c2='';
-            if(m.s1!=='' && m.s2!=='') {
-                if(parseInt(m.s1)>parseInt(m.s2)) { c1='winner'; c2='loser'; } else { c1='loser'; c2='winner'; }
-            }
-            // Geçmişte güncelleme yapılamaz, disabled zorla
-            const finalDisabled = (context === 'history') ? 'disabled' : disabled;
-            return `<div class="match-box"><div class="match-player"><span class="${c1}">${p1}</span><input type="number" ${finalDisabled} value="${m.s1}" onchange="updateFinalScore('${context}', '${id}', 's1', this.value)"></div><div class="match-player"><span class="${c2}">${p2}</span><input type="number" ${finalDisabled} value="${m.s2}" onchange="updateFinalScore('${context}', '${id}', 's2', this.value)"></div></div>`;
-        };
-
-        const qf1=mkMatch('qf1',seeds[0],seeds[7]); const qf2=mkMatch('qf2',seeds[3],seeds[4]); 
-        const qf3=mkMatch('qf3',seeds[2],seeds[5]); const qf4=mkMatch('qf4',seeds[1],seeds[6]);
-        const sf1_p1=getWinner(seeds[0],seeds[7],'qf1'); const sf1_p2=getWinner(seeds[3],seeds[4],'qf2');
-        const sf2_p1=getWinner(seeds[2],seeds[5],'qf3'); const sf2_p2=getWinner(seeds[1],seeds[6],'qf4');
-        const sf1=mkMatch('sf1',sf1_p1,sf1_p2); const sf2=mkMatch('sf2',sf2_p1,sf2_p2);
-        const f_p1=getWinner(sf1_p1,sf1_p2,'sf1'); const f_p2=getWinner(sf2_p1,sf2_p2,'sf2');
-        const finalMatch=mkMatch('final',f_p1,f_p2);
-        const t_p1=getLoser(sf1_p1,sf1_p2,'sf1'); const t_p2=getLoser(sf2_p1,sf2_p2,'sf2');
-        const thirdMatch=mkMatch('3rdPlace',t_p1,t_p2);
-
-        const w=getWinner(f_p1,f_p2,'final'); const l=getLoser(f_p1,f_p2,'final'); const t=getWinner(t_p1,t_p2,'3rdPlace');
-        let podiumHTML='';
-        if(w!=="???" && l!=="???" && t!=="???") {
-            const getImg = (name) => {
-                const p = tData.players.find(x => x.name === name);
-                return (p && p.photo) ? `<img src="${p.photo}" class="podium-img" onclick="openPhotoModal(this.src)">` : '';
-            }
-            podiumHTML = `<div class="podium-container"><div class="podium-header">🏆 TURNUVA SONUCU</div><div class="podium-list"><div class="rank-item rank-1">${getImg(w)} 🥇 ${w}</div><div class="rank-item rank-2">${getImg(l)} 🥈 ${l}</div><div class="rank-item rank-3">${getImg(t)} 🥉 ${t}</div></div></div>`;
-        }
-
-        return `<div class="bracket-container"><div class="round"><div class="round-title">Çeyrek</div>${qf1}${qf2}${qf3}${qf4}</div><div class="round"><div class="round-title">Yarı</div>${sf1}${sf2}</div><div class="round"><div class="round-title">Final</div>${finalMatch}<div class="bronze-title">3.Lük</div>${thirdMatch}</div></div>${podiumHTML}`;
-    }
-
-    // --- YENİ EKLENEN FONKSİYON: Güncel turnuvayı ekrana basar ---
     function renderCurrentTournament() {
         const container = document.getElementById('currentTournamentArea');
         if (dbData.current) {
-            // Eğer veritabanında turnuva varsa render et
             renderTournamentView(dbData.current, 'currentTournamentArea', true);
         } else {
-            // Eğer turnuva yoksa "Yok" mesajını göster
             container.innerHTML = `
                 <div style="text-align:center; color:#777; margin-top:50px;">
                     <h3>Şu anda aktif bir turnuva yok.</h3>
