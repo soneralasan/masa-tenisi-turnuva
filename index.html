@@ -824,6 +824,23 @@
         return `<div class="bracket-container"><div class="round"><div class="round-title">Çeyrek</div>${qf1}${qf2}${qf3}${qf4}</div><div class="round"><div class="round-title">Yarı</div>${sf1}${sf2}</div><div class="round"><div class="round-title">Final</div>${finalMatch}<div class="bronze-title">3.Lük</div>${thirdMatch}</div></div>${podiumHTML}`;
     }
 
+    // --- YENİ EKLENEN FONKSİYON: Güncel turnuvayı ekrana basar ---
+    function renderCurrentTournament() {
+        const container = document.getElementById('currentTournamentArea');
+        if (dbData.current) {
+            // Eğer veritabanında turnuva varsa render et
+            renderTournamentView(dbData.current, 'currentTournamentArea', true);
+        } else {
+            // Eğer turnuva yoksa "Yok" mesajını göster
+            container.innerHTML = `
+                <div style="text-align:center; color:#777; margin-top:50px;">
+                    <h3>Şu anda aktif bir turnuva yok.</h3>
+                    <p>Yönetici panelinden yeni bir turnuva başlatabilirsiniz.</p>
+                </div>
+            `;
+        }
+    }
+
 </script>
 
 </body>
