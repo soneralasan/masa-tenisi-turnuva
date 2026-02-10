@@ -30,8 +30,19 @@
         th, td { padding: 12px 8px; text-align: center; border-bottom: 1px solid #eee; font-size: 14px; }
         th { background: var(--primary); color: white; font-weight: 600; font-size: 12px; letter-spacing: 0.5px; }
         tr:nth-child(even) { background-color: #f9f9f9; }
-        .top8 { background-color: #e8f5e9 !important; } 
-        .top8 td:first-child { border-left: 4px solid var(--accent); font-weight: bold; color: var(--accent); }
+        
+        /* YENİ RENKLENDİRME STİLLERİ */
+        .rank-1-row { background-color: #27ae60 !important; color: white !important; }
+        .rank-1-row td { color: white !important; border-color: rgba(255,255,255,0.2) !important; }
+        .rank-1-row .edit-name-btn { color: white !important; opacity: 0.9; }
+        
+        .rank-2-row { background-color: #2ecc71 !important; color: white !important; }
+        .rank-2-row td { color: white !important; border-color: rgba(255,255,255,0.2) !important; }
+        .rank-2-row .edit-name-btn { color: white !important; opacity: 0.9; }
+
+        .rank-3-row { background-color: #a9dfbf !important; color: #2c3e50 !important; }
+        .rank-3-row td { border-color: rgba(0,0,0,0.05) !important; }
+
         .withdrawn-row { background-color: #333 !important; color: #bdc3c7 !important; }
         .withdrawn-row td { border-bottom: 1px solid #555; }
         .skipped-row { background-color: #fff5f5; }
@@ -669,9 +680,16 @@
         });
 
         let rows = players.map((p, i) => {
-            let rowClass = (i < 8 && !p.withdrawn && !p.skipPlayoff) ? 'top8' : '';
+            let rowClass = '';
+            if(!p.withdrawn && !p.skipPlayoff) {
+                if(i === 0) rowClass = 'rank-1-row';
+                else if(i === 1) rowClass = 'rank-2-row';
+                else if(i === 2) rowClass = 'rank-3-row';
+            }
+
             if(p.withdrawn) rowClass = 'withdrawn-row';
             if(p.skipPlayoff) rowClass = 'skipped-row';
+            
             let btns = '';
             
             // Edit Button (Only for Admin & Editable Mode)
