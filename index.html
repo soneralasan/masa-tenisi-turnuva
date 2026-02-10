@@ -51,6 +51,8 @@
         .withdraw-btn.active { background: #555; color: #bbb; border: 1px solid #777; }
         .skip-btn { background: #f39c12; color: white; border: none; padding: 2px 6px; border-radius: 4px; font-size: 10px; cursor: pointer; margin-left: 5px; }
         .undo-btn { background: #7f8c8d; color: white; border: none; padding: 2px 6px; border-radius: 4px; font-size: 10px; cursor: pointer; margin-left: 5px; }
+        .edit-name-btn { background: transparent; border: none; cursor: pointer; font-size: 14px; margin-left: 5px; color: #7f8c8d; transition: color 0.2s; }
+        .edit-name-btn:hover { color: var(--primary); transform: scale(1.1); }
 
         .match-card { background: white; padding: 12px; margin-bottom: 10px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: space-between; }
         
@@ -532,6 +534,33 @@
     function logout() { auth.signOut(); }
     function showStatus(msg, type) { const bar = document.getElementById('statusBar'); bar.innerText = msg; bar.style.display = 'block'; setTimeout(() => { bar.style.display = 'none'; }, 3000); }
 
+    // --- NEW FEATURE: EDIT TEAM NAME ---
+    window.editParticipantName = function(oldName) {
+        if(!dbData.current) return;
+        const newName = prompt("Takım/Oyuncu için yeni ismi giriniz:", oldName);
+        if(!newName || newName === oldName || newName.trim() === "") return;
+        
+        // 1. Check duplicate
+        if(dbData.current.players.find(p => p.name === newName)) {
+            return alert("Bu isimde bir oyuncu zaten var!");
+        }
+
+        // 2. Update Player Object
+        const player = dbData.current.players.find(p => p.name === oldName);
+        if(player) player.name = newName;
+
+        // 3. Update All Matches
+        dbData.current.matches.forEach(m => {
+            if(m.p1 === oldName) m.p1 = newName;
+            if(m.p2 === oldName) m.p2 = newName;
+        });
+
+        // 4. Save
+        db.ref('turnuva_v2/current').set(dbData.current).then(() => {
+            alert("İsim güncellendi.");
+        });
+    }
+
     // --- IMPORT LEGACY ---
     window.importLegacyToHistory = function() {
         const fileInput = document.getElementById('historyJsonInput');
@@ -644,9 +673,16 @@
             if(p.withdrawn) rowClass = 'withdrawn-row';
             if(p.skipPlayoff) rowClass = 'skipped-row';
             let btns = '';
-            if(isEditable && isAdmin && !p.withdrawn) {
-               if(p.skipPlayoff) btns = `<button class="undo-btn" onclick="togglePlayoffSkip('${p.name}')">↩️</button>`;
-               else if(i < 8) btns = `<button class="skip-btn" onclick="togglePlayoffSkip('${p.name}')">🚫</button>`;
+            
+            // Edit Button (Only for Admin & Editable Mode)
+            let editBtn = '';
+            if(isEditable && isAdmin) {
+               editBtn = `<button class="edit-name-btn" onclick="editParticipantName('${p.name}')" title="İsmi Düzenle">✏️</button>`;
+               
+               if(!p.withdrawn) {
+                   if(p.skipPlayoff) btns = `<button class="undo-btn" onclick="togglePlayoffSkip('${p.name}')">↩️</button>`;
+                   else if(i < 8) btns = `<button class="skip-btn" onclick="togglePlayoffSkip('${p.name}')">🚫</button>`;
+               }
             }
             
             let displayName = p.name;
@@ -654,7 +690,7 @@
                 displayName += ` <span style="font-size:0.85em; color:#666;">(${p.members.join(' & ')})</span>`;
             }
 
-            return `<tr class="${rowClass}"><td>${i+1}</td><td style="text-align:left;">${displayName} ${btns}</td><td>${p.stats.o}</td><td>${p.stats.g}</td><td>${p.stats.m}</td><td>${p.stats.av}</td><td><strong>${p.stats.p}</strong></td></tr>`;
+            return `<tr class="${rowClass}"><td>${i+1}</td><td style="text-align:left;">${displayName} ${editBtn} ${btns}</td><td>${p.stats.o}</td><td>${p.stats.g}</td><td>${p.stats.m}</td><td>${p.stats.av}</td><td><strong>${p.stats.p}</strong></td></tr>`;
         }).join('');
         
         return `<table><thead><tr><th>#</th><th>İsim</th><th>O</th><th>G</th><th>M</th><th>Av</th><th>P</th></tr></thead><tbody>${rows}</tbody></table>`;
